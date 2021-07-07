@@ -67,6 +67,11 @@
     return nil;
 }
 
+- (NSString *)senderDomain
+{
+    return [[self.payload optionalDictionaryForKey:@"qualified_from"] optionalStringForKey:@"domain"];
+}
+
 - (NSString *)recipientClientID
 {
     if (self.type == ZMUpdateEventTypeConversationOtrMessageAdd || self.type == ZMUpdateEventTypeConversationOtrAssetAdd) {
