@@ -43,19 +43,17 @@ public class FeatureService {
 
     // MARK: - Accessors
 
-    public var appLock: Feature.AppLock {
-        get {
-            let feature = Feature.fetch(name: .appLock, context: context)!
-            let config = try! JSONDecoder().decode(Feature.AppLock.Config.self, from: feature.config!)
-            return .init(status: feature.status, config: config)
-        }
+    public func fetchAppLock() -> Feature.AppLock {
+        let feature = Feature.fetch(name: .appLock, context: context)!
+        let config = try! JSONDecoder().decode(Feature.AppLock.Config.self, from: feature.config!)
+        return .init(status: feature.status, config: config)
+    }
 
-        set {
-            let config = try! JSONEncoder().encode(newValue.config)
-            Feature.updateOrCreate(havingName: .appLock, in: context) {
-                $0.status = newValue.status
-                $0.config = config
-            }
+    public func storeAppLock(_ appLock: Feature.AppLock) {
+        let config = try! JSONEncoder().encode(appLock.config)
+        Feature.updateOrCreate(havingName: .appLock, in: context) {
+            $0.status = appLock.status
+            $0.config = config
         }
     }
 
@@ -65,7 +63,7 @@ public class FeatureService {
         for name in Feature.Name.allCases where Feature.fetch(name: name, context: context) == nil {
             switch name {
             case .appLock:
-                appLock = .init()
+                storeAppLock(.init())
             }
         }
     }

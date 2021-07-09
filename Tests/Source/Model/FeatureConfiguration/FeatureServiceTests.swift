@@ -34,7 +34,7 @@ class FeatureServiceTests: ZMBaseManagedObjectTest {
 
         // When
         syncMOC.performGroupedAndWait { context in
-            sut.appLock = appLock
+            sut.storeAppLock(appLock)
         }
 
         // Then

@@ -107,7 +107,7 @@ public final class AppLockController: AppLockType {
     private let legacyConfig: LegacyConfig?
 
     private var config: Config {
-        let appLock = featureService.appLock
+        let appLock = featureService.fetchAppLock()
 
         return Config(isAvailable: appLock.status == .enabled,
                       isForced: appLock.config.enforceAppLock,
