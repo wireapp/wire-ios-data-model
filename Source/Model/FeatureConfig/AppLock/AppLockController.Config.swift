@@ -38,7 +38,7 @@ public extension AppLockController {
     /// is only used by whitelabel custom builds. The new config is retrieved from the backend using
     /// the 'features' endpoint.
 
-    struct LegacyConfig {
+    struct LegacyConfig: Codable {
 
         public let isForced: Bool
         public let timeout: UInt
