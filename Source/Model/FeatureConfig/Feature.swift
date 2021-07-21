@@ -32,6 +32,7 @@ public class Feature: ZMManagedObject {
 
     public enum Name: String, Codable, CaseIterable {
         case appLock
+        case fileSharing
     }
 
     public enum Status: String, Codable {
@@ -162,6 +163,9 @@ public class Feature: ZMManagedObject {
                    config: defaultConfigData,
                    team: team,
                    context: context)
+        //TODO Katerina check
+        case .fileSharing:
+            return
         }
     }
 
@@ -189,12 +193,15 @@ public class Feature: ZMManagedObject {
             
             let decoder = JSONDecoder()
             guard let oldValue = oldData,
-                let newValue = newData,
-                let oldConfig = try? decoder.decode(Feature.AppLock.Config.self, from: oldValue),
-                let newConfig = try? decoder.decode(Feature.AppLock.Config.self, from: newValue) else {
-                    return
+                  let newValue = newData,
+                  let oldConfig = try? decoder.decode(Feature.AppLock.Config.self, from: oldValue),
+                  let newConfig = try? decoder.decode(Feature.AppLock.Config.self, from: newValue) else {
+                return
             }
             needsToNotifyUser = oldConfig.enforceAppLock != newConfig.enforceAppLock
+        //TODO Katerina check
+        case .fileSharing:
+            return
         }
     }
 }

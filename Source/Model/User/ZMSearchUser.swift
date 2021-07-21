@@ -222,6 +222,12 @@ public class ZMSearchUser: NSObject, UserType {
     public var hasDigitalSignatureEnabled: Bool {
         return user?.hasDigitalSignatureEnabled ?? false
     }
+
+    public var canShareFiles: Bool {
+        guard let user = user else { return true }
+
+        return user.canShareFiles
+    }
     
     public var teamRole: TeamRole {
         guard let user = user else {

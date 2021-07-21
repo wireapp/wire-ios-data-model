@@ -47,7 +47,14 @@ extension ZMUser: UserType {
     public var hasDigitalSignatureEnabled: Bool {
         return team?.fetchFeatureFlag(with: .digitalSignature)?.isEnabled ?? false
     }
-    
+
+    public var canShareFiles: Bool {
+        guard let feature = team?.feature(for: .fileSharing) else {
+            return true
+        }
+        return feature.status == .enabled
+    }
+
     public var previewImageData: Data? {
         return imageSmallProfileData
     }
