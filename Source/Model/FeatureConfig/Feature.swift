@@ -204,7 +204,6 @@ public class Feature: ZMManagedObject {
                 return
             }
             needsToNotifyUser = oldConfig.enforceAppLock != newConfig.enforceAppLock
-        //TODO Katerina check
         case .fileSharing:
             return
         }
