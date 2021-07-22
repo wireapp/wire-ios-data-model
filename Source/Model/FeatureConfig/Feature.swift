@@ -163,9 +163,14 @@ public class Feature: ZMManagedObject {
                    config: defaultConfigData,
                    team: team,
                    context: context)
-        //TODO Katerina check
         case .fileSharing:
-            return
+            let defaultInstance = Feature.FileSharing()
+
+            insert(name: name,
+                   status: defaultInstance.status,
+                   config: nil,
+                   team: team,
+                   context: context)
         }
     }
 

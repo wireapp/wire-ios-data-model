@@ -20,11 +20,11 @@ import Foundation
 
 public extension Feature {
 
-    struct AppLock: FeatureLike, Codable {
+    struct FileSharing: FeatureLike, Codable {
 
         // MARK: - Properties
 
-        public static let name: Feature.Name = .appLock
+        public static let name: Feature.Name = .fileSharing
 
         public let status: Status
         public let config: Config?
@@ -33,14 +33,11 @@ public extension Feature {
 
         public init?(feature: Feature) {
             guard
-                feature.name == Self.name,
-                let data = feature.config,
-                let config = try? JSONDecoder().decode(Config.self, from: data)
-            else {
+                feature.name == Self.name else {
                 return nil
             }
-            
-            self.init(status: feature.status, config: config)
+
+            self.init(status: feature.status, config: nil)
         }
 
         public init() {
@@ -54,25 +51,9 @@ public extension Feature {
 
         // MARK: - Types
 
-        public struct Config: Codable {
-
-            /// If `true` then app lock is mandatory and can not
-            /// be disabled by by the user.
-
-            public let enforceAppLock: Bool
-
-            /// The number of seconds in the background before the
-            /// app should relock.
-
-            public let inactivityTimeoutSecs: UInt
-
-            public init(enforceAppLock: Bool = false, inactivityTimeoutSecs: UInt = 60) {
-                self.enforceAppLock = enforceAppLock
-                self.inactivityTimeoutSecs = inactivityTimeoutSecs
-            }
-
-        }
+        public struct Config: Codable {}
 
     }
 
 }
+
