@@ -337,16 +337,6 @@ NSUInteger const ZMClientMessageByteSizeExternalThreshold = 128000;
     XCTAssertEqualObjects(message.keysTrackedForLocalModifications, expected);
 }
 
-- (void)testThatSpecialKeysAreNotPartOfTheLocallyModifiedKeysForClientMessages
-{
-    // when
-    ZMClientMessage *message = [[ZMClientMessage alloc] initWithNonce:NSUUID.createUUID managedObjectContext:self.uiMOC];
-    
-    // then
-    NSSet *keysThatShouldBeTracked = [NSSet setWithArray:@[@"dataSet", @"linkPreviewState"]];
-    XCTAssertEqualObjects(message.keysTrackedForLocalModifications, keysThatShouldBeTracked);
-}
-
 - (void)testThat_doesEventGenerateMessage_returnsTrueForAllKnownTypes
 {
     NSArray *validTypes = @[
@@ -455,12 +445,7 @@ NSUInteger const ZMClientMessageByteSizeExternalThreshold = 128000;
     XCTAssertFalse(systemMessage.needsUpdatingUsers);
 }
 
-@end
-
-
-
-@implementation ZMMessageTests (TextMessage)
-
+#pragma mark - TextMessage
 
 - (void)testThatATextMessageHasTextMessageData
 {
@@ -474,11 +459,8 @@ NSUInteger const ZMClientMessageByteSizeExternalThreshold = 128000;
     XCTAssertNil(message.knockMessageData);
 }
 
-@end
 
-
-
-@implementation ZMMessageTests (ImageMessages)
+#pragma mark - ImageMessages
 
 - (void)testThatSettingTheOriginalDataRecognizesAGif
 {
@@ -650,11 +632,7 @@ NSUInteger const ZMClientMessageByteSizeExternalThreshold = 128000;
     XCTAssertTrue([self waitForCustomExpectationsWithTimeout:0.5]);
 }
 
-@end
-
-
-
-@implementation ZMMessageTests (ImageIdentifiersForCaching)
+#pragma mark - ImageIdentifiersForCaching
 
 - (void)testThatItDoesNotReturnAnIdentifierWhenTheImageDataIsNil
 {
@@ -740,11 +718,7 @@ NSUInteger const ZMClientMessageByteSizeExternalThreshold = 128000;
     XCTAssertNil(identifier);
 }
 
-@end
-
-
-
-@implementation ZMMessageTests (ImageMessageUploadAttributes)
+#pragma mark - ImageMessageUploadAttributes
 
 - (void)testThatItRequiresPreviewAndMediumData
 {
@@ -756,12 +730,8 @@ NSUInteger const ZMClientMessageByteSizeExternalThreshold = 128000;
     XCTAssertEqualObjects(message.requiredImageFormats,  expectedFormats);
 }
 
-@end
+#pragma mark - CreateSystemMessageFromUpdateEvent
 
-
-
-
-@implementation ZMMessageTests (CreateSystemMessageFromUpdateEvent)
 
 - (void)testThat_isEventTypeGeneratingSystemMessage_returnsNo
 {
@@ -791,8 +761,9 @@ NSUInteger const ZMClientMessageByteSizeExternalThreshold = 128000;
                               };
     (void)[(ZMUpdateEvent *)[[(id)updateEvent stub] andReturn:payload] payload];
     
-    NSUUID *nonce = [NSUUID UUID];
-    (void)[(ZMUpdateEvent *)[[(id)updateEvent stub] andReturn:nonce] messageNonce];
+    ///TODO: messageNonce can not be marked @objc since it is extended in DM, and it can not be stubed
+//    NSUUID *nonce = [NSUUID UUID];
+//    (void)[(ZMUpdateEvent *)[[(id)updateEvent stub] andReturn:nonce] messageNonce];
     (void)[(ZMUpdateEvent *)[[(id)updateEvent stub] andReturn:serverTimeStamp] timestamp];
     (void)[(ZMUpdateEvent *)[[(id)updateEvent stub] andReturn:conversation.remoteIdentifier] conversationUUID];
     (void)[(ZMUpdateEvent *)[[(id)updateEvent stub] andReturn:from] senderUUID];
