@@ -223,12 +223,6 @@ public class ZMSearchUser: NSObject, UserType {
         return user?.hasDigitalSignatureEnabled ?? false
     }
 
-    public var canShareFiles: Bool {
-        guard let user = user else { return true }
-
-        return user.canShareFiles
-    }
-    
     public var teamRole: TeamRole {
         guard let user = user else {
             return (internalTeamPermissions?.rawValue).flatMap(TeamRole.init(rawPermissions:)) ?? .none

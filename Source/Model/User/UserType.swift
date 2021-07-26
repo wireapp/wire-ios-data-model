@@ -56,10 +56,7 @@ public protocol UserType: NSObjectProtocol, UserConnections {
     
     /// Whether the PDF digial signature is enable
     var hasDigitalSignatureEnabled: Bool { get }
-    
-    /// Whether the user can share files
-    var canShareFiles: Bool { get }
-    
+        
     /// The role (and permissions) e.g. partner, member, admin, owner
     var teamRole: TeamRole { get }
     

@@ -20,39 +20,18 @@ import Foundation
 
 public extension Feature {
 
-    struct FileSharing: FeatureLike, Codable {
+    struct FileSharing: Codable {
 
         // MARK: - Properties
 
-        public static let name: Feature.Name = .fileSharing
-
         public let status: Status
-        public let config: Config?
 
         // MARK: - Life cycle
 
-        public init?(feature: Feature) {
-            guard
-                feature.name == Self.name else {
-                return nil
-            }
-
-            self.init(status: feature.status, config: nil)
-        }
-
-        public init() {
-            self.init(status: .enabled, config: .init())
-        }
-
-        public init(status: Feature.Status, config: Config?) {
+        public init(status: Feature.Status = .enabled) {
             self.status = status
-            self.config = config
         }
-
-        // MARK: - Types
-
-        public struct Config: Codable {}
-
+        
     }
 
 }
