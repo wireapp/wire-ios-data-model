@@ -20,7 +20,7 @@ import Foundation
 
 public extension Feature {
 
-    class FileSharing: Codable {
+    struct FileSharing: Codable {
 
         // MARK: - Properties
 
