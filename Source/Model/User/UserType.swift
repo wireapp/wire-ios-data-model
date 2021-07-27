@@ -56,7 +56,7 @@ public protocol UserType: NSObjectProtocol, UserConnections {
     
     /// Whether the PDF digial signature is enable
     var hasDigitalSignatureEnabled: Bool { get }
-        
+
     /// The role (and permissions) e.g. partner, member, admin, owner
     var teamRole: TeamRole { get }
     

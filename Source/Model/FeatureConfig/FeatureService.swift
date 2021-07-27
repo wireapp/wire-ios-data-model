@@ -43,7 +43,7 @@ public class FeatureService {
 
     // MARK: - Accessors
 
-    /// The app Lock
+    /// The app lock
     public func fetchAppLock() -> Feature.AppLock {
         let feature = Feature.fetch(name: .appLock, context: context)!
         let config = try! JSONDecoder().decode(Feature.AppLock.Config.self, from: feature.config!)
