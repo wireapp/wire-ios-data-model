@@ -142,6 +142,7 @@ public class Feature: ZMManagedObject {
                 feature.name = name
                 changes(feature)
             }
+            context.saveOrRollback()
         }
     }
 
