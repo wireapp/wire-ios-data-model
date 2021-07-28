@@ -747,19 +747,6 @@ NSUInteger const ZMClientMessageByteSizeExternalThreshold = 128000;
     }
 }
 
-- (ZMSystemMessage *)createSystemMessageFromType:(ZMUpdateEventType)updateEventType inConversation:(ZMConversation *)conversation withUsersIDs:(NSArray *)userIDs senderID:(NSUUID *)senderID
-{
-    NSDictionary *data =@{
-                          @"user_ids" : [userIDs mapWithBlock:^id(id obj) {
-                              return [obj transportString];
-                          }],
-                          @"reason" : @"missed"
-                          };
-    MockUpdateEvent *updateEvent = [self mockEventOfType:updateEventType forConversation:conversation sender:senderID data:data];
-    ZMSystemMessage *systemMessage = [ZMSystemMessage createOrUpdateMessageFromUpdateEvent:updateEvent inManagedObjectContext:self.uiMOC prefetchResult:nil];
-    return systemMessage;
-}
-
 - (ZMSystemMessage *)createConversationNameChangeSystemMessageInConversation:(ZMConversation *)conversation inManagedObjectContext:(NSManagedObjectContext *)moc
 {
     NSDictionary *data = @{@"name" : conversation.displayName};

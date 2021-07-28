@@ -39,6 +39,22 @@ public final class MockUpdateEvent: NSObject, UpdateEvent, SwiftUpdateEvent {
 }
 
 extension ZMMessageTests {
+    @objc(createSystemMessageFromType:inConversation:withUsersIDs:senderID:)
+    func createSystemMessage(from updateEventType: ZMUpdateEventType, in conversation: ZMConversation?, withUsersIDs userIDs: [ZMTransportEncoding]?, senderID: UUID?) -> ZMSystemMessage? {
+        var data: [String : Any]? = nil
+        if let transportStrings = userIDs?.map({ obj in
+            return obj.transportString()
+        }) {
+            data = [
+                "user_ids": transportStrings,
+                "reason": "missed"
+            ]
+        }
+        let updateEvent = mockEventOf(updateEventType, for: conversation, sender: senderID, data: data)
+        let systemMessage = ZMSystemMessage.createOrUpdate(from: updateEvent, in: uiMOC, prefetchResult: nil)
+        return systemMessage
+    }
+    
     @objc(mockEventOfType:forConversation:sender:data:)
     public func mockEventOf(_ type: ZMUpdateEventType,
                             for conversation: ZMConversation?,
