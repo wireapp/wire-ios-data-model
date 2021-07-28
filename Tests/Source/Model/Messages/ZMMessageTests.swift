@@ -27,14 +27,23 @@ public final class MockUpdateEvent: NSObject, UpdateEvent {
     public var conversationUUID: UUID?
     
     public var senderUUID: UUID?
+    
+    public var type: ZMUpdateEventType
+    
+    init(type: ZMUpdateEventType) {
+        self.type = type
+    }
 }
 
 extension ZMMessageTests {
     @objc(mockEventOfType:forConversation:sender:data:)
-    public func mockEventOf(_ type: ZMUpdateEventType, for conversation: ZMConversation?, sender senderID: UUID?, data: [AnyHashable : Any]?) -> MockUpdateEvent {
-        let updateEvent = MockUpdateEvent()
-//        (updateEvent?.stub().andReturnValue(OCMOCK_VALUE(type)) as? ZMUpdateEvent)?.type()
-//        let serverTimeStamp: Date? = (conversation?.lastServerTimeStamp ? conversation?.lastServerTimeStamp.addingTimeInterval(5) : Date()) as? Date
+    public func mockEventOf(_ type: ZMUpdateEventType,
+                            for conversation: ZMConversation?,
+                            sender senderID: UUID?,
+                            data: [AnyHashable : Any]?) -> MockUpdateEvent {
+        let updateEvent = MockUpdateEvent(type: type)
+
+        //        let serverTimeStamp: Date? = (conversation?.lastServerTimeStamp ? conversation?.lastServerTimeStamp.addingTimeInterval(5) : Date()) as? Date
 //        let from = senderID ?? NSUUID.createUUID
 //        var payload: [StringLiteralConvertible : UnknownType?]? = nil
 //        if let transportString = conversation?.remoteIdentifier.transportString, let transportString1 = serverTimeStamp?.transportString, let transportString2 = from?.transportString, let data = data {

@@ -24,6 +24,9 @@ public protocol UpdateEvent: NSObjectProtocol {
     var timestamp: Date? { get }
     var conversationUUID: UUID? { get }
     var senderUUID: UUID? { get }
+    
+    //from Transport
+    var type: ZMUpdateEventType { get }
 }
 
 extension ZMUpdateEvent: UpdateEvent {
