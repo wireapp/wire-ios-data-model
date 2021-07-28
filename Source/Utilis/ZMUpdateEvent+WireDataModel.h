@@ -24,9 +24,6 @@
 
 @interface ZMUpdateEvent (WireDataModel)
 
-/// May be nil (e.g. transient events)
-//@property (readonly, nullable) NSUUID *senderUUID;
-//@property (readonly, nullable) NSUUID *conversationUUID;
 @property (readonly, nullable) NSString *senderClientID;
 @property (readonly, nullable) NSString *recipientClientID;
 

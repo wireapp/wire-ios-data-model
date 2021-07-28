@@ -23,6 +23,7 @@ public protocol UpdateEvent: NSObjectProtocol {
     var messageNonce: UUID? { get }
     var timestamp: Date? { get }
     var conversationUUID: UUID? { get }
+    /// May be nil (e.g. transient events)
     var senderUUID: UUID? { get }
     var participantsRemovedReason: ZMParticipantsRemovedReason { get }
     
@@ -36,7 +37,7 @@ extension ZMUpdateEvent: UpdateEvent {
         return payload as NSDictionary
     }
     
-    @objc
+//    @objc
     public var conversationUUID: UUID? {
         if type == .userConnection {
             return (payloadDictionary.optionalDictionary(forKey: "connection")! as NSDictionary).optionalUuid(forKey: "conversation")
@@ -49,7 +50,7 @@ extension ZMUpdateEvent: UpdateEvent {
 
     }
     
-    @objc
+//    @objc
     public var senderUUID: UUID? {
         if type == .userConnection {
             return ((payload as NSDictionary).optionalDictionary(forKey: "connection")! as NSDictionary).optionalUuid(forKey: "to")
@@ -62,7 +63,7 @@ extension ZMUpdateEvent: UpdateEvent {
         return (payload as NSDictionary).optionalUuid(forKey: "from")
     }
     
-    @objc
+//    @objc
     public var timestamp: Date? {
         if isTransient || type == .userConnection {
             return nil
@@ -71,7 +72,7 @@ extension ZMUpdateEvent: UpdateEvent {
         return (payload as NSDictionary).date(for: "time")
     }
     
-    @objc
+//    @objc
     public var messageNonce: UUID? {
         switch type {
         case .conversationMessageAdd,
