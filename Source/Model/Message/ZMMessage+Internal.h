@@ -34,6 +34,7 @@
 @class ZMClientMessage;
 
 @protocol UserClientType;
+@protocol UpdateEvent;
 
 extern NSString * _Nonnull const ZMMessageIsExpiredKey;
 extern NSString * _Nonnull const ZMMessageMissingRecipientsKey;
@@ -200,7 +201,7 @@ extern NSString * _Nonnull const ZMMessageNeedsLinkAttachmentsUpdateKey;
 + (NSTimeInterval)defaultExpirationTime;
 + (void)resetDefaultExpirationTime;
 
-+ (ZMConversation * _Nullable)conversationForUpdateEvent:(ZMUpdateEvent * _Nonnull)event inContext:(NSManagedObjectContext * _Nonnull)moc prefetchResult:(ZMFetchRequestBatchResult * _Nullable)prefetchResult;
++ (ZMConversation * _Nullable)conversationForUpdateEvent:(id<UpdateEvent> _Nonnull)event inContext:(NSManagedObjectContext * _Nonnull)moc prefetchResult:(ZMFetchRequestBatchResult * _Nullable)prefetchResult;
 
 /// Returns the message represented in this update event
 /// @param prefetchResult Contains a mapping from message nonce to message and `remoteIdentifier` to `ZMConversation`,
