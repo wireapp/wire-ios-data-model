@@ -19,7 +19,7 @@
 import Foundation
 
 @objc
-public final class MockUpdateEvent: NSObject, UpdateEvent {
+public final class MockUpdateEvent: NSObject, UpdateEvent, SwiftUpdateEvent {
     public var messageNonce: UUID? = UUID()
     
     public var timestamp: Date?
