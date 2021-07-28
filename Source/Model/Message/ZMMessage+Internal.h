@@ -201,8 +201,6 @@ extern NSString * _Nonnull const ZMMessageNeedsLinkAttachmentsUpdateKey;
 + (NSTimeInterval)defaultExpirationTime;
 + (void)resetDefaultExpirationTime;
 
-+ (ZMConversation * _Nullable)conversationForUpdateEvent:(ZMUpdateEvent * _Nonnull)event inContext:(NSManagedObjectContext * _Nonnull)moc prefetchResult:(ZMFetchRequestBatchResult * _Nullable)prefetchResult;
-
 /// Returns the message represented in this update event
 /// @param prefetchResult Contains a mapping from message nonce to message and `remoteIdentifier` to `ZMConversation`,
 /// which should be used to avoid premature fetchRequests. If the class needs messages or conversations to be prefetched

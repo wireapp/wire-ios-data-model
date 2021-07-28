@@ -22,6 +22,22 @@
 import Foundation
 
 extension ZMMessage {
+    @objc(conversationForUpdateEvent:inContext:prefetchResult:)
+    public class func conversation(for event: ZMUpdateEvent?,
+                                   in moc: NSManagedObjectContext?,
+                                   prefetchResult: ZMFetchRequestBatchResult?) -> ZMConversation? {
+        guard let conversationUUID = event?.conversationUUID,
+              let moc = moc else { return nil }
+        
+        if let conversation = prefetchResult?.conversationsByRemoteIdentifier[conversationUUID] {
+            return conversation
+        }
+        
+        return ZMConversation(remoteID: conversationUUID,
+                              createIfNeeded: true,
+                              in: moc)
+    }
+    
     @objc
     public func sender(event: ZMUpdateEvent) -> ZMUser? {
         guard let senderUUID = event.senderUUID,

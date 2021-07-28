@@ -96,8 +96,6 @@ NSString * const ZMMessageDecryptionErrorCodeKey = @"decryptionErrorCode";
 
 @interface ZMMessage ()
 
-+ (ZMConversation *)conversationForUpdateEvent:(ZMUpdateEvent *)event inContext:(NSManagedObjectContext *)context prefetchResult:(ZMFetchRequestBatchResult *)prefetchResult;
-
 - (void)updateWithUpdateEvent:(ZMUpdateEvent *)event forConversation:(ZMConversation *)conversation;
 
 @property (nonatomic) NSSet *missingRecipients;
@@ -323,19 +321,6 @@ NSString * const ZMMessageDecryptionErrorCodeKey = @"decryptionErrorCode";
     
     [self updateQuoteRelationships];
     [conversation updateTimestampsAfterUpdatingMessage:self];
-}
-
-+ (ZMConversation *)conversationForUpdateEvent:(ZMUpdateEvent *)event inContext:(NSManagedObjectContext *)moc prefetchResult:(ZMFetchRequestBatchResult *)prefetchResult
-{
-    NSUUID *conversationUUID = event.conversationUUID;
-    
-    VerifyReturnNil(conversationUUID != nil);
-    
-    if (nil != prefetchResult.conversationsByRemoteIdentifier[conversationUUID]) {
-        return prefetchResult.conversationsByRemoteIdentifier[conversationUUID];
-    }
-    
-    return [ZMConversation conversationWithRemoteID:conversationUUID createIfNeeded:YES inContext:moc];
 }
 
 - (void)removeMessageClearingSender:(BOOL)clearingSender
