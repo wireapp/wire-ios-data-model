@@ -24,7 +24,7 @@ extension ZMClientMessage {
         guard let message = GenericMessage(from: updateEvent) else { return }
 
         guard initialUpdate else {
-            applyLinkPreviewUpdate(message, from: updateEvent as! ZMUpdateEvent)
+            applyLinkPreviewUpdate(message, from: updateEvent)
             return
         }
 
