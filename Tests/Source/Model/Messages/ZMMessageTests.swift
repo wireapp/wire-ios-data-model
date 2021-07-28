@@ -20,7 +20,7 @@ import Foundation
 
 @objc
 public final class MockUpdateEvent: NSObject, UpdateEvent {
-    public var messageNonce: UUID?
+    public var messageNonce: UUID? = UUID()
     
     public var timestamp: Date?
     
@@ -56,9 +56,6 @@ extension ZMMessageTests {
 //        }
 //        (updateEvent?.stub().andReturn(payload) as? ZMUpdateEvent)?.payload()
 //
-//        ///TODO: messageNonce can not be marked @objc since it is extended in DM, and it can not be stubed
-//        //    NSUUID *nonce = [NSUUID UUID];
-//        //    (void)[(ZMUpdateEvent *)[[(id)updateEvent stub] andReturn:nonce] messageNonce];
 //        (updateEvent?.stub().andReturn(serverTimeStamp) as? ZMUpdateEvent)?.timestamp()
 //        (updateEvent?.stub().andReturn(conversation?.remoteIdentifier) as? ZMUpdateEvent)?.conversationUUID()
 //        (updateEvent?.stub().andReturn(from) as? ZMUpdateEvent)?.senderUUID()

@@ -34,6 +34,7 @@ extension ZMUpdateEvent: UpdateEvent {
         return payload as NSDictionary
     }
     
+    @objc
     public var conversationUUID: UUID? {
         if type == .userConnection {
             return (payloadDictionary.optionalDictionary(forKey: "connection")! as NSDictionary).optionalUuid(forKey: "conversation")
@@ -46,6 +47,7 @@ extension ZMUpdateEvent: UpdateEvent {
 
     }
     
+    @objc
     public var senderUUID: UUID? {
         if type == .userConnection {
             return ((payload as NSDictionary).optionalDictionary(forKey: "connection")! as NSDictionary).optionalUuid(forKey: "to")
@@ -58,6 +60,7 @@ extension ZMUpdateEvent: UpdateEvent {
         return (payload as NSDictionary).optionalUuid(forKey: "from")
     }
     
+    @objc
     public var timestamp: Date? {
         if isTransient || type == .userConnection {
             return nil
@@ -66,6 +69,7 @@ extension ZMUpdateEvent: UpdateEvent {
         return (payload as NSDictionary).date(for: "time")
     }
     
+    @objc
     public var messageNonce: UUID? {
         switch type {
         case .conversationMessageAdd,
