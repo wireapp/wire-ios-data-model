@@ -30,6 +30,8 @@ public final class MockUpdateEvent: NSObject, UpdateEvent {
     
     public var type: ZMUpdateEventType
     public var payload: [AnyHashable : Any] = [:]
+    
+    public var participantsRemovedReason: ZMParticipantsRemovedReason = .none
 
     init(type: ZMUpdateEventType) {
         self.type = type

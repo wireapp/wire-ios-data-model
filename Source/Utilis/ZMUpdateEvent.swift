@@ -24,6 +24,7 @@ public protocol UpdateEvent: NSObjectProtocol {
     var timestamp: Date? { get }
     var conversationUUID: UUID? { get }
     var senderUUID: UUID? { get }
+    var participantsRemovedReason: ZMParticipantsRemovedReason { get }
     
     //from Transport
     var type: ZMUpdateEventType { get }
