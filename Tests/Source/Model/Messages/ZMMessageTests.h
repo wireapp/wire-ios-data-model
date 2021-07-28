@@ -37,5 +37,4 @@
 @end
 
 @interface ZMMessageTests : BaseZMMessageTests
-- (id)mockEventOfType:(ZMUpdateEventType)type forConversation:(ZMConversation *)conversation sender:(NSUUID *)senderID data:(NSDictionary *)data;
 @end

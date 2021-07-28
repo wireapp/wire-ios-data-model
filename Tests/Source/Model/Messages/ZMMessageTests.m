@@ -748,33 +748,10 @@ NSUInteger const ZMClientMessageByteSizeExternalThreshold = 128000;
     }
 }
 
-- (id)mockEventOfType:(ZMUpdateEventType)type forConversation:(ZMConversation *)conversation sender:(NSUUID *)senderID data:(NSDictionary *)data
-{
-    ZMUpdateEvent *updateEvent = [OCMockObject niceMockForClass:ZMUpdateEvent.class];
-    (void)[(ZMUpdateEvent *)[[(id)updateEvent stub] andReturnValue:OCMOCK_VALUE(type)] type];
-    NSDate *serverTimeStamp = conversation.lastServerTimeStamp ? [conversation.lastServerTimeStamp dateByAddingTimeInterval:5] : [NSDate date];
-    NSUUID *from = senderID ?: NSUUID.createUUID;
-    NSDictionary *payload = @{
-                              @"conversation" : conversation.remoteIdentifier.transportString,
-                              @"time" : serverTimeStamp.transportString,
-                              @"from" : from.transportString,
-                              @"data" : data
-                              };
-    (void)[(ZMUpdateEvent *)[[(id)updateEvent stub] andReturn:payload] payload];
-    
-    ///TODO: messageNonce can not be marked @objc since it is extended in DM, and it can not be stubed
-//    NSUUID *nonce = [NSUUID UUID];
-//    (void)[(ZMUpdateEvent *)[[(id)updateEvent stub] andReturn:nonce] messageNonce];
-    (void)[(ZMUpdateEvent *)[[(id)updateEvent stub] andReturn:serverTimeStamp] timestamp];
-    (void)[(ZMUpdateEvent *)[[(id)updateEvent stub] andReturn:conversation.remoteIdentifier] conversationUUID];
-    (void)[(ZMUpdateEvent *)[[(id)updateEvent stub] andReturn:from] senderUUID];
-    return updateEvent;
-}
-
 - (ZMSystemMessage *)createConversationNameChangeSystemMessageInConversation:(ZMConversation *)conversation inManagedObjectContext:(NSManagedObjectContext *)moc
 {
     NSDictionary *data = @{@"name" : conversation.displayName};
-    ZMUpdateEvent *updateEvent = [self mockEventOfType:ZMUpdateEventTypeConversationRename forConversation:conversation sender:nil data:data];
+    id<UpdateEvent> updateEvent = [self mockEventOfType:ZMUpdateEventTypeConversationRename forConversation:conversation sender:nil data:data];
 
     ZMSystemMessage *systemMessage = [ZMSystemMessage createOrUpdateMessageFromUpdateEvent:updateEvent inManagedObjectContext:moc prefetchResult:nil];
     return systemMessage;
@@ -785,7 +762,7 @@ NSUInteger const ZMClientMessageByteSizeExternalThreshold = 128000;
     NSDictionary *data = @{
                            @"message" : @"This is a very important message"
                            };
-    ZMUpdateEvent *updateEvent = [self mockEventOfType:ZMUpdateEventTypeConversationConnectRequest forConversation:conversation sender:nil data:data];
+    id<UpdateEvent> updateEvent = [self mockEventOfType:ZMUpdateEventTypeConversationConnectRequest forConversation:conversation sender:nil data:data];
     ZMSystemMessage *systemMessage = [ZMSystemMessage createOrUpdateMessageFromUpdateEvent:updateEvent inManagedObjectContext:moc prefetchResult:nil];
     return systemMessage;
 }

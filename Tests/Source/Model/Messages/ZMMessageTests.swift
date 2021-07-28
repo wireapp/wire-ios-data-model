@@ -18,8 +18,55 @@
 
 import Foundation
 
+final class MockUpdateEvent: NSObject, UpdateEvent {
+    var type: WireTransport.ZMUpdateEventType = ZMUpdateEventType.unknown
+    var conversationUUID: UUID?
+    var payload: [AnyHashable : Any] = [:]
+    
+    var timestamp: Date?
+    var senderUUID: UUID?
+    var senderClientID: String?
+}
+
 extension ZMMessageTests {
     
+    @objc(mockEventOfType:forConversation:sender:data:)
+    func mockEvent(of type: ZMUpdateEventType,
+                            for conversation: ZMConversation?,
+                            sender senderID: UUID?,
+                            data: [AnyHashable : Any]?) -> MockUpdateEvent {
+        let updateEvent = MockUpdateEvent()
+        updateEvent.type = type
+
+        let serverTimeStamp: Date
+                    
+        if let lastServerTimeStamp = conversation?.lastServerTimeStamp {
+            serverTimeStamp = lastServerTimeStamp.addingTimeInterval(5)
+        } else {
+            serverTimeStamp = Date()
+        }
+        
+        let from = senderID ?? UUID()
+        
+        if let remoteIdentifier = conversation?.remoteIdentifier?.transportString,
+           let data = data {
+            let payload = [
+                "conversation": remoteIdentifier,
+                "time": serverTimeStamp.transportString,
+                "from": from.transportString,
+                "data": data
+            ] as [String : Any]
+
+            updateEvent.payload = payload
+        }
+        
+        updateEvent.timestamp = serverTimeStamp
+        updateEvent.conversationUUID = conversation?.remoteIdentifier
+        updateEvent.senderUUID = from
+
+        return updateEvent
+    }
+
     @objc(createSystemMessageFromType:inConversation:withUsersIDs:senderID:)
     func createSystemMessage(from updateEventType: ZMUpdateEventType,
                              in conversation: ZMConversation?,
@@ -35,9 +82,8 @@ extension ZMMessageTests {
             ]
         }
 
-        ///TODO: mockEvent with UpdateEvent
         let updateEvent = mockEvent(of: updateEventType, for: conversation, sender: senderID, data: data)
-        let systemMessage = ZMSystemMessage.createOrUpdate(from: updateEvent as! UpdateEvent,
+        let systemMessage = ZMSystemMessage.createOrUpdate(from: updateEvent,
                                                            in: uiMOC,
                                                            prefetchResult: nil)
         return systemMessage

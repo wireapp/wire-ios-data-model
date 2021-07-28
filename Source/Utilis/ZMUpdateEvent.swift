@@ -27,7 +27,6 @@ public protocol UpdateEvent {
     var timestamp: Date? { get }
     var senderUUID: UUID? { get }
     var senderClientID: String? { get }
-//    var messageNonce: UUID? { get }
 }
 
 extension ZMUpdateEvent: UpdateEvent {}
@@ -60,6 +59,9 @@ extension ZMUpdateEvent {
         return userIds.compactMap({ UUID.init(uuidString: $0)})
     }
 
+}
+
+extension UpdateEvent {
     public var participantsRemovedReason: ZMParticipantsRemovedReason {
         guard let dataPayload = (payload as NSDictionary).dictionary(forKey: "data"),
               let reasonString = dataPayload["reason"] as? String else {
