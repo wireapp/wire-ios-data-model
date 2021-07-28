@@ -155,7 +155,7 @@ extension ZMOTRMessage {
             }
             
             // In case of AssetMessages: If the payload does not match the sha265 digest, calling `updateWithGenericMessage:updateEvent` will delete the object.
-            clientMessage?.update(with: updateEvent as! ZMUpdateEvent, initialUpdate: isNewMessage)
+            clientMessage?.update(with: updateEvent, initialUpdate: isNewMessage)
 
             // It seems that if the object was inserted and immediately deleted, the isDeleted flag is not set to true.
             // In addition the object will still have a managedObjectContext until the context is finally saved. In this
@@ -165,7 +165,7 @@ extension ZMOTRMessage {
                 return nil
             }
             
-            clientMessage?.update(with: updateEvent as! ZMUpdateEvent,
+            clientMessage?.update(with: updateEvent,
                                   for: conversation)
             clientMessage?.unarchiveIfNeeded(conversation)
             clientMessage?.updateCategoryCache()

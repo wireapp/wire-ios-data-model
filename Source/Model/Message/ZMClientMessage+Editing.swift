@@ -43,7 +43,7 @@ extension ZMClientMessage {
     
     func processMessageEdit(_ messageEdit: MessageEdit, from updateEvent: UpdateEvent) -> Bool {
         guard
-            let nonce = (updateEvent as? ZMUpdateEvent)?.messageNonce, ///TODO:
+            let nonce = updateEvent.messageNonce,
             let senderUUID = updateEvent.senderUUID,
             let originalText = underlyingMessage?.textData,
             case .text? = messageEdit.content,

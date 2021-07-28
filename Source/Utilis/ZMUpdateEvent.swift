@@ -32,6 +32,17 @@ public protocol UpdateEvent {
 extension ZMUpdateEvent: UpdateEvent {}
 
 extension ZMUpdateEvent {
+    public var userIDs: [UUID] {
+        guard let dataPayload = (payload as NSDictionary).dictionary(forKey: "data"),
+            let userIds = dataPayload["user_ids"] as? [String] else {
+                return []
+        }
+        return userIds.compactMap({ UUID.init(uuidString: $0)})
+    }
+
+}
+
+extension UpdateEvent {
     public var messageNonce: UUID? {
         switch type {
         case .conversationMessageAdd,
@@ -50,18 +61,7 @@ extension ZMUpdateEvent {
             return nil
         }
     }
-    
-    public var userIDs: [UUID] {
-        guard let dataPayload = (payload as NSDictionary).dictionary(forKey: "data"),
-            let userIds = dataPayload["user_ids"] as? [String] else {
-                return []
-        }
-        return userIds.compactMap({ UUID.init(uuidString: $0)})
-    }
 
-}
-
-extension UpdateEvent {
     public var participantsRemovedReason: ZMParticipantsRemovedReason {
         guard let dataPayload = (payload as NSDictionary).dictionary(forKey: "data"),
               let reasonString = dataPayload["reason"] as? String else {
