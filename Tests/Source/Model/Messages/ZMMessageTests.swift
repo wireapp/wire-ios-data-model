@@ -66,11 +66,10 @@ extension ZMMessageTests {
             updateEvent.payload = payload
         }
         
-        
-//
-//        (updateEvent?.stub().andReturn(serverTimeStamp) as? ZMUpdateEvent)?.timestamp()
-//        (updateEvent?.stub().andReturn(conversation?.remoteIdentifier) as? ZMUpdateEvent)?.conversationUUID()
-//        (updateEvent?.stub().andReturn(from) as? ZMUpdateEvent)?.senderUUID()
+        updateEvent.timestamp = serverTimeStamp
+        updateEvent.conversationUUID = conversation?.remoteIdentifier
+        updateEvent.senderUUID = from
+
         return updateEvent
     }
     
