@@ -21,9 +21,48 @@ import Foundation
 @objc
 public protocol UpdateEvent: NSObjectProtocol {
     var messageNonce: UUID? { get }
+    var timestamp: Date? { get }
+    var conversationUUID: UUID? { get }
+    var senderUUID: UUID? { get }
 }
 
 extension ZMUpdateEvent: UpdateEvent {
+    private var payloadDictionary: NSDictionary {
+        return payload as NSDictionary
+    }
+    
+    public var conversationUUID: UUID? {
+        if type == .userConnection {
+            return (payloadDictionary.optionalDictionary(forKey: "connection")! as NSDictionary).optionalUuid(forKey: "conversation")
+        }
+        if type == .teamConversationDelete {
+            return (payloadDictionary.optionalDictionary(forKey: "data") as! NSDictionary).optionalUuid(forKey: "conv")
+        }
+
+        return payloadDictionary.optionalUuid(forKey: "conversation")
+
+    }
+    
+    public var senderUUID: UUID? {
+        if type == .userConnection {
+            return ((payload as NSDictionary).optionalDictionary(forKey: "connection")! as NSDictionary).optionalUuid(forKey: "to")
+        }
+
+        if type == .userContactJoin {
+            return ((payload as NSDictionary).optionalDictionary(forKey: "user") as! NSDictionary).optionalUuid(forKey: "id")
+        }
+
+        return (payload as NSDictionary).optionalUuid(forKey: "from")
+    }
+    
+    public var timestamp: Date? {
+        if isTransient || type == .userConnection {
+            return nil
+        }
+        
+        return (payload as NSDictionary).date(for: "time")
+    }
+    
     public var messageNonce: UUID? {
         switch type {
         case .conversationMessageAdd,
