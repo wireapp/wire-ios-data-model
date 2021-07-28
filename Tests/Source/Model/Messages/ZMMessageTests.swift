@@ -18,7 +18,44 @@
 
 import Foundation
 
+@objc
+public final class MockUpdateEvent: NSObject, UpdateEvent {
+    public var messageNonce: UUID?
+    
+    public var timestamp: Date?
+    
+    public var conversationUUID: UUID?
+    
+    public var senderUUID: UUID?
+}
+
 extension ZMMessageTests {
+    @objc(mockEventOfType:forConversation:sender:data:)
+    public func mockEventOf(_ type: ZMUpdateEventType, for conversation: ZMConversation?, sender senderID: UUID?, data: [AnyHashable : Any]?) -> MockUpdateEvent {
+        let updateEvent = MockUpdateEvent()
+//        (updateEvent?.stub().andReturnValue(OCMOCK_VALUE(type)) as? ZMUpdateEvent)?.type()
+//        let serverTimeStamp: Date? = (conversation?.lastServerTimeStamp ? conversation?.lastServerTimeStamp.addingTimeInterval(5) : Date()) as? Date
+//        let from = senderID ?? NSUUID.createUUID
+//        var payload: [StringLiteralConvertible : UnknownType?]? = nil
+//        if let transportString = conversation?.remoteIdentifier.transportString, let transportString1 = serverTimeStamp?.transportString, let transportString2 = from?.transportString, let data = data {
+//            payload = [
+//                "conversation": transportString,
+//                "time": transportString1,
+//                "from": transportString2,
+//                "data": data
+//            ]
+//        }
+//        (updateEvent?.stub().andReturn(payload) as? ZMUpdateEvent)?.payload()
+//
+//        ///TODO: messageNonce can not be marked @objc since it is extended in DM, and it can not be stubed
+//        //    NSUUID *nonce = [NSUUID UUID];
+//        //    (void)[(ZMUpdateEvent *)[[(id)updateEvent stub] andReturn:nonce] messageNonce];
+//        (updateEvent?.stub().andReturn(serverTimeStamp) as? ZMUpdateEvent)?.timestamp()
+//        (updateEvent?.stub().andReturn(conversation?.remoteIdentifier) as? ZMUpdateEvent)?.conversationUUID()
+//        (updateEvent?.stub().andReturn(from) as? ZMUpdateEvent)?.senderUUID()
+        return updateEvent
+    }
+    
     func testThatSpecialKeysAreNotPartOfTheLocallyModifiedKeysForClientMessages() {
         // when
         let message = ZMClientMessage(nonce: NSUUID.create(), managedObjectContext: uiMOC)

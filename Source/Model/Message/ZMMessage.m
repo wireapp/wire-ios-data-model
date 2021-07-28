@@ -149,7 +149,7 @@ NSString * const ZMMessageDecryptionErrorCodeKey = @"decryptionErrorCode";
     return self;
 }
 
-+ (instancetype)createOrUpdateMessageFromUpdateEvent:(ZMUpdateEvent *)updateEvent
++ (instancetype)createOrUpdateMessageFromUpdateEvent:(id<UpdateEvent>)updateEvent
                               inManagedObjectContext:(NSManagedObjectContext *)moc
 {
     ZMMessage *message = [self createOrUpdateMessageFromUpdateEvent:updateEvent inManagedObjectContext:moc prefetchResult:nil];

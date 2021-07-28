@@ -34,6 +34,7 @@
 @class ZMClientMessage;
 
 @protocol UserClientType;
+@protocol UpdateEvent;
 
 extern NSString * _Nonnull const ZMMessageIsExpiredKey;
 extern NSString * _Nonnull const ZMMessageMissingRecipientsKey;
@@ -262,7 +263,7 @@ extern NSString *  _Nonnull const ZMMessageServerTimestampKey;
 @interface ZMSystemMessage (Internal)
 
 + (BOOL)doesEventTypeGenerateSystemMessage:(ZMUpdateEventType)type;
-+ (instancetype _Nullable)createOrUpdateMessageFromUpdateEvent:(ZMUpdateEvent * _Nonnull)updateEvent inManagedObjectContext:(NSManagedObjectContext * _Nonnull)moc;
++ (instancetype _Nullable)createOrUpdateMessageFromUpdateEvent:(id<UpdateEvent>_Nonnull)updateEvent inManagedObjectContext:(NSManagedObjectContext * _Nonnull)moc;
 + (NSPredicate * _Nonnull)predicateForSystemMessagesInsertedLocally;
 
 @end
