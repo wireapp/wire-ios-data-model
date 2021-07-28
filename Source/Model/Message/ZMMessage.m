@@ -314,7 +314,7 @@ NSString * const ZMMessageDecryptionErrorCodeKey = @"decryptionErrorCode";
     }
     
     self.visibleInConversation = conversation;
-    ZMUser *sender = [ZMUser userWithRemoteID:event.senderUUID createIfNeeded:YES inContext:self.managedObjectContext];
+    ZMUser *sender = [self senderWithEvent: event];
     if (sender != nil && !sender.isZombieObject && self.managedObjectContext == sender.managedObjectContext) {
         self.sender = sender;
     } else {
