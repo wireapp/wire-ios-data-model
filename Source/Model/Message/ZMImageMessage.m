@@ -185,7 +185,7 @@
 @dynamic originalDataProcessed;
 
 
-+ (instancetype)createOrUpdateMessageFromUpdateEvent:(ZMUpdateEvent __unused *)updateEvent
++ (instancetype)createOrUpdateMessageFromUpdateEvent:(id<UpdateEvent> __unused)updateEvent
                               inManagedObjectContext:(NSManagedObjectContext __unused *)moc
                                       prefetchResult:(ZMFetchRequestBatchResult __unused *)prefetchResult
 {

@@ -147,7 +147,7 @@ NSString * const ZMMessageDecryptionErrorCodeKey = @"decryptionErrorCode";
     return self;
 }
 
-+ (instancetype)createOrUpdateMessageFromUpdateEvent:(ZMUpdateEvent *)updateEvent
++ (instancetype)createOrUpdateMessageFromUpdateEvent:(id<UpdateEvent>)updateEvent
                               inManagedObjectContext:(NSManagedObjectContext *)moc
 {
     ZMMessage *message = [self createOrUpdateMessageFromUpdateEvent:updateEvent inManagedObjectContext:moc prefetchResult:nil];
@@ -519,7 +519,7 @@ NSString * const ZMMessageDecryptionErrorCodeKey = @"decryptionErrorCode";
 }
 
 
-+ (instancetype)createOrUpdateMessageFromUpdateEvent:(ZMUpdateEvent *__unused)updateEvent
++ (instancetype)createOrUpdateMessageFromUpdateEvent:(id<UpdateEvent>__unused)updateEvent
                               inManagedObjectContext:(NSManagedObjectContext *__unused)moc
                                       prefetchResult:(__unused ZMFetchRequestBatchResult *)prefetchResult
 {
@@ -642,7 +642,7 @@ NSString * const ZMMessageDecryptionErrorCodeKey = @"decryptionErrorCode";
     return [[super shortDebugDescription] stringByAppendingFormat:@", \'%@\'", self.text];
 }
 
-+ (instancetype)createOrUpdateMessageFromUpdateEvent:(ZMUpdateEvent __unused *)updateEvent
++ (instancetype)createOrUpdateMessageFromUpdateEvent:(id<UpdateEvent> __unused *)updateEvent
                               inManagedObjectContext:(NSManagedObjectContext __unused *)moc
                                       prefetchResult:(ZMFetchRequestBatchResult __unused *)prefetchResult
 {
@@ -743,7 +743,7 @@ NSString * const ZMMessageDecryptionErrorCodeKey = @"decryptionErrorCode";
     return @"KnockMessage";
 }
 
-+ (instancetype)createOrUpdateMessageFromUpdateEvent:(ZMUpdateEvent __unused *)updateEvent
++ (instancetype)createOrUpdateMessageFromUpdateEvent:(id<UpdateEvent> __unused *)updateEvent
                               inManagedObjectContext:(NSManagedObjectContext __unused *)moc
                                       prefetchResult:(ZMFetchRequestBatchResult __unused *)prefetchResult
 {

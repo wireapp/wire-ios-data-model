@@ -123,7 +123,7 @@ NSString * const DeliveredKey = @"delivered";
     NSAssert(FALSE, @"Subclasses should override this method: [%@ %@]", NSStringFromClass([self class]), NSStringFromSelector(_cmd));
 }
 
-+ (instancetype)createOrUpdateMessageFromUpdateEvent:(ZMUpdateEvent *)updateEvent
++ (instancetype)createOrUpdateMessageFromUpdateEvent:(id<UpdateEvent>)updateEvent
                               inManagedObjectContext:(NSManagedObjectContext *)moc
                                       prefetchResult:(ZMFetchRequestBatchResult *)prefetchResult
 {

@@ -37,7 +37,9 @@ extension ZMMessageTests {
 
         ///TODO: mockEvent with UpdateEvent
         let updateEvent = mockEvent(of: updateEventType, for: conversation, sender: senderID, data: data)
-        let systemMessage = ZMSystemMessage.createOrUpdate(from: updateEvent as! UpdateEvent, in: uiMOC, prefetchResult: nil)
+        let systemMessage = ZMSystemMessage.createOrUpdate(from: updateEvent as! UpdateEvent,
+                                                           in: uiMOC,
+                                                           prefetchResult: nil)
         return systemMessage
     }
 

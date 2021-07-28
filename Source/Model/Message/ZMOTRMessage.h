@@ -41,7 +41,7 @@ extern NSString * const DeliveredKey;
 
 - (void)updateWithUpdateEvent:(id<UpdateEvent>)updateEvent initialUpdate:(BOOL)initialUpdate;
 
-+ (instancetype _Nullable)createOrUpdateMessageFromUpdateEvent:(ZMUpdateEvent *)updateEvent
++ (instancetype _Nullable)createOrUpdateMessageFromUpdateEvent:(id<UpdateEvent>)updateEvent
                                         inManagedObjectContext:(NSManagedObjectContext *)moc
                                                 prefetchResult:(ZMFetchRequestBatchResult * _Nullable)prefetchResult;
 
