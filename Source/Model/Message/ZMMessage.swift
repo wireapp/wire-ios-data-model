@@ -28,10 +28,10 @@ extension ZMMessage {
     }
     
     @objc(conversationForUpdateEvent:inContext:prefetchResult:)
-    public class func conversation(for event: ZMUpdateEvent?,
+    public class func conversation(for event: UpdateEvent?,
                                    in moc: NSManagedObjectContext?,
                                    prefetchResult: ZMFetchRequestBatchResult?) -> ZMConversation? {
-        guard let conversationUUID = event?.conversationUUID,
+        guard let conversationUUID = (event as? SwiftUpdateEvent)?.conversationUUID,
               let moc = moc else { return nil }
         
         if let conversation = prefetchResult?.conversationsByRemoteIdentifier[conversationUUID] {
