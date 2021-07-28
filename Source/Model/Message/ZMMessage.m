@@ -816,7 +816,7 @@ NSString * const ZMMessageDecryptionErrorCodeKey = @"decryptionErrorCode";
     ZMSystemMessage *message = [[ZMSystemMessage alloc] initWithNonce:NSUUID.UUID managedObjectContext:moc];
     message.systemMessageType = type;
     message.visibleInConversation = conversation;
-    message.serverTimestamp = updateEvent.timestamp;
+    [message setServerTimestampWithUpdateEvent: updateEvent];
     
     [message updateWithUpdateEvent:updateEvent forConversation:conversation];
     

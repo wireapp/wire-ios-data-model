@@ -22,6 +22,11 @@
 import Foundation
 
 extension ZMMessage {
+    @objc
+    func setServerTimestamp(updateEvent: ZMUpdateEvent) {
+        serverTimestamp = updateEvent.timestamp;
+    }
+    
     @objc(conversationForUpdateEvent:inContext:prefetchResult:)
     public class func conversation(for event: ZMUpdateEvent?,
                                    in moc: NSManagedObjectContext?,

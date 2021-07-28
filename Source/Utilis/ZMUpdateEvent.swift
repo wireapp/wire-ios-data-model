@@ -29,7 +29,6 @@ public protocol SwiftUpdateEvent: NSObjectProtocol {
 
 @objc
 public protocol UpdateEvent: NSObjectProtocol {
-    
     //from Transport
     var type: ZMUpdateEventType { get }
     var payload: [AnyHashable : Any] { get }
@@ -42,7 +41,6 @@ extension ZMUpdateEvent: SwiftUpdateEvent {
         return payload as NSDictionary
     }
     
-//    @objc
     public var conversationUUID: UUID? {
         if type == .userConnection {
             return (payloadDictionary.optionalDictionary(forKey: "connection")! as NSDictionary).optionalUuid(forKey: "conversation")
@@ -55,26 +53,24 @@ extension ZMUpdateEvent: SwiftUpdateEvent {
 
     }
     
-//    @objc
     public var senderUUID: UUID? {
         if type == .userConnection {
-            return ((payload as NSDictionary).optionalDictionary(forKey: "connection")! as NSDictionary).optionalUuid(forKey: "to")
+            return (payloadDictionary.optionalDictionary(forKey: "connection")! as NSDictionary).optionalUuid(forKey: "to")
         }
 
         if type == .userContactJoin {
-            return ((payload as NSDictionary).optionalDictionary(forKey: "user")! as NSDictionary).optionalUuid(forKey: "id")
+            return (payloadDictionary.optionalDictionary(forKey: "user")! as NSDictionary).optionalUuid(forKey: "id")
         }
 
-        return (payload as NSDictionary).optionalUuid(forKey: "from")
+        return payloadDictionary.optionalUuid(forKey: "from")
     }
     
-//    @objc
     public var timestamp: Date? {
         if isTransient || type == .userConnection {
             return nil
         }
         
-        return (payload as NSDictionary).date(for: "time")
+        return payloadDictionary.date(for: "time")
     }
     
 //    @objc
@@ -101,7 +97,7 @@ extension ZMUpdateEvent: SwiftUpdateEvent {
 extension ZMUpdateEvent {
     
     public var userIDs: [UUID] {
-        guard let dataPayload = (payload as NSDictionary).dictionary(forKey: "data"),
+        guard let dataPayload = payloadDictionary.dictionary(forKey: "data"),
             let userIds = dataPayload["user_ids"] as? [String] else {
                 return []
         }
@@ -109,7 +105,7 @@ extension ZMUpdateEvent {
     }
 
     public var participantsRemovedReason: ZMParticipantsRemovedReason {
-        guard let dataPayload = (payload as NSDictionary).dictionary(forKey: "data"),
+        guard let dataPayload = payloadDictionary.dictionary(forKey: "data"),
               let reasonString = dataPayload["reason"] as? String else {
             return ZMParticipantsRemovedReason.none
         }
