@@ -236,7 +236,7 @@ extension ZMConversation {
     
     
     @objc(shouldAddEvent:)
-    public func shouldAdd(event: ZMUpdateEvent) -> Bool {
+    public func shouldAdd(event: UpdateEvent) -> Bool {
         if let clearedTime = self.clearedTimeStamp, let time = event.timestamp,
             clearedTime.compare(time) != .orderedAscending {
             return false

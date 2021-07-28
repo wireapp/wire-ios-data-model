@@ -60,7 +60,9 @@ open class ZMMessageConfirmation: ZMManagedObject, ReadReceipt {
     /// Creates a ZMMessageConfirmation objects that holds a reference to a message that was confirmed and the user who confirmed it.
     /// It can have 2 types: Delivered and Read depending on the confirmation type
     @discardableResult
-    public static func createMessageConfirmations(_ confirmation: Confirmation, conversation: ZMConversation, updateEvent: ZMUpdateEvent) -> [ZMMessageConfirmation] {
+    public static func createMessageConfirmations(_ confirmation: Confirmation,
+                                                  conversation: ZMConversation,
+                                                  updateEvent: UpdateEvent) -> [ZMMessageConfirmation] {
         
         let type = MessageConfirmationType.convert(confirmation.type)
         

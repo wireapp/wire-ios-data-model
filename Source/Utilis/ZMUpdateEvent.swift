@@ -19,12 +19,15 @@
 import Foundation
 
 @objc
-protocol UpdateEvent {
+public protocol UpdateEvent {
     var type: WireTransport.ZMUpdateEventType { get }
     var conversationUUID: UUID? { get }
     var payload: [AnyHashable : Any] { get }
     
     var timestamp: Date? { get }
+    var senderUUID: UUID? { get }
+    var senderClientID: String? { get }
+//    var messageNonce: UUID? { get }
 }
 
 extension ZMUpdateEvent: UpdateEvent {}

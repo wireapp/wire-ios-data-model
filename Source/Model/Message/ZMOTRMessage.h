@@ -39,7 +39,7 @@ extern NSString * const DeliveredKey;
 - (void)doesNotMissRecipient:(UserClient *)recipient;
 - (void)doesNotMissRecipients:(NSSet<UserClient *> *)recipients;
 
-- (void)updateWithUpdateEvent:(ZMUpdateEvent *)updateEvent initialUpdate:(BOOL)initialUpdate;
+- (void)updateWithUpdateEvent:(id<UpdateEvent>)updateEvent initialUpdate:(BOOL)initialUpdate;
 
 + (instancetype _Nullable)createOrUpdateMessageFromUpdateEvent:(ZMUpdateEvent *)updateEvent
                                         inManagedObjectContext:(NSManagedObjectContext *)moc

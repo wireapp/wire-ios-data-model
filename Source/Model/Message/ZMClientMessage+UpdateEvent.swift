@@ -19,11 +19,12 @@
 import Foundation
 
 extension ZMClientMessage {
-    override open func update(with updateEvent: ZMUpdateEvent, initialUpdate: Bool) {
+    override open func update(with updateEvent: UpdateEvent,
+                              initialUpdate: Bool) {
         guard let message = GenericMessage(from: updateEvent) else { return }
 
         guard initialUpdate else {
-            applyLinkPreviewUpdate(message, from: updateEvent)
+            applyLinkPreviewUpdate(message, from: updateEvent as! ZMUpdateEvent)
             return
         }
 

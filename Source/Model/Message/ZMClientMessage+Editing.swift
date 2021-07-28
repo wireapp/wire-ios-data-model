@@ -21,7 +21,7 @@ import Foundation
 extension ZMClientMessage {
     static func editMessage(withEdit messageEdit: MessageEdit,
                             forConversation conversation: ZMConversation,
-                            updateEvent: ZMUpdateEvent,
+                            updateEvent: UpdateEvent,
                             inContext moc: NSManagedObjectContext,
                             prefetchResult: ZMFetchRequestBatchResult) -> ZMClientMessage? {
         guard
@@ -41,9 +41,9 @@ extension ZMClientMessage {
     /// - parameter updateEvent: Update event which delivered the message edit update
     /// - Returns: true if edit was succesfully applied
     
-    func processMessageEdit(_ messageEdit: MessageEdit, from updateEvent: ZMUpdateEvent) -> Bool {
+    func processMessageEdit(_ messageEdit: MessageEdit, from updateEvent: UpdateEvent) -> Bool {
         guard
-            let nonce = updateEvent.messageNonce,
+            let nonce = (updateEvent as? ZMUpdateEvent)?.messageNonce, ///TODO:
             let senderUUID = updateEvent.senderUUID,
             let originalText = underlyingMessage?.textData,
             case .text? = messageEdit.content,

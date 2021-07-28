@@ -23,27 +23,25 @@ private let zmLog = ZMSLog(tag: "event-processing")
 extension ZMOTRMessage {
     
     @objc
-    static func createOrUpdate(fromUpdateEvent updateEvent: ZMUpdateEvent,
+    static func createOrUpdate(fromUpdateEvent updateEvent: UpdateEvent,
                                      inManagedObjectContext moc: NSManagedObjectContext,
                                      prefetchResult: ZMFetchRequestBatchResult) -> ZMOTRMessage? {
         
         let selfUser = ZMUser.selfUser(in: moc)
         
-        guard
-            let senderID = updateEvent.senderUUID,
-            let conversation = self.conversation(for: updateEvent, in: moc, prefetchResult: prefetchResult),
-            !isSelf(conversation: conversation, andIsSenderID: senderID, differentFromSelfUserID: selfUser.remoteIdentifier)
+        guard let senderID = updateEvent.senderUUID,
+              let conversation = self.conversation(for: updateEvent, in: moc, prefetchResult: prefetchResult),
+              !isSelf(conversation: conversation, andIsSenderID: senderID, differentFromSelfUserID: selfUser.remoteIdentifier)
             else {
                 zmLog.debug("Illegal sender or conversation, abort processing.")
                 return nil
         }
         
-        guard
-            let message = GenericMessage(from: updateEvent),
+        guard let message = GenericMessage(from: updateEvent),
             let content = message.content
             else {
                 zmLog.debug("Can't read protobuf, abort processing:\n\(updateEvent.payload)")
-                appendInvalidSystemMessage(forUpdateEvent: updateEvent, toConversation: conversation, inContext: moc)
+            appendInvalidSystemMessage(forUpdateEvent: updateEvent, toConversation: conversation, inContext: moc)
                 return nil
         }
         zmLog.debug("Processing:\n\(message)")
@@ -84,13 +82,19 @@ extension ZMOTRMessage {
             ZMMessage.add(reaction: message.reaction, senderID: senderID, conversation: conversation, inContext: moc)
 
         case .confirmation:
-            ZMMessageConfirmation.createMessageConfirmations(message.confirmation, conversation: conversation, updateEvent: updateEvent)
+            ZMMessageConfirmation.createMessageConfirmations(message.confirmation,
+                                                             conversation: conversation,
+                                                             updateEvent: updateEvent)
 
         case .buttonActionConfirmation:
             ZMClientMessage.updateButtonStates(withConfirmation: message.buttonActionConfirmation, forConversation: conversation, inContext: moc)
 
         case .edited:
-            return ZMClientMessage.editMessage(withEdit: message.edited, forConversation: conversation, updateEvent: updateEvent, inContext: moc, prefetchResult: prefetchResult)
+            return ZMClientMessage.editMessage(withEdit: message.edited,
+                                               forConversation: conversation,
+                                               updateEvent: updateEvent,
+                                               inContext: moc,
+                                               prefetchResult: prefetchResult)
             
         case .clientAction(.resetSession):
             guard
@@ -151,7 +155,7 @@ extension ZMOTRMessage {
             }
             
             // In case of AssetMessages: If the payload does not match the sha265 digest, calling `updateWithGenericMessage:updateEvent` will delete the object.
-            clientMessage?.update(with: updateEvent, initialUpdate: isNewMessage)
+            clientMessage?.update(with: updateEvent as! ZMUpdateEvent, initialUpdate: isNewMessage)
 
             // It seems that if the object was inserted and immediately deleted, the isDeleted flag is not set to true.
             // In addition the object will still have a managedObjectContext until the context is finally saved. In this
@@ -161,7 +165,8 @@ extension ZMOTRMessage {
                 return nil
             }
             
-            clientMessage?.update(with: updateEvent, for: conversation)
+            clientMessage?.update(with: updateEvent as! ZMUpdateEvent,
+                                  for: conversation)
             clientMessage?.unarchiveIfNeeded(conversation)
             clientMessage?.updateCategoryCache()
             
@@ -184,7 +189,7 @@ extension ZMOTRMessage {
         return conversation.conversationType == .group && senderID != selfUserID
     }
     
-    private static func appendInvalidSystemMessage(forUpdateEvent event: ZMUpdateEvent, toConversation conversation: ZMConversation, inContext moc: NSManagedObjectContext) {
+    private static func appendInvalidSystemMessage(forUpdateEvent event: UpdateEvent, toConversation conversation: ZMConversation, inContext moc: NSManagedObjectContext) {
         guard let remoteId = event.senderUUID,
             let sender = ZMUser(remoteID: remoteId, createIfNeeded: false, in: moc) else {
                 return
