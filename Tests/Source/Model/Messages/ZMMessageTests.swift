@@ -29,7 +29,8 @@ public final class MockUpdateEvent: NSObject, UpdateEvent {
     public var senderUUID: UUID?
     
     public var type: ZMUpdateEventType
-    
+    public var payload: [AnyHashable : Any] = [:]
+
     init(type: ZMUpdateEventType) {
         self.type = type
     }
@@ -43,18 +44,29 @@ extension ZMMessageTests {
                             data: [AnyHashable : Any]?) -> MockUpdateEvent {
         let updateEvent = MockUpdateEvent(type: type)
 
-        //        let serverTimeStamp: Date? = (conversation?.lastServerTimeStamp ? conversation?.lastServerTimeStamp.addingTimeInterval(5) : Date()) as? Date
-//        let from = senderID ?? NSUUID.createUUID
-//        var payload: [StringLiteralConvertible : UnknownType?]? = nil
-//        if let transportString = conversation?.remoteIdentifier.transportString, let transportString1 = serverTimeStamp?.transportString, let transportString2 = from?.transportString, let data = data {
-//            payload = [
-//                "conversation": transportString,
-//                "time": transportString1,
-//                "from": transportString2,
-//                "data": data
-//            ]
-//        }
-//        (updateEvent?.stub().andReturn(payload) as? ZMUpdateEvent)?.payload()
+        let serverTimeStamp: Date
+                    
+        if let lastServerTimeStamp = conversation?.lastServerTimeStamp {
+            serverTimeStamp = lastServerTimeStamp.addingTimeInterval(5)
+        } else {
+            serverTimeStamp = Date()
+        }
+        
+        let from = senderID ?? UUID()
+        
+        if let remoteIdentifier = conversation?.remoteIdentifier?.transportString,
+           let data = data {
+            let payload = [
+                "conversation": remoteIdentifier,
+                "time": serverTimeStamp.transportString,
+                "from": from.transportString,
+                "data": data
+            ] as [String : Any]
+
+            updateEvent.payload = payload
+        }
+        
+        
 //
 //        (updateEvent?.stub().andReturn(serverTimeStamp) as? ZMUpdateEvent)?.timestamp()
 //        (updateEvent?.stub().andReturn(conversation?.remoteIdentifier) as? ZMUpdateEvent)?.conversationUUID()

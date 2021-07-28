@@ -27,6 +27,7 @@ public protocol UpdateEvent: NSObjectProtocol {
     
     //from Transport
     var type: ZMUpdateEventType { get }
+    var payload: [AnyHashable : Any] { get }
 }
 
 extension ZMUpdateEvent: UpdateEvent {
