@@ -19,6 +19,27 @@
 import Foundation
 
 extension ZMMessageTests {
+    @objc(createSystemMessageFromType:inConversation:withUsersIDs:senderID:)
+    func createSystemMessage(from updateEventType: ZMUpdateEventType,
+                             in conversation: ZMConversation?,
+                             withUsersIDs userIDs: [ZMTransportEncoding]?,
+                             senderID: UUID?) -> ZMSystemMessage? {
+        var data: [String : Any]? = nil
+        if let transportStrings = userIDs?.map({ obj in
+            return obj.transportString()
+        }) {
+            data = [
+                "user_ids": transportStrings,
+                "reason": "missed"
+            ]
+        }
+//        open func mockEvent(of type: ZMUpdateEventType, for conversation: ZMConversation!, sender senderID: UUID!, data: [AnyHashable : Any]!) -> Any!
+
+        let updateEvent = mockEvent(of: updateEventType, for: conversation, sender: senderID, data: data)
+        let systemMessage = ZMSystemMessage.createOrUpdate(from: updateEvent as! ZMUpdateEvent, in: uiMOC, prefetchResult: nil)
+        return systemMessage
+    }
+
     func testThatSpecialKeysAreNotPartOfTheLocallyModifiedKeysForClientMessages() {
         // when
         let message = ZMClientMessage(nonce: NSUUID.create(), managedObjectContext: uiMOC)
