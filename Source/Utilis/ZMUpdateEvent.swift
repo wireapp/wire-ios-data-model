@@ -18,6 +18,7 @@
 
 import Foundation
 
+//non objc properties added in Data Model
 public protocol SwiftUpdateEvent: NSObjectProtocol {
     var messageNonce: UUID? { get }
     var timestamp: Date? { get }
@@ -27,9 +28,9 @@ public protocol SwiftUpdateEvent: NSObjectProtocol {
     var participantsRemovedReason: ZMParticipantsRemovedReason { get }
 }
 
+//objc properties in Transport
 @objc
 public protocol UpdateEvent: NSObjectProtocol {
-    //from Transport
     var type: ZMUpdateEventType { get }
     var payload: [AnyHashable : Any] { get }
 }
@@ -73,7 +74,6 @@ extension ZMUpdateEvent: SwiftUpdateEvent {
         return payloadDictionary.date(for: "time")
     }
     
-//    @objc
     public var messageNonce: UUID? {
         switch type {
         case .conversationMessageAdd,

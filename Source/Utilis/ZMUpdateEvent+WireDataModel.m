@@ -25,31 +25,6 @@
 
 @implementation ZMUpdateEvent (WireDataModel)
 
-//- (NSUUID *)senderUUID
-//{
-//    if (self.type == ZMUpdateEventTypeUserConnection) {
-//        return [[self.payload optionalDictionaryForKey:@"connection"] optionalUuidForKey:@"to"];
-//    }
-//    
-//    if (self.type == ZMUpdateEventTypeUserContactJoin) {
-//        return [[self.payload optionalDictionaryForKey:@"user"] optionalUuidForKey:@"id"];
-//    }
-//
-//    return [self.payload optionalUuidForKey:@"from"];
-//}
-
-//- (NSUUID *)conversationUUID;
-//{
-//    if (self.type == ZMUpdateEventTypeUserConnection) {
-//        return  [[self.payload optionalDictionaryForKey:@"connection"] optionalUuidForKey:@"conversation"];
-//    }
-//    if (self.type == ZMUpdateEventTypeTeamConversationDelete) {
-//        return [[self.payload optionalDictionaryForKey:@"data"] optionalUuidForKey:@"conv"];
-//    }
-//    
-//    return [self.payload optionalUuidForKey:@"conversation"];
-//}
-
 - (NSString *)senderClientID
 {
     if (self.type == ZMUpdateEventTypeConversationOtrMessageAdd || self.type == ZMUpdateEventTypeConversationOtrAssetAdd) {
