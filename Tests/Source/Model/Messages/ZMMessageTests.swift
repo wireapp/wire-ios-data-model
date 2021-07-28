@@ -19,6 +19,7 @@
 import Foundation
 
 extension ZMMessageTests {
+    
     @objc(createSystemMessageFromType:inConversation:withUsersIDs:senderID:)
     func createSystemMessage(from updateEventType: ZMUpdateEventType,
                              in conversation: ZMConversation?,
@@ -33,7 +34,6 @@ extension ZMMessageTests {
                 "reason": "missed"
             ]
         }
-//        open func mockEvent(of type: ZMUpdateEventType, for conversation: ZMConversation!, sender senderID: UUID!, data: [AnyHashable : Any]!) -> Any!
 
         let updateEvent = mockEvent(of: updateEventType, for: conversation, sender: senderID, data: data)
         let systemMessage = ZMSystemMessage.createOrUpdate(from: updateEvent as! ZMUpdateEvent, in: uiMOC, prefetchResult: nil)

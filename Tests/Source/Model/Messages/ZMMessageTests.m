@@ -32,6 +32,7 @@
 #import <OCMock/OCMock.h>
 #import "ZMUpdateEvent+WireDataModel.h"
 #import "NSString+RandomString.h"
+#import "WireDataModelTests-Swift.h"
 
 NSString * const IsExpiredKey = @"isExpired";
 NSString * const ReactionsKey = @"reactions";
