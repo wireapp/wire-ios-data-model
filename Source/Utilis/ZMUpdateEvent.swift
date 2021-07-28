@@ -18,21 +18,26 @@
 
 import Foundation
 
-@objc
-public protocol UpdateEvent: NSObjectProtocol {
+public protocol SwiftUpdateEvent: NSObjectProtocol {
     var messageNonce: UUID? { get }
     var timestamp: Date? { get }
     var conversationUUID: UUID? { get }
     /// May be nil (e.g. transient events)
     var senderUUID: UUID? { get }
     var participantsRemovedReason: ZMParticipantsRemovedReason { get }
+}
+
+@objc
+public protocol UpdateEvent: NSObjectProtocol {
     
     //from Transport
     var type: ZMUpdateEventType { get }
     var payload: [AnyHashable : Any] { get }
 }
 
-extension ZMUpdateEvent: UpdateEvent {
+extension ZMUpdateEvent: UpdateEvent {}
+
+extension ZMUpdateEvent: SwiftUpdateEvent {
     private var payloadDictionary: NSDictionary {
         return payload as NSDictionary
     }
@@ -43,7 +48,7 @@ extension ZMUpdateEvent: UpdateEvent {
             return (payloadDictionary.optionalDictionary(forKey: "connection")! as NSDictionary).optionalUuid(forKey: "conversation")
         }
         if type == .teamConversationDelete {
-            return (payloadDictionary.optionalDictionary(forKey: "data") as! NSDictionary).optionalUuid(forKey: "conv")
+            return (payloadDictionary.optionalDictionary(forKey: "data")! as NSDictionary).optionalUuid(forKey: "conv")
         }
 
         return payloadDictionary.optionalUuid(forKey: "conversation")
@@ -57,7 +62,7 @@ extension ZMUpdateEvent: UpdateEvent {
         }
 
         if type == .userContactJoin {
-            return ((payload as NSDictionary).optionalDictionary(forKey: "user") as! NSDictionary).optionalUuid(forKey: "id")
+            return ((payload as NSDictionary).optionalDictionary(forKey: "user")! as NSDictionary).optionalUuid(forKey: "id")
         }
 
         return (payload as NSDictionary).optionalUuid(forKey: "from")
