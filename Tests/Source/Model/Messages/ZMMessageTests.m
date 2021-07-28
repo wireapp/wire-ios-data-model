@@ -29,7 +29,6 @@
 #import "NSManagedObjectContext+zmessaging.h"
 #import "ZMMessageTests.h"
 #import "MessagingTest+EventFactory.h"
-#import <OCMock/OCMock.h>
 #import "ZMUpdateEvent+WireDataModel.h"
 #import "NSString+RandomString.h"
 #import "WireDataModelTests-Swift.h"
@@ -787,7 +786,7 @@ NSUInteger const ZMClientMessageByteSizeExternalThreshold = 128000;
 - (ZMSystemMessage *)createConversationNameChangeSystemMessageInConversation:(ZMConversation *)conversation inManagedObjectContext:(NSManagedObjectContext *)moc
 {
     NSDictionary *data = @{@"name" : conversation.displayName};
-    ZMUpdateEvent *updateEvent = [self mockEventOfType:ZMUpdateEventTypeConversationRename forConversation:conversation sender:nil data:data];
+    MockUpdateEvent *updateEvent = [self mockEventOfType:ZMUpdateEventTypeConversationRename forConversation:conversation sender:nil data:data];
 
     ZMSystemMessage *systemMessage = [ZMSystemMessage createOrUpdateMessageFromUpdateEvent:updateEvent inManagedObjectContext:moc prefetchResult:nil];
     return systemMessage;
@@ -798,7 +797,7 @@ NSUInteger const ZMClientMessageByteSizeExternalThreshold = 128000;
     NSDictionary *data = @{
                            @"message" : @"This is a very important message"
                            };
-    ZMUpdateEvent *updateEvent = [self mockEventOfType:ZMUpdateEventTypeConversationConnectRequest forConversation:conversation sender:nil data:data];
+    MockUpdateEvent *updateEvent = [self mockEventOfType:ZMUpdateEventTypeConversationConnectRequest forConversation:conversation sender:nil data:data];
     ZMSystemMessage *systemMessage = [ZMSystemMessage createOrUpdateMessageFromUpdateEvent:updateEvent inManagedObjectContext:moc prefetchResult:nil];
     return systemMessage;
 }

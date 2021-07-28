@@ -208,7 +208,7 @@ extern NSString * _Nonnull const ZMMessageNeedsLinkAttachmentsUpdateKey;
 /// which should be used to avoid premature fetchRequests. If the class needs messages or conversations to be prefetched
 /// and passed into this method it should conform to `ZMObjectStrategy` and return them in
 /// `-messageNoncesToPrefetchToProcessEvents:` or `-conversationRemoteIdentifiersToPrefetchToProcessEvents`
-+ (instancetype _Nullable)createOrUpdateMessageFromUpdateEvent:(ZMUpdateEvent * _Nonnull)updateEvent
++ (instancetype _Nullable)createOrUpdateMessageFromUpdateEvent:(id<UpdateEvent> _Nonnull)updateEvent
                               inManagedObjectContext:(NSManagedObjectContext * _Nonnull)moc
                                       prefetchResult:(ZMFetchRequestBatchResult * _Nullable)prefetchResult;
 

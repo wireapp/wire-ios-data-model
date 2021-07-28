@@ -521,7 +521,7 @@ NSString * const ZMMessageDecryptionErrorCodeKey = @"decryptionErrorCode";
 }
 
 
-+ (instancetype)createOrUpdateMessageFromUpdateEvent:(ZMUpdateEvent *__unused)updateEvent
++ (instancetype)createOrUpdateMessageFromUpdateEvent:(id<UpdateEvent>__unused)updateEvent
                               inManagedObjectContext:(NSManagedObjectContext *__unused)moc
                                       prefetchResult:(__unused ZMFetchRequestBatchResult *)prefetchResult
 {
