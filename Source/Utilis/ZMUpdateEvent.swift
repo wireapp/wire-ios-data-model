@@ -18,7 +18,12 @@
 
 import Foundation
 
-extension ZMUpdateEvent {
+@objc
+public protocol UpdateEvent: NSObjectProtocol {
+    var messageNonce: UUID? { get }
+}
+
+extension ZMUpdateEvent: UpdateEvent {
     public var messageNonce: UUID? {
         switch type {
         case .conversationMessageAdd,
@@ -37,6 +42,9 @@ extension ZMUpdateEvent {
             return nil
         }
     }
+}
+
+extension ZMUpdateEvent {
     
     public var userIDs: [UUID] {
         guard let dataPayload = (payload as NSDictionary).dictionary(forKey: "data"),
