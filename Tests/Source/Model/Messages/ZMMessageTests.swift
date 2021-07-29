@@ -21,33 +21,33 @@ import Foundation
 final class MockUpdateEvent: NSObject, UpdateEvent {
     var type: WireTransport.ZMUpdateEventType = ZMUpdateEventType.unknown
     var conversationUUID: UUID?
-    var payload: [AnyHashable : Any] = [:]
-    
+    var payload: [AnyHashable: Any] = [:]
+
     var timestamp: Date?
     var senderUUID: UUID?
     var senderClientID: String?
 }
 
 extension ZMMessageTests {
-    
+
     @objc(mockEventOfType:forConversation:sender:data:)
     func mockEvent(of type: ZMUpdateEventType,
                             for conversation: ZMConversation?,
                             sender senderID: UUID?,
-                            data: [AnyHashable : Any]?) -> MockUpdateEvent {
+                            data: [AnyHashable: Any]?) -> MockUpdateEvent {
         let updateEvent = MockUpdateEvent()
         updateEvent.type = type
 
         let serverTimeStamp: Date
-                    
+
         if let lastServerTimeStamp = conversation?.lastServerTimeStamp {
             serverTimeStamp = lastServerTimeStamp.addingTimeInterval(5)
         } else {
             serverTimeStamp = Date()
         }
-        
+
         let from = senderID ?? UUID()
-        
+
         if let remoteIdentifier = conversation?.remoteIdentifier?.transportString,
            let data = data {
             let payload = [
@@ -55,11 +55,11 @@ extension ZMMessageTests {
                 "time": serverTimeStamp.transportString,
                 "from": from.transportString,
                 "data": data
-            ] as [String : Any]
+            ] as [String: Any]
 
             updateEvent.payload = payload
         }
-        
+
         updateEvent.timestamp = serverTimeStamp
         updateEvent.conversationUUID = conversation?.remoteIdentifier
         updateEvent.senderUUID = from
@@ -72,7 +72,7 @@ extension ZMMessageTests {
                              in conversation: ZMConversation?,
                              withUsersIDs userIDs: [ZMTransportEncoding]?,
                              senderID: UUID?) -> ZMSystemMessage? {
-        var data: [String : Any]? = nil
+        var data: [String: Any]?
         if let transportStrings = userIDs?.map({ obj in
             return obj.transportString()
         }) {
@@ -92,12 +92,12 @@ extension ZMMessageTests {
     func testThatSpecialKeysAreNotPartOfTheLocallyModifiedKeysForClientMessages() {
         // when
         let message = ZMClientMessage(nonce: NSUUID.create(), managedObjectContext: uiMOC)
-        
+
         // then
         let keysThatShouldBeTracked = Set<AnyHashable>(["dataSet", "linkPreviewState"])
         XCTAssertEqual(message.keysTrackedForLocalModifications(), keysThatShouldBeTracked)
     }
-    
+
     func testThatFlagIsNotSetWhenSenderIsNotTheOnlyUser() {
         // given
         let conversation = ZMConversation.insertNewObject(in: uiMOC)
@@ -115,10 +115,10 @@ extension ZMMessageTests {
         let userIDs: [ZMTransportEncoding] = [sender.remoteIdentifier as NSUUID,
                                               user.remoteIdentifier as NSUUID]
         var message: ZMSystemMessage?
-        performPretendingUiMocIsSyncMoc{ [weak self] in
+        performPretendingUiMocIsSyncMoc { [weak self] in
             message = self?.createSystemMessage(from: .conversationMemberJoin, in: conversation, withUsersIDs: userIDs, senderID: sender.remoteIdentifier)
         }
-        
+
         uiMOC.saveOrRollback()
         _ = waitForAllGroupsToBeEmpty(withTimeout: 0.5)
 

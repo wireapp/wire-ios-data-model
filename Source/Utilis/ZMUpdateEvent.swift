@@ -22,8 +22,8 @@ import Foundation
 public protocol UpdateEvent {
     var type: WireTransport.ZMUpdateEventType { get }
     var conversationUUID: UUID? { get }
-    var payload: [AnyHashable : Any] { get }
-    
+    var payload: [AnyHashable: Any] { get }
+
     var timestamp: Date? { get }
     var senderUUID: UUID? { get }
     var senderClientID: String? { get }

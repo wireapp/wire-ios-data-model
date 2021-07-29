@@ -29,7 +29,6 @@
 #import "NSManagedObjectContext+zmessaging.h"
 #import "ZMMessageTests.h"
 #import "MessagingTest+EventFactory.h"
-#import <OCMock/OCMock.h>
 #import "ZMUpdateEvent+WireDataModel.h"
 #import "NSString+RandomString.h"
 #import "WireDataModelTests-Swift.h"
