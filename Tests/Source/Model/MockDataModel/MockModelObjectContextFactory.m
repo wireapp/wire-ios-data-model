@@ -27,7 +27,6 @@
 #import "NSManagedObjectContext+tests.h"
 
 
-
 @implementation MockModelObjectContextFactory
 
 + (NSManagedObjectContext *)alternativeMocForPSC:(NSPersistentStoreCoordinator *)psc
