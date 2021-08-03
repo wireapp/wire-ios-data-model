@@ -97,7 +97,7 @@ extension ZMMessageTests {
         let keysThatShouldBeTracked = Set<AnyHashable>(["dataSet", "linkPreviewState"])
         XCTAssertEqual(message.keysTrackedForLocalModifications(), keysThatShouldBeTracked)
     }
-
+    
     func testThatFlagIsNotSetWhenSenderIsNotTheOnlyUser() {
         // given
         let conversation = ZMConversation.insertNewObject(in: uiMOC)
@@ -115,10 +115,10 @@ extension ZMMessageTests {
         let userIDs: [ZMTransportEncoding] = [sender.remoteIdentifier as NSUUID,
                                               user.remoteIdentifier as NSUUID]
         var message: ZMSystemMessage?
-        performPretendingUiMocIsSyncMoc { [weak self] in
+        performPretendingUiMocIsSyncMoc{ [weak self] in
             message = self?.createSystemMessage(from: .conversationMemberJoin, in: conversation, withUsersIDs: userIDs, senderID: sender.remoteIdentifier)
         }
-
+        
         uiMOC.saveOrRollback()
         _ = waitForAllGroupsToBeEmpty(withTimeout: 0.5)
 
