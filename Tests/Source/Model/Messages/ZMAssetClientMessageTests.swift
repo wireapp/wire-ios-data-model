@@ -1427,7 +1427,7 @@ extension ZMAssetClientMessageTests {
         // GIVEN
         let gifMIME = "image/gif"
         // WHEN
-        let isGif = UTType(mimeType: gifMIME)?.isGIF
+        let isGif = UTIHelper.conformsToGifType(mime: gifMIME)
         // THEN
         XCTAssertEqual(isGif, true)
     }
@@ -1437,7 +1437,7 @@ extension ZMAssetClientMessageTests {
         
         ["text/plain", "application/pdf", "image/jpeg", "video/mp4"].forEach {
             // WHEN
-            let isGif = UTType(mimeType: $0)?.isGIF
+            let isGif = UTIHelper.conformsToGifType(mime: $0)
             
             // THEN
             XCTAssertEqual(isGif, false)

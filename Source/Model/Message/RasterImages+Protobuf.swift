@@ -18,29 +18,19 @@
 
 public extension WireProtos.Asset.Original {
     var hasRasterImage: Bool {
-        guard case .image? = self.metaData else {
+        guard case .image? = metaData else {
             return false
         }
         
-        // FUTUREWORK remove once arm64 simulator support have been added JIRA ticket: SQPIT-583
-        #if targetEnvironment(simulator)
-        if let utType = UTType(mimeType: mimeType) {
-            return utType.isSVG == false
-        } else if mimeType == "image/svg+xml" {
-            return false
-        }
-        #else
-        guard UTType(mimeType: mimeType)?.isSVG == false else {
-            return false
-        }
-        #endif
-        return true
+        guard let uti = UTIHelper.convertToUti(mime: mimeType) else { return false }
+        
+        return !UTIHelper.conformsToVectorType(uti: uti)
     }
 }
 
 fileprivate extension ImageAsset {
     var isRaster: Bool {
-        return UTType(mimeType: mimeType)?.isSVG == false
+        return !UTIHelper.conformsToVectorType(mime: mimeType)
     }
 }
 
