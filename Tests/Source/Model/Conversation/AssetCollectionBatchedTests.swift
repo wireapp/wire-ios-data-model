@@ -95,7 +95,7 @@ class AssetColletionBatchedTests : ModelObjectsTests {
         
         // then
         let receivedMessages = delegate.allMessages(for: defaultMatchPair)
-        XCTAssertTrue(receivedMessages.first!.compare(receivedMessages.last!) == .orderedDescending) ///TODO: fail
+        XCTAssertTrue(receivedMessages.first!.compare(receivedMessages.last!) == .orderedDescending)
         XCTAssertEqual(messages.first, receivedMessages.last)
         XCTAssertEqual(messages.last, receivedMessages.first)
     }
@@ -382,7 +382,7 @@ class AssetColletionBatchedTests : ModelObjectsTests {
         XCTAssertEqual(receivedMessages.first, includedMessage)
     }
     
-    func testThatItDoesNotReturnFailedToUploadAssets_PreCategorized(){ ///TODO: used UTType but still passes
+    func testThatItDoesNotReturnFailedToUploadAssets_PreCategorized() {
         // given
         let includedMessage = try! self.conversation.appendFile(with: ZMVideoMetadata(fileURL: self.fileURL(forResource: "video", extension: "mp4"), thumbnail: self.verySmallJPEGData())) as! ZMAssetClientMessage
         let excludedMessage = try! self.conversation.appendFile(with: ZMVideoMetadata(fileURL: self.fileURL(forResource: "video", extension: "mp4"), thumbnail: self.verySmallJPEGData())) as! ZMAssetClientMessage
