@@ -155,7 +155,7 @@ public protocol ZMConversationMessage : NSObjectProtocol {
     
     var isSilenced: Bool { get }
 
-    /// Whether the message can not be received or shared.
+    /// Whether the asset message can not be received or shared.
     var isRestricted: Bool { get }
 }
 
