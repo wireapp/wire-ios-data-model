@@ -20,7 +20,6 @@
 import Foundation
 import MobileCoreServices
 
-
 @objcMembers
 public class V2Asset: NSObject, ZMImageMessageData {
     
