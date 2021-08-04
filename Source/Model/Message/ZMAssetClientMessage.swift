@@ -147,7 +147,7 @@ import Foundation
             self.willAccessValue(forKey: key)
             let data = self.primitiveValue(forKey: key) as? Data
             self.didAccessValue(forKey: key)
-            let value = data.flatMap { ZMTaskIdentifier.identifier(from: $0) }
+            let value = data.flatMap { ZMTaskIdentifier(from: $0) }
             return value
         }
         set {
