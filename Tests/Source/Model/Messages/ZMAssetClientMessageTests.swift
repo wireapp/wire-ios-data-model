@@ -215,7 +215,6 @@ extension ZMAssetClientMessageTests {
     func testThatItSetsTheGenericAssetMessageWhenCreatingMessage()
     {
         // given
-        let nonce = UUID.create()
         let mimeType = "text/plain"
         let filename = "document.txt"
         let url = testURLWithFilename(filename)
