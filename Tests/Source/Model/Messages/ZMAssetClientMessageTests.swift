@@ -89,7 +89,7 @@ class BaseZMAssetClientMessageTests : BaseZMClientMessageTests {
     
 }
 
-class ZMAssetClientMessageTests : BaseZMAssetClientMessageTests {
+final class ZMAssetClientMessageTests : BaseZMAssetClientMessageTests {
     
     func testThatItDeletesCopiesOfDownloadedFilesIntoTemporaryFolder() {
         // given
