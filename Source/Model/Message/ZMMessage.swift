@@ -22,23 +22,4 @@ import Foundation
 extension ZMMessage {
     
     
-    /// Returns whether the data represents animated GIF
-    /// - Parameter data: image data
-    /// - Returns: returns turn if the data is GIF and number of images > 1
-    @objc
-    class func isDataAnimatedGIF(_ data: Data?) -> Bool {
-        guard let data = data,
-              !data.isEmpty,
-              let source = CGImageSourceCreateWithData(data as CFData, nil),
-              let type = CGImageSourceGetType(source) as String? else {
-            return false
-        }
-        
-        
-        guard UTIHelper.conformsToGifType(mime: type) else {
-            return false
-        }
-
-        return CGImageSourceGetCount(source) > 1
-    }
 }
