@@ -146,7 +146,7 @@
     [remoteIdentifierDataAttribute setName:@"remoteIdentifier_data"];
     [remoteIdentifierDataAttribute setAttributeType:NSBinaryDataAttributeType];
     [remoteIdentifierDataAttribute setOptional:YES];
-//    [remoteIdentifierDataAttribute setIndexed:YES];
+    [remoteIdentifierDataAttribute setIndexed:YES];
     
     NSAttributeDescription *testUUIDAttribute = [[NSAttributeDescription alloc] init];
     [testUUIDAttribute setName:@"testUUID"];
