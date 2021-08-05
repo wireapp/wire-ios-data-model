@@ -87,7 +87,7 @@
     [testUUIDDataAttribute setName:@"testUUID_data"];
     [testUUIDDataAttribute setAttributeType:NSBinaryDataAttributeType];
     [testUUIDDataAttribute setOptional:YES];
-//    [testUUIDDataAttribute setIndexed:YES];
+    [testUUIDDataAttribute setIndexed:YES];
     
     
     NSAttributeDescription *needsToBeUpdatedFromBackendAttribute = [[NSAttributeDescription alloc] init];
