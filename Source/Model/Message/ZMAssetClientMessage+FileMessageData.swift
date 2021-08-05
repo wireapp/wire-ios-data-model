@@ -171,16 +171,7 @@ extension ZMAssetClientMessage: ZMFileMessageData {
         
         return temporaryFileURL
     }
-    
-//    private var fileExtension: String? { ///TODO: mv to utiliies
-//        guard let mime = mimeType,
-//            let uti = UTTypeCreatePreferredIdentifierForTag(kUTTagClassMIMEType, mime as CFString, nil),
-//            let extensionUTI = UTTypeCopyPreferredTagWithClass(uti.takeRetainedValue(), kUTTagClassFilenameExtension) else {
-//                return nil
-//        }
-//        return String(extensionUTI.takeRetainedValue())
-//    }
-    
+        
     public var temporaryDirectoryURL: URL? {
         guard let cacheKey = FileAssetCache.cacheKeyForAsset(self) else { return nil }
         var temporaryURL = URL(fileURLWithPath: NSTemporaryDirectory(), isDirectory: true)
