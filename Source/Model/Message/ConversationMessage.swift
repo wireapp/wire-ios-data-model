@@ -276,10 +276,10 @@ extension ZMMessage : ZMConversationMessage {
     }
 
     public var isRestricted: Bool {
-        guard (self.isFile || self.isImage),
-            let managedObjectContext = self.managedObjectContext else {
-            return false
-        }
+        guard 
+            (self.isFile || self.isImage),
+            let managedObjectContext = self.managedObjectContext 
+        else { return false }
 
         let featureService = FeatureService(context: managedObjectContext)
         let fileSharingFeature = featureService.fetchFileSharing()
@@ -363,4 +363,3 @@ extension ZMMessage {
         return -1
     }
 }
-
