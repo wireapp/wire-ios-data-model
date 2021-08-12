@@ -32,6 +32,7 @@ public class Feature: ZMManagedObject {
 
     public enum Name: String, Codable, CaseIterable {
         case appLock
+        case conferenceCalling
     }
 
     public enum Status: String, Codable {
@@ -81,6 +82,7 @@ public class Feature: ZMManagedObject {
         }
 
         set {
+            updateNeedsToNotifyUser(oldStatus: status, newStatus: newValue)
             statusValue = newValue.rawValue
         }
     }
@@ -125,9 +127,9 @@ public class Feature: ZMManagedObject {
     ///     - context: The context in which to fetch the instance.
     ///     - changes: A closure to mutate the fetched instance.
 
-    public static func updateOrCreate(havingName name: Name,
-                                      in context: NSManagedObjectContext,
-                                      changes: @escaping (Feature) -> Void) {
+    static func updateOrCreate(havingName name: Name,
+                               in context: NSManagedObjectContext,
+                               changes: @escaping (Feature) -> Void) {
 
         // There should be at most one instance per feature, so only allow modifications
         // on a single context to avoid race conditions.
@@ -144,7 +146,17 @@ public class Feature: ZMManagedObject {
         }
     }
 
-    public func updateNeedsToNotifyUser(oldData: Data?, newData: Data?) {
+    private func updateNeedsToNotifyUser(oldStatus: Status, newStatus: Status) {
+        switch name {
+        case .conferenceCalling:
+            needsToNotifyUser = oldStatus != newStatus
+
+        default:
+            break
+        }
+    }
+
+    private func updateNeedsToNotifyUser(oldData: Data?, newData: Data?) {
         switch name {
         case .appLock:
             let decoder = JSONDecoder()
@@ -160,6 +172,58 @@ public class Feature: ZMManagedObject {
             }
 
             needsToNotifyUser = oldConfig.enforceAppLock != newConfig.enforceAppLock
+
+        case .conferenceCalling:
+            return
         }
     }
 }
+
+extension Feature: ObjectInSnapshot {
+
+    public static var observableKeys: Set<String> {
+        return Set([#keyPath(Feature.statusValue), #keyPath(Feature.configData)])
+    }
+
+    public var notificationName: Notification.Name {
+        return .FeatureChange
+    }
+
+    final class FeatureChangeInfo: ObjectChangeInfo {
+
+        var feature: Feature {
+            return object as! Feature
+        }
+
+        var statusChanged: Bool {
+            return changedKeysContain(keys: #keyPath(Feature.statusValue))
+        }
+
+        var configChanged: Bool {
+            return changedKeysContain(keys: #keyPath(Feature.configData))
+        }
+    }
+
+    static func addObserver(_ observer: FeatureObserver, in context: NSManagedObjectContext) -> Any {
+        return ManagedObjectObserverToken(name: .FeatureChange, managedObjectContext: context) { [weak observer] note in
+            guard
+                let `observer` = observer,
+                let changeInfo = note.changeInfo as? FeatureChangeInfo
+            else {
+                return
+            }
+
+            observer.featureDidChange(changeInfo)
+        }
+
+    }
+
+
+}
+
+protocol FeatureObserver: class {
+
+    func featureDidChange(_ changeInfo: Feature.FeatureChangeInfo)
+
+}
+
