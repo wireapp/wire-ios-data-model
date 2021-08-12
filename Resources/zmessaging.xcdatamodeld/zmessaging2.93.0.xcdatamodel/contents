@@ -50,7 +50,6 @@
         <attribute name="archivedChangedTimestamp" optional="YES" attributeType="Date" usesScalarValueType="NO" syncable="YES"/>
         <attribute name="clearedTimeStamp" optional="YES" attributeType="Date" usesScalarValueType="NO" syncable="YES"/>
         <attribute name="conversationType" attributeType="Integer 16" defaultValueString="0" usesScalarValueType="NO" syncable="YES"/>
-        <attribute name="domain" optional="YES" attributeType="String" syncable="YES"/>
         <attribute name="draftMessageData" optional="YES" attributeType="Binary" syncable="YES"/>
         <attribute name="draftMessageNonce" optional="YES" attributeType="Binary" syncable="YES"/>
         <attribute name="hasReadReceiptsEnabled" optional="YES" attributeType="Boolean" usesScalarValueType="NO" syncable="YES"/>
@@ -107,7 +106,6 @@
         <attribute name="needsToBeUpdatedFromBackend" attributeType="Boolean" defaultValueString="NO" usesScalarValueType="NO" syncable="YES"/>
         <attribute name="needsToNotifyUser" optional="YES" attributeType="Boolean" defaultValueString="NO" usesScalarValueType="NO" syncable="YES"/>
         <attribute name="statusValue" attributeType="String" syncable="YES"/>
-        <relationship name="team" optional="YES" maxCount="1" deletionRule="Nullify" destinationEntity="Team" inverseName="features" inverseEntity="Team" syncable="YES"/>
     </entity>
     <entity name="FeatureFlag" representedClassName=".FeatureFlag" syncable="YES">
         <attribute name="identifier" optional="YES" attributeType="String" syncable="YES"/>
@@ -252,7 +250,6 @@
         <relationship name="conversations" optional="YES" toMany="YES" deletionRule="Nullify" destinationEntity="Conversation" inverseName="team" inverseEntity="Conversation" syncable="YES"/>
         <relationship name="creator" optional="YES" maxCount="1" deletionRule="Nullify" destinationEntity="User" inverseName="createdTeams" inverseEntity="User" syncable="YES"/>
         <relationship name="featureFlags" optional="YES" toMany="YES" deletionRule="Nullify" destinationEntity="FeatureFlag" inverseName="team" inverseEntity="FeatureFlag" syncable="YES"/>
-        <relationship name="features" optional="YES" toMany="YES" deletionRule="Cascade" destinationEntity="Feature" inverseName="team" inverseEntity="Feature" syncable="YES"/>
         <relationship name="members" optional="YES" toMany="YES" deletionRule="Cascade" destinationEntity="Member" inverseName="team" inverseEntity="Member" syncable="YES"/>
         <relationship name="roles" optional="YES" toMany="YES" deletionRule="Nullify" destinationEntity="Role" inverseName="team" inverseEntity="Role" syncable="YES"/>
     </entity>
@@ -348,8 +345,8 @@
         <element name="ButtonState" positionX="-225" positionY="36" width="128" height="105"/>
         <element name="ClientMessage" positionX="9" positionY="153" width="128" height="90"/>
         <element name="Connection" positionX="0" positionY="0" width="128" height="163"/>
-        <element name="Conversation" positionX="0" positionY="0" width="128" height="749"/>
-        <element name="Feature" positionX="-286.9609375" positionY="-65" width="128" height="148"/>
+        <element name="Conversation" positionX="0" positionY="0" width="128" height="748"/>
+        <element name="Feature" positionX="-286.9609375" positionY="-65" width="128" height="119"/>
         <element name="FeatureFlag" positionX="-225" positionY="36" width="128" height="118"/>
         <element name="GenericMessageData" positionX="18" positionY="162" width="128" height="103"/>
         <element name="ImageMessage" positionX="0" positionY="0" width="128" height="165"/>
@@ -363,7 +360,7 @@
         <element name="Role" positionX="-198" positionY="63" width="128" height="120"/>
         <element name="Session" positionX="9" positionY="153" width="128" height="60"/>
         <element name="SystemMessage" positionX="0" positionY="0" width="128" height="283"/>
-        <element name="Team" positionX="9" positionY="153" width="128" height="239"/>
+        <element name="Team" positionX="9" positionY="153" width="128" height="224"/>
         <element name="TextMessage" positionX="-153" positionY="-117" width="128" height="60"/>
         <element name="User" positionX="-434" positionY="-72" width="128" height="718"/>
         <element name="UserClient" positionX="9" positionY="153" width="128" height="538"/>
