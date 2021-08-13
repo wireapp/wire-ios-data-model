@@ -72,7 +72,7 @@ open class ZMMessageConfirmation: ZMManagedObject, ReadReceipt {
             return []
         }
 
-        let sender = ZMUser.fetchOrCreate(with: senderUUID, domain: nil, in: managedObjectContext)
+        let sender = ZMUser.fetchOrCreate(with: senderUUID, domain: updateEvent.senderDomain, in: managedObjectContext)
         let moreMessageIds = confirmation.moreMessageIds
         let confirmedMesssageIds = ([confirmation.firstMessageID] + moreMessageIds).compactMap({ UUID(uuidString: $0) })
         
