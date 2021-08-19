@@ -128,7 +128,7 @@ public class Feature: ZMManagedObject {
     ///     - context: The context in which to fetch the instance.
     ///     - changes: A closure to mutate the fetched instance.
 
-    static func updateOrCreate(havingName name: Name,
+    public static func updateOrCreate(havingName name: Name,
                                in context: NSManagedObjectContext,
                                changes: @escaping (Feature) -> Void) {
 
