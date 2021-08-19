@@ -35,7 +35,7 @@ public class FeatureService {
 
     private let context: NSManagedObjectContext
     private var observerToken: Any?
-    weak var delegate: FeatureServiceDelegate?
+    public weak var delegate: FeatureServiceDelegate?
 
     // MARK: - Life cycle
 
