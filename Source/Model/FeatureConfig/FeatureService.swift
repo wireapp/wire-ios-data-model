@@ -48,6 +48,7 @@ public class FeatureService {
 
     // We need to avoid the explicits here.
 
+    /// The app lock
     public func fetchAppLock() -> Feature.AppLock {
         var result: Feature.AppLock!
 
@@ -89,6 +90,18 @@ public class FeatureService {
         }
     }
 
+    /// The file sharing
+    public func fetchFileSharing() -> Feature.FileSharing {
+        let feature = Feature.fetch(name: .fileSharing, context: context)!
+        return .init(status: feature.status)
+    }
+
+    public func storeFileSharing(_ fileSharing: Feature.FileSharing) {
+        Feature.updateOrCreate(havingName: .fileSharing, in: context) {
+            $0.status = fileSharing.status
+        }
+    }
+
     // MARK: - Helpers
 
     func createDefaultConfigsIfNeeded() {
@@ -99,6 +112,9 @@ public class FeatureService {
 
             case .conferenceCalling:
                 storeConferenceCalling(.init())
+                
+            case .fileSharing:
+                storeFileSharing(.init())
             }
         }
     }

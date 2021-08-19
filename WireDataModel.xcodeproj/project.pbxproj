@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		06034B6D26A8D36E003624B4 /* Feature.FileSharing.swift in Sources */ = {isa = PBXBuildFile; fileRef = 06034B6C26A8D36E003624B4 /* Feature.FileSharing.swift */; };
 		0604F7C8265184B70016A71E /* ZMSystemMessage+ParticipantsRemovedReason.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0604F7C7265184B70016A71E /* ZMSystemMessage+ParticipantsRemovedReason.swift */; };
 		0604F8002651CAFE0016A71E /* store2-91-0.wiredatabase in Resources */ = {isa = PBXBuildFile; fileRef = 0604F7FF2651CAFD0016A71E /* store2-91-0.wiredatabase */; };
 		060D194F2462A9EC00623376 /* ZMMessageTests+GenericMessage.swift in Sources */ = {isa = PBXBuildFile; fileRef = 060D194D2462A9D000623376 /* ZMMessageTests+GenericMessage.swift */; };
@@ -88,6 +89,8 @@
 		16519D36231D1BB200C9D76D /* ZMConversation+Deletion.swift in Sources */ = {isa = PBXBuildFile; fileRef = 16519D35231D1BB200C9D76D /* ZMConversation+Deletion.swift */; };
 		16519D54231D6F8200C9D76D /* ZMConversationTests+Deletion.swift in Sources */ = {isa = PBXBuildFile; fileRef = 16519D53231D6F8200C9D76D /* ZMConversationTests+Deletion.swift */; };
 		1651F9BE1D3554C800A9FAE8 /* ZMClientMessageTests+TextMessage.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1651F9BD1D3554C800A9FAE8 /* ZMClientMessageTests+TextMessage.swift */; };
+		1658E90826C525A3003D0090 /* Starscream.xcframework in Frameworks */ = {isa = PBXBuildFile; fileRef = 1658E90726C525A3003D0090 /* Starscream.xcframework */; };
+		1658E90926C525A3003D0090 /* Starscream.xcframework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 1658E90726C525A3003D0090 /* Starscream.xcframework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		165911551DF054AD007FA847 /* ZMConversation+Predicates.swift in Sources */ = {isa = PBXBuildFile; fileRef = 165911541DF054AD007FA847 /* ZMConversation+Predicates.swift */; };
 		165D3A2D1E1D47AB0052E654 /* ZMCallState.swift in Sources */ = {isa = PBXBuildFile; fileRef = 165D3A2B1E1D47AB0052E654 /* ZMCallState.swift */; };
 		165DC51F21491C0400090B7B /* Mention.swift in Sources */ = {isa = PBXBuildFile; fileRef = 165DC51E21491C0400090B7B /* Mention.swift */; };
@@ -684,7 +687,22 @@
 		};
 /* End PBXContainerItemProxy section */
 
+/* Begin PBXCopyFilesBuildPhase section */
+		1658E90A26C525A3003D0090 /* Embed Frameworks */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "";
+			dstSubfolderSpec = 10;
+			files = (
+				1658E90926C525A3003D0090 /* Starscream.xcframework in Embed Frameworks */,
+			);
+			name = "Embed Frameworks";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXCopyFilesBuildPhase section */
+
 /* Begin PBXFileReference section */
+		06034B6C26A8D36E003624B4 /* Feature.FileSharing.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Feature.FileSharing.swift; sourceTree = "<group>"; };
 		0604F7C7265184B70016A71E /* ZMSystemMessage+ParticipantsRemovedReason.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "ZMSystemMessage+ParticipantsRemovedReason.swift"; sourceTree = "<group>"; };
 		0604F7FC2651C9220016A71E /* zmessaging2.91.0.xcdatamodel */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcdatamodel; path = zmessaging2.91.0.xcdatamodel; sourceTree = "<group>"; };
 		0604F7FF2651CAFD0016A71E /* store2-91-0.wiredatabase */ = {isa = PBXFileReference; lastKnownFileType = file; path = "store2-91-0.wiredatabase"; sourceTree = "<group>"; };
@@ -776,6 +794,7 @@
 		16519D35231D1BB200C9D76D /* ZMConversation+Deletion.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "ZMConversation+Deletion.swift"; sourceTree = "<group>"; };
 		16519D53231D6F8200C9D76D /* ZMConversationTests+Deletion.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "ZMConversationTests+Deletion.swift"; sourceTree = "<group>"; };
 		1651F9BD1D3554C800A9FAE8 /* ZMClientMessageTests+TextMessage.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = "ZMClientMessageTests+TextMessage.swift"; sourceTree = "<group>"; };
+		1658E90726C525A3003D0090 /* Starscream.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; name = Starscream.xcframework; path = Carthage/Build/Starscream.xcframework; sourceTree = "<group>"; };
 		165911541DF054AD007FA847 /* ZMConversation+Predicates.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = "ZMConversation+Predicates.swift"; sourceTree = "<group>"; };
 		165D3A2B1E1D47AB0052E654 /* ZMCallState.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ZMCallState.swift; sourceTree = "<group>"; };
 		165DC51E21491C0400090B7B /* Mention.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Mention.swift; sourceTree = "<group>"; };
@@ -1473,6 +1492,7 @@
 				A99B8A8E26824BD5006B4D29 /* WireTransport.xcframework in Frameworks */,
 				A99B8A9426824BD5006B4D29 /* SwiftProtobuf.xcframework in Frameworks */,
 				A99B8A9826824BD5006B4D29 /* WireProtos.xcframework in Frameworks */,
+				1658E90826C525A3003D0090 /* Starscream.xcframework in Frameworks */,
 				A99B8A9026824BD5006B4D29 /* WireImages.xcframework in Frameworks */,
 				A99B8AA026824BD5006B4D29 /* WireCryptobox.xcframework in Frameworks */,
 				A99B8A9626824BD5006B4D29 /* WireUtilities.xcframework in Frameworks */,
@@ -1505,6 +1525,14 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
+		06034B6B26A8D31F003624B4 /* FileSharing */ = {
+			isa = PBXGroup;
+			children = (
+				06034B6C26A8D36E003624B4 /* Feature.FileSharing.swift */,
+			);
+			path = FileSharing;
+			sourceTree = "<group>";
+		};
 		0686649D256FB087001C8747 /* AppLock */ = {
 			isa = PBXGroup;
 			children = (
@@ -1617,6 +1645,7 @@
 		54CB3FE824A3993400BA86DD /* FeatureConfig */ = {
 			isa = PBXGroup;
 			children = (
+				06034B6B26A8D31F003624B4 /* FileSharing */,
 				0686649D256FB087001C8747 /* AppLock */,
 				EE28991C26B4420A00E7BAF0 /* ConferenceCalling */,
 				EE9AD9152696F01700DD5F51 /* FeatureService.swift */,
@@ -2560,6 +2589,7 @@
 		F9C9A6701CAD779E0039E10C /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
+				1658E90726C525A3003D0090 /* Starscream.xcframework */,
 				A99B8AA626824BFA006B4D29 /* OCMock.xcframework */,
 				A99B8AA726824BFA006B4D29 /* WireTesting.xcframework */,
 				A99B8A8626824BD5006B4D29 /* HTMLString.xcframework */,
@@ -2818,6 +2848,7 @@
 				F9C9A4F81CAD5DF10039E10C /* Frameworks */,
 				F9C9A4F91CAD5DF10039E10C /* Headers */,
 				F9C9A4FA1CAD5DF10039E10C /* Resources */,
+				1658E90A26C525A3003D0090 /* Embed Frameworks */,
 			);
 			buildRules = (
 			);
@@ -3129,6 +3160,7 @@
 				F125BAD71EE9849B0018C2F8 /* ZMConversation+SystemMessages.swift in Sources */,
 				54F84CFD1F9950B300ABD7D5 /* DuplicatedEntityRemoval.swift in Sources */,
 				A90B3E2D23A255D5003EFED4 /* ZMConversation+Creation.swift in Sources */,
+				06034B6D26A8D36E003624B4 /* Feature.FileSharing.swift in Sources */,
 				87C1C25F207F7DA80083BF6B /* InvalidGenericMessageDataRemoval.swift in Sources */,
 				544E8C111E2F76B400F9B8B8 /* NSManagedObjectContext+UserInfoMerge.swift in Sources */,
 				EEBACDA725B9C2C6000210AC /* AppLockType.swift in Sources */,

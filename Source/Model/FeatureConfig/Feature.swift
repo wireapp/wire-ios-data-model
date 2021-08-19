@@ -33,6 +33,7 @@ public class Feature: ZMManagedObject {
     public enum Name: String, Codable, CaseIterable {
         case appLock
         case conferenceCalling
+        case fileSharing
     }
 
     public enum Status: String, Codable {
@@ -143,6 +144,7 @@ public class Feature: ZMManagedObject {
                 feature.name = name
                 changes(feature)
             }
+            context.saveOrRollback()
         }
     }
 
@@ -173,7 +175,7 @@ public class Feature: ZMManagedObject {
 
             needsToNotifyUser = oldConfig.enforceAppLock != newConfig.enforceAppLock
 
-        case .conferenceCalling:
+        case .conferenceCalling, .fileSharing:
             return
         }
     }
