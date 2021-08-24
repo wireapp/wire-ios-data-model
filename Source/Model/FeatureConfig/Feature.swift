@@ -163,11 +163,24 @@ public class Feature: ZMManagedObject {
             }
 
             needsToNotifyUser = oldConfig.enforceAppLock != newConfig.enforceAppLock
+
         case .fileSharing:
             return
 
         case .selfDeletingMessages:
-            fatalError("Not implemented")
+            let decoder = JSONDecoder()
+
+            guard
+                !needsToNotifyUser,
+                let oldValue = oldData,
+                let newValue = newData,
+                let oldConfig = try? decoder.decode(Feature.SelfDeletingMessages.Config.self, from: oldValue),
+                let newConfig = try? decoder.decode(Feature.SelfDeletingMessages.Config.self, from: newValue)
+            else {
+                return
+            }
+
+            needsToNotifyUser = oldConfig.enforcedTimeoutSeconds != newConfig.enforcedTimeoutSeconds
         }
     }
 }
