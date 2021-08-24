@@ -35,11 +35,10 @@ extension ZMManagedObject {
         let localDomain = ZMUser.selfUser(in: context).domain
         let isSearchingLocalDomain = localDomain == nil || localDomain == domain
 
-        if let domain = domain, !isSearchingLocalDomain {
-            return internalFetch(withRemoteIdentifier: remoteIdentifier, domain: domain, in: context)
-        } else {
-            return internalFetch(withRemoteIdentifier: remoteIdentifier, in: context)
-        }
+        return internalFetch(withRemoteIdentifier: remoteIdentifier,
+                             domain: domain,
+                             searchingLocalDomain: isSearchingLocalDomain,
+                             in: context)
     }
 
 }
