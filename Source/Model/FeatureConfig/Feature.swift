@@ -190,7 +190,7 @@ extension Feature: ObjectInSnapshot {
         return .FeatureChange
     }
 
-    final class FeatureChangeInfo: ObjectChangeInfo {
+    @objcMembers final class FeatureChangeInfo: ObjectChangeInfo {
 
         var feature: Feature {
             return object as! Feature
