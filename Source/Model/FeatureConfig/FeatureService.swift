@@ -79,6 +79,8 @@ public class FeatureService {
                 storeAppLock(.init())
             case .fileSharing:
                 storeFileSharing(.init())
+            case .selfDeletingMessages:
+                fatalError("Not implemented")
             }
         }
     }

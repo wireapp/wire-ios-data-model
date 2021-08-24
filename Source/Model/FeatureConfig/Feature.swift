@@ -33,6 +33,7 @@ public class Feature: ZMManagedObject {
     public enum Name: String, Codable, CaseIterable {
         case appLock
         case fileSharing
+        case selfDeletingMessages
     }
 
     public enum Status: String, Codable {
@@ -164,6 +165,9 @@ public class Feature: ZMManagedObject {
             needsToNotifyUser = oldConfig.enforceAppLock != newConfig.enforceAppLock
         case .fileSharing:
             return
+
+        case .selfDeletingMessages:
+            fatalError("Not implemented")
         }
     }
 }
