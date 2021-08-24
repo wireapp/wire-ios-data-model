@@ -105,4 +105,22 @@ final class FeatureObserverTests: NotificationDispatcherTestBase {
         )
     }
 
+    func testThatItNotifiesTheObserverOfChangedConfig() {
+        // given
+        let feature = Feature.insertNewObject(in: uiMOC)
+        feature.name = .appLock
+        feature.status = .enabled
+        let config = Feature.AppLock.Config()
+        feature.config = try! JSONEncoder().encode(config)
+        uiMOC.saveOrRollback()
+
+        // when
+        let newConfig = Feature.AppLock.Config(enforceAppLock: true, inactivityTimeoutSecs: 70)
+        self.checkThatItNotifiesTheObserverOfAChange(feature,
+                                                     modifier: {
+                                                        $0.config = try! JSONEncoder().encode(newConfig) },
+                                                     expectedChangedFields: [#keyPath(Feature.FeatureChangeInfo.configChanged)]
+        )
+    }
+
 }
