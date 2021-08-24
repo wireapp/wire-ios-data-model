@@ -165,7 +165,6 @@ extension FeatureService: FeatureObserver {
     func featureDidChange(_ changeInfo: Feature.FeatureChangeInfo) {
         guard
             let delegate = delegate,
-            changeInfo.feature.needsToNotifyUser,
             let change = change(from: changeInfo.feature)
         else {
             return

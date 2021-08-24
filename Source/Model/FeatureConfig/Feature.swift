@@ -83,7 +83,6 @@ public class Feature: ZMManagedObject {
         }
 
         set {
-            updateNeedsToNotifyUser(oldStatus: status, newStatus: newValue)
             statusValue = newValue.rawValue
         }
     }
