@@ -92,7 +92,7 @@ public class FeatureService {
             case .fileSharing:
                 storeFileSharing(.init())
             case .selfDeletingMessages:
-                fatalError("Not implemented")
+                storeSelfDeletingMessages(.init())
             }
         }
     }
