@@ -158,6 +158,24 @@ class ZMManagedObjectFetchingTests: DatabaseBaseTest {
         XCTAssertEqual(user.objectID, fetched?.objectID)
     }
 
+    func testThatItFetchesEntityByDomain_WhenSelfUserDomainIsSetButSearchDomainIsNil() throws {
+        // given
+        let domain = "example.com"
+        let selfUser = ZMUser.selfUser(in: mocs.viewContext)
+        selfUser.domain = domain
+
+        let uuid = UUID()
+        let user = ZMUser.insertNewObject(in: mocs.viewContext)
+        user.remoteIdentifier = uuid
+        user.domain = domain
+
+        // when
+        let fetched = ZMUser.fetch(with: uuid, domain: nil, in: mocs.viewContext)
+
+        // then
+        XCTAssertEqual(user.objectID, fetched?.objectID)
+    }
+
     func testThatItDoesntFetchEntityByDomain_WhenEntityDomainDoesntMatchSearchDomain() throws {
         // given
         let domain = "example.com"
