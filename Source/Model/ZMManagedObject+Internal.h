@@ -69,7 +69,8 @@ extern NSString * _Nonnull const ZMManagedObjectLocallyModifiedKeysKey;
                                           inManagedObjectContext:(nonnull NSManagedObjectContext *)moc;
 
 + (nullable instancetype)internalFetchObjectWithRemoteIdentifier:(nonnull NSUUID *)uuid
-                                                          domain:(nonnull NSString *)domain
+                                                          domain:(nullable NSString *)domain
+                                            searchingLocalDomain:(BOOL)searchingLocalDomain
                                           inManagedObjectContext:(nonnull NSManagedObjectContext *)moc;
 
 + (nullable NSSet *)fetchObjectsWithRemoteIdentifiers:(nonnull NSSet <NSUUID *> *)uuids

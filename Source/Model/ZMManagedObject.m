@@ -352,8 +352,9 @@ static NSString * const KeysForCachedValuesKey = @"ZMKeysForCachedValues";
 }
 
 + (instancetype)internalFetchObjectWithRemoteIdentifier:(NSUUID *)uuid
-                                         domain:(NSString *)domain
-                         inManagedObjectContext:(NSManagedObjectContext *)moc;
+                                                 domain:(NSString *)domain
+                                   searchingLocalDomain:(BOOL)searchingLocalDomain
+                                 inManagedObjectContext:(NSManagedObjectContext *)moc;
 {
     // Executing a fetch request is quite expensive, because it will _always_ (1) round trip through
     // the persistent store coordinator and the SQLite engine, and (2) touch the file system.
@@ -374,7 +375,18 @@ static NSString * const KeysForCachedValuesKey = @"ZMKeysForCachedValues";
         }
     }
     NSFetchRequest *fetchRequest = [[NSFetchRequest alloc] initWithEntityName:self.entityName];
-    fetchRequest.predicate = [NSPredicate predicateWithFormat:@"%K == %@ AND %K == %@", [self remoteIdentifierDataKey], uuid.data, [self domainKey], domain];
+
+    if (searchingLocalDomain) {
+        fetchRequest.predicate = [NSPredicate predicateWithFormat:@"%K == %@ AND (%K == %@ OR %K == NULL)",
+                                  [self remoteIdentifierDataKey], uuid.data,
+                                  [self domainKey], domain,
+                                  [self domainKey]];
+    } else {
+        fetchRequest.predicate = [NSPredicate predicateWithFormat:@"%K == %@ AND %K == %@",
+                                  [self remoteIdentifierDataKey], uuid.data,
+                                  [self domainKey], domain];
+    }
+
     fetchRequest.fetchLimit = 2; // We only want 1, but want to check if there are too many.
     NSArray *fetchResult = [moc executeFetchRequestOrAssert:fetchRequest];
     RequireString([fetchResult count] <= 1, "More than one object with the same UUID: %s and domain: %s", uuid.transportString.UTF8String, domain.UTF8String);
