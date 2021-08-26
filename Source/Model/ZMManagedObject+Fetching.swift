@@ -33,10 +33,10 @@ extension ZMManagedObject {
     /// If the domain is nil only objects belonging to your own domain will be returned. Similarily if the self user aren't associated with a domain the domain parameter will be ignored.
     @objc public static func fetch(with remoteIdentifier: UUID, domain: String?, in context: NSManagedObjectContext) -> Self? {
         let localDomain = ZMUser.selfUser(in: context).domain
-        let isSearchingLocalDomain = localDomain == nil || localDomain == domain
+        let isSearchingLocalDomain = domain == nil || localDomain == nil || localDomain == domain
 
         return internalFetch(withRemoteIdentifier: remoteIdentifier,
-                             domain: domain,
+                             domain: domain ?? localDomain,
                              searchingLocalDomain: isSearchingLocalDomain,
                              in: context)
     }
