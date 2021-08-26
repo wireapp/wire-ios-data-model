@@ -24,7 +24,12 @@ public extension Feature {
 
         // MARK: - Properties
 
+        /// If `enabled` then the feature is available to the user.
+
         public let status: Status
+
+        /// The configuration used to control how the feature behaves.
+
         public let config: Config
 
         // MARK: - Life cycle
@@ -35,6 +40,9 @@ public extension Feature {
         }
 
         // MARK: - Types
+
+        // WARNING: This config is encoded and stored in the database, so any changes
+        // to it will require some migration code.
 
         public struct Config: Codable {
 
