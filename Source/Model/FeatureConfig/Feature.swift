@@ -50,25 +50,7 @@ public class Feature: ZMManagedObject {
     @NSManaged private var nameValue: String
     @NSManaged private var statusValue: String
     @NSManaged private var configData: Data?
-    @NSManaged private var primitiveNeedsToNotifyUser: NSNumber
-
-    public var needsToNotifyUser: Bool {
-        set {
-            if !needsToNotifyUser && newValue {
-                NotificationCenter.default.post(name: .featureDidChangeNotification, object: change(from: self))
-            }
-            willChangeValue(forKey: #keyPath(needsToNotifyUser))
-            primitiveNeedsToNotifyUser = NSNumber(booleanLiteral: newValue)
-            didChangeValue(forKey: #keyPath(needsToNotifyUser))
-        }
-
-        get {
-            willAccessValue(forKey: #keyPath(needsToNotifyUser))
-            let result = primitiveNeedsToNotifyUser
-            didAccessValue(forKey: #keyPath(needsToNotifyUser))
-            return result.boolValue
-        }
-    }
+    @NSManaged public var needsToNotifyUser: Bool
     
     public var config: Data? {
         get {
@@ -76,9 +58,7 @@ public class Feature: ZMManagedObject {
         }
 
         set {
-            if !statusValue.isEmpty {
-                updateNeedsToNotifyUser(oldData: configData, newData: newValue)
-            }
+            updateNeedsToNotifyUser(oldData: configData, newData: newValue)
             configData = newValue
         }
     }
@@ -107,10 +87,11 @@ public class Feature: ZMManagedObject {
         }
 
         set {
-            if !statusValue.isEmpty {
-                updateNeedsToNotifyUser(oldStatus: status, newStatus: newValue)
-            }
+            updateNeedsToNotifyUser(oldStatus: status, newStatus: newValue)
             statusValue = newValue.rawValue
+            if needsToNotifyUser {
+                NotificationCenter.default.post(name: .featureDidChangeNotification, object: change(from: self))
+            }
         }
     }
 
@@ -177,7 +158,7 @@ public class Feature: ZMManagedObject {
     private func updateNeedsToNotifyUser(oldStatus: Status, newStatus: Status) {
         switch name {
         case .conferenceCalling:
-            needsToNotifyUser = oldStatus != newStatus
+            needsToNotifyUser = (oldStatus != newStatus) && newStatus == .enabled
 
         default:
             break
@@ -185,6 +166,7 @@ public class Feature: ZMManagedObject {
     }
 
     private func updateNeedsToNotifyUser(oldData: Data?, newData: Data?) {
+        guard !statusValue.isEmpty else { return }
         switch name {
         case .appLock:
             let decoder = JSONDecoder()
