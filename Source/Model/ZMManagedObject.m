@@ -377,10 +377,15 @@ static NSString * const KeysForCachedValuesKey = @"ZMKeysForCachedValues";
     NSFetchRequest *fetchRequest = [[NSFetchRequest alloc] initWithEntityName:self.entityName];
 
     if (searchingLocalDomain) {
-        fetchRequest.predicate = [NSPredicate predicateWithFormat:@"%K == %@ AND (%K == %@ OR %K == NULL)",
-                                  [self remoteIdentifierDataKey], uuid.data,
-                                  [self domainKey], domain,
-                                  [self domainKey]];
+        if (domain != nil) {
+            fetchRequest.predicate = [NSPredicate predicateWithFormat:@"%K == %@ AND (%K == %@ OR %K == NULL)",
+                                      [self remoteIdentifierDataKey], uuid.data,
+                                      [self domainKey], domain,
+                                      [self domainKey]];
+        } else {
+            fetchRequest.predicate = [NSPredicate predicateWithFormat:@"%K == %@",
+                                      [self remoteIdentifierDataKey], uuid.data];
+        }
     } else {
         fetchRequest.predicate = [NSPredicate predicateWithFormat:@"%K == %@ AND %K == %@",
                                   [self remoteIdentifierDataKey], uuid.data,
