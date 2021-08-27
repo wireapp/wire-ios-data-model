@@ -34,14 +34,11 @@ public class FeatureService {
     // MARK: - Properties
 
     private let context: NSManagedObjectContext
-    private var observerToken: Any?
-    public weak var delegate: FeatureServiceDelegate?
 
     // MARK: - Life cycle
 
     public init(context: NSManagedObjectContext) {
         self.context = context
-        self.observerToken = Feature.addObserver(self, in: context)
     }
 
     // MARK: - Accessors
@@ -143,53 +140,12 @@ public class FeatureService {
         return result
     }
 
-    // Maybe call this acknowledgeChanges
+    // Call this to acknowledge changes
     public func setNeedsToNotifyUser(_ notifyUser: Bool, for featureName: Feature.Name) {
         context.performGroupedAndWait {
             let feature = Feature.fetch(name: featureName, context: $0)
             feature?.needsToNotifyUser = notifyUser
         }
     }
-
-}
-
-extension FeatureService: FeatureObserver {
-
-    public enum FeatureChange {
-
-        case conferenceCallingIsAvailable
-        case conferenceCallingIsUnavailable
-
-    }
-
-    func featureDidChange(_ changeInfo: Feature.FeatureChangeInfo) {
-        guard
-            let delegate = delegate,
-            let change = change(from: changeInfo.feature)
-        else {
-            return
-        }
-
-        delegate.featureService(self, didDetectChange: change)
-    }
-
-    private func change(from feature: Feature) -> FeatureChange? {
-        switch feature.name {
-        case .conferenceCalling where feature.status == .enabled:
-            return .conferenceCallingIsAvailable
-
-        case .conferenceCalling where feature.status == .disabled:
-            return .conferenceCallingIsUnavailable
-
-        default:
-            return nil
-        }
-    }
-
-}
-
-public protocol FeatureServiceDelegate: class {
-
-    func featureService(_ service: FeatureService, didDetectChange change: FeatureService.FeatureChange)
 
 }

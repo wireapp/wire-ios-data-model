@@ -122,8 +122,6 @@ class DependencyKeyStore {
             return ParticipantRole.observableKeys
         case ButtonState.entityName():
             return Set([#keyPath(ButtonState.stateValue), #keyPath(ButtonState.isExpired)])
-        case Feature.entityName():
-            return Feature.observableKeys
         default:
             zmLog.warn("There are no observable keys defined for \(classIdentifier)")
             return Set()

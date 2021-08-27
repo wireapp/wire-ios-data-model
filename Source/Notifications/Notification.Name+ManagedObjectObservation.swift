@@ -35,7 +35,6 @@ extension Notification.Name {
     static let TeamChange = Notification.Name("TeamChangeNotification")
     static let LabelChange = Notification.Name("LabelChangeNotification")
     static let ParticipantRoleChange = Notification.Name("ParticipantRoleChange")
-    static let FeatureChange = Notification.Name("FeatureChange")
 
     public static let NonCoreDataChangeInManagedObject = Notification.Name("NonCoreDataChangeInManagedObject")
 

@@ -122,8 +122,7 @@ import CoreData
                     Team.classIdentifier,
                     Member.classIdentifier,
                     Label.classIdentifier,
-                    ParticipantRole.classIdentifier,
-                    Feature.classIdentifier
+                    ParticipantRole.classIdentifier
                 ]
 
                 return ExplicitChangeDetector(
