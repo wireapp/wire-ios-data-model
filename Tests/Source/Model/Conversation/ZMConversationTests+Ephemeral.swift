@@ -147,5 +147,99 @@ class ZMConversationTests_Ephemeral : BaseZMMessageTests {
         XCTAssertTrue(conversation.hasLocalDestructionTimeout)
     }
 
+    func testThatItReturnsCorrectValueWhenForcedOff() {
+        // Given
+        let featureService = FeatureService(context: self.syncMOC)
+
+        syncMOC.performGroupedBlockAndWait {
+            featureService.storeSelfDeletingMessages(.init(status: .disabled, config: .init()))
+        }
+
+        syncMOC.performGroupedBlockAndWait {
+            XCTAssertEqual(featureService.fetchSelfDeletingMesssages().status, .disabled)
+        }
+
+        syncMOC.performGroupedBlockAndWait {
+            let conversation = ZMConversation.insertNewObject(in: self.syncMOC)
+            conversation.localMessageDestructionTimeout = 10
+            conversation.syncedMessageDestructionTimeout = 10
+
+            // Then
+            XCTAssertEqual(conversation.messageDestructionTimeout, nil)
+        }
+    }
+
+    func testThatItReturnsCorrectValueWhenForcedOn() {
+        // Given
+        let featureService = FeatureService(context: self.syncMOC)
+
+        syncMOC.performGroupedBlockAndWait {
+            featureService.storeSelfDeletingMessages(.init(status: .enabled, config: .init(enforcedTimeoutSeconds: 300)))
+        }
+
+        syncMOC.performGroupedBlockAndWait {
+            let feature = featureService.fetchSelfDeletingMesssages()
+            XCTAssertEqual(feature.status, .enabled)
+            XCTAssertEqual(feature.config.enforcedTimeoutSeconds, 300)
+        }
+
+        syncMOC.performGroupedBlockAndWait {
+            let conversation = ZMConversation.insertNewObject(in: self.syncMOC)
+            conversation.localMessageDestructionTimeout = 10
+            conversation.syncedMessageDestructionTimeout = 10
+
+            // Then
+            XCTAssertEqual(conversation.messageDestructionTimeout, .local(.fiveMinutes))
+        }
+    }
+
+    func testThatItIgnoresSetTimeoutWhenForcedOff() {
+        // Given
+        let featureService = FeatureService(context: self.syncMOC)
+
+        syncMOC.performGroupedBlockAndWait {
+            featureService.storeSelfDeletingMessages(.init(status: .disabled, config: .init()))
+        }
+
+        syncMOC.performGroupedBlockAndWait {
+            XCTAssertEqual(featureService.fetchSelfDeletingMesssages().status, .disabled)
+        }
+
+        syncMOC.performGroupedBlockAndWait {
+            let conversation = ZMConversation.insertNewObject(in: self.syncMOC)
+
+            // When
+            conversation.messageDestructionTimeout = .synced(.fiveMinutes)
+
+            // Then
+            XCTAssertEqual(conversation.messageDestructionTimeout, nil)
+        }
+    }
+
+    func testThatItIgnoresSetTimeoutWhenForcedOn() {
+        // Given
+        let featureService = FeatureService(context: self.syncMOC)
+
+        syncMOC.performGroupedBlockAndWait {
+            featureService.storeSelfDeletingMessages(.init(status: .enabled, config: .init(enforcedTimeoutSeconds: 300)))
+        }
+
+        syncMOC.performGroupedBlockAndWait {
+            let feature = featureService.fetchSelfDeletingMesssages()
+            XCTAssertEqual(feature.status, .enabled)
+            XCTAssertEqual(feature.config.enforcedTimeoutSeconds, 300)
+        }
+
+        syncMOC.performGroupedBlockAndWait {
+            let conversation = ZMConversation.insertNewObject(in: self.syncMOC)
+
+            // When
+            conversation.messageDestructionTimeout = nil
+
+            // Then
+            XCTAssertEqual(conversation.messageDestructionTimeout, .local(.fiveMinutes))
+        }
+    }
+
 }
 
