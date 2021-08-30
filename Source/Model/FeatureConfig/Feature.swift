@@ -58,7 +58,9 @@ public class Feature: ZMManagedObject {
         }
 
         set {
-            updateNeedsToNotifyUser(oldData: configData, newData: newValue)
+            if !statusValue.isEmpty {
+                updateNeedsToNotifyUser(oldData: configData, newData: newValue)
+            }
             configData = newValue
         }
     }
@@ -87,7 +89,9 @@ public class Feature: ZMManagedObject {
         }
 
         set {
-            updateNeedsToNotifyUser(oldStatus: status, newStatus: newValue)
+            if !statusValue.isEmpty {
+                updateNeedsToNotifyUser(oldStatus: status, newStatus: newValue)
+            }
             statusValue = newValue.rawValue
             if needsToNotifyUser {
                 NotificationCenter.default.post(name: .featureDidChangeNotification, object: change(from: self))
@@ -166,7 +170,6 @@ public class Feature: ZMManagedObject {
     }
 
     private func updateNeedsToNotifyUser(oldData: Data?, newData: Data?) {
-        guard !statusValue.isEmpty else { return }
         switch name {
         case .appLock:
             let decoder = JSONDecoder()
