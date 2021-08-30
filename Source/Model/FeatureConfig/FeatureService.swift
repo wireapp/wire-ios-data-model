@@ -140,7 +140,6 @@ public class FeatureService {
         return result
     }
 
-    // Call this to acknowledge changes
     public func setNeedsToNotifyUser(_ notifyUser: Bool, for featureName: Feature.Name) {
         context.performGroupedAndWait {
             let feature = Feature.fetch(name: featureName, context: $0)
