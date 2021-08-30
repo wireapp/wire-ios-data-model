@@ -43,7 +43,6 @@ public class FeatureService {
 
     // MARK: - Accessors
 
-    /// The app lock
     public func fetchAppLock() -> Feature.AppLock {
         let feature = Feature.fetch(name: .appLock, context: context)!
         let config = try! JSONDecoder().decode(Feature.AppLock.Config.self, from: feature.config!)
@@ -58,7 +57,6 @@ public class FeatureService {
         }
     }
 
-    /// The file sharing
     public func fetchFileSharing() -> Feature.FileSharing {
         let feature = Feature.fetch(name: .fileSharing, context: context)!
         return .init(status: feature.status)
@@ -67,6 +65,20 @@ public class FeatureService {
     public func storeFileSharing(_ fileSharing: Feature.FileSharing) {
         Feature.updateOrCreate(havingName: .fileSharing, in: context) {
             $0.status = fileSharing.status
+        }
+    }
+
+    public func fetchSelfDeletingMesssages() -> Feature.SelfDeletingMessages {
+        let feature = Feature.fetch(name: .selfDeletingMessages, context: context)!
+        let config = try! JSONDecoder().decode(Feature.SelfDeletingMessages.Config.self, from: feature.config!)
+        return .init(status: feature.status, config: config)
+    }
+
+    public func storeSelfDeletingMessages(_ selfDeletingMessages: Feature.SelfDeletingMessages) {
+        let config = try! JSONEncoder().encode(selfDeletingMessages.config)
+        Feature.updateOrCreate(havingName: .selfDeletingMessages, in: context) {
+            $0.status = selfDeletingMessages.status
+            $0.config = config
         }
     }
 
@@ -79,6 +91,8 @@ public class FeatureService {
                 storeAppLock(.init())
             case .fileSharing:
                 storeFileSharing(.init())
+            case .selfDeletingMessages:
+                storeSelfDeletingMessages(.init())
             }
         }
     }
