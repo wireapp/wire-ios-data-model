@@ -170,23 +170,29 @@ public extension ZMConversation {
 
     /// Defines the time interval until an inserted messages is deleted / "self-destructs" on all clients.
     /// Can be set to the local or to the synchronized value.
+    ///
+    /// NOTE: If the timeout if forced (according to Feature.SelfDeletingMessages), setting values will
+    /// have no effect.
+    ///
     /// WARNING: setting the synced value: please update the value on the backend and then update the value of this
     /// property.
+    ///
     /// Computed property from @c localMessageDestructionTimeout and @c syncedMessageDestructionTimeout.
     var messageDestructionTimeout: MessageDestructionTimeout? {
         get {
-            if syncedMessageDestructionTimeout != 0 {
+            if let forcedTimeout = forcedMessageDestructionTimeout {
+                return forcedTimeout == 0 ? nil : .local(MessageDestructionTimeoutValue(rawValue: forcedTimeout))
+            } else if syncedMessageDestructionTimeout != 0 {
                 return .synced(MessageDestructionTimeoutValue(rawValue: syncedMessageDestructionTimeout))
-            }
-            else if localMessageDestructionTimeout != 0 {
+            } else if localMessageDestructionTimeout != 0 {
                 return .local(MessageDestructionTimeoutValue(rawValue: localMessageDestructionTimeout))
-            }
-            else {
+            } else {
                 return nil
             }
         }
 
         set {
+            guard canSetMessageDestructionTimeout else { return }
             let currentValue = messageDestructionTimeout
             
             if let newTimeout = newValue {
@@ -218,7 +224,26 @@ public extension ZMConversation {
             }
         }
     }
-    
+
+    private var canSetMessageDestructionTimeout: Bool {
+        guard let context = managedObjectContext else { return false }
+        let selfDeletingMessageFeature = FeatureService(context: context).fetchSelfDeletingMesssages()
+        return !selfDeletingMessageFeature.isForcedOff && !selfDeletingMessageFeature.isForcedOn
+    }
+
+    private var forcedMessageDestructionTimeout: Double? {
+        guard let context = managedObjectContext else { return nil }
+        let selfDeletingMessageFeature = FeatureService(context: context).fetchSelfDeletingMesssages()
+
+        if selfDeletingMessageFeature.isForcedOff {
+            return 0
+        } else if selfDeletingMessageFeature.isForcedOn {
+            return Double(selfDeletingMessageFeature.config.enforcedTimeoutSeconds)
+        } else {
+            return nil
+        }
+    }
+
     @objc var messageDestructionTimeoutValue: TimeInterval {
         switch messageDestructionTimeout {
         case .local(let value)?:
@@ -264,3 +289,18 @@ public extension ZMConversation {
     }
 }
 
+private extension Feature.SelfDeletingMessages {
+
+    var isForcedOff: Bool {
+        return status == .disabled
+    }
+
+    var isForcedOn: Bool {
+        return config.enforcedTimeoutSeconds > 0
+    }
+
+    var timeoutValue: MessageDestructionTimeoutValue {
+        return .init(rawValue: Double(config.enforcedTimeoutSeconds))
+    }
+
+}
