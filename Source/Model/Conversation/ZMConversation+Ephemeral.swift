@@ -192,7 +192,6 @@ public extension ZMConversation {
         }
 
         set {
-            guard canSetMessageDestructionTimeout else { return }
             let currentValue = messageDestructionTimeout
             
             if let newTimeout = newValue {
@@ -223,12 +222,6 @@ public extension ZMConversation {
                 }
             }
         }
-    }
-
-    private var canSetMessageDestructionTimeout: Bool {
-        guard let context = managedObjectContext else { return false }
-        let selfDeletingMessageFeature = FeatureService(context: context).fetchSelfDeletingMesssages()
-        return !selfDeletingMessageFeature.isForcedOff && !selfDeletingMessageFeature.isForcedOn
     }
 
     private var forcedMessageDestructionTimeout: Double? {
