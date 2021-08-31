@@ -232,13 +232,6 @@ public class CoreDataStack: NSObject, ContextProvider {
             self.configureSyncContext(self.syncContext)
             self.configureSearchContext(self.searchContext)
 
-            // NOTE disabled since MemoryReferenceDebugger reports false postives for the NSManagedObjectContext
-            #if false // DEBUG
-            MemoryReferenceDebugger.register(self.viewContext)
-            MemoryReferenceDebugger.register(self.syncContext)
-            MemoryReferenceDebugger.register(self.searchContext)
-            #endif
-
             completionHandler(nil)
         }
     }
