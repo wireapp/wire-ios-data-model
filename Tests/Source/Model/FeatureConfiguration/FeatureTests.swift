@@ -114,6 +114,27 @@ final class FeatureTests: ZMBaseManagedObjectTest {
             return
         }
     }
+
+    func testThatItNotifiesAboutFeatureChanges() {
+        // given
+        let defaultConferenceCalling = Feature.fetch(name: .conferenceCalling, context: uiMOC)
+        XCTAssertNotNil(defaultConferenceCalling)
+
+        // expect
+        XCTAssert(waitForCustomExpectations(withTimeout: 0.5))
+        let expectation = self.expectation(description: "Notification fired")
+        NotificationCenter.default.addObserver(forName: .featureDidChangeNotification, object: nil, queue: nil) { (note) in
+            guard let object = note.object as? Feature.FeatureChange else { return }
+            XCTAssertEqual(object, .conferenceCallingIsAvailable)
+            expectation.fulfill()
+        }
+
+        // when
+        defaultConferenceCalling?.needsToNotifyUser = false
+        defaultConferenceCalling?.status = .enabled
+        XCTAssertTrue(uiMOC.saveOrRollback())
+    }
+
 }
 
 // MARK: - Helpers

@@ -18,6 +18,10 @@
 
 import Foundation
 
+extension Notification.Name {
+    public static let featureDidChangeNotification = Notification.Name("FeatureDidChangeNotification")
+}
+
 private let zmLog = ZMSLog(tag: "Feature")
 
 @objcMembers
@@ -54,7 +58,9 @@ public class Feature: ZMManagedObject {
         }
 
         set {
-            updateNeedsToNotifyUser(oldData: configData, newData: newValue)
+            if !statusValue.isEmpty {
+                updateNeedsToNotifyUser(oldData: configData, newData: newValue)
+            }
             configData = newValue
         }
     }
@@ -83,8 +89,13 @@ public class Feature: ZMManagedObject {
         }
 
         set {
-            updateNeedsToNotifyUser(oldStatus: status, newStatus: newValue)
+            if !statusValue.isEmpty {
+                updateNeedsToNotifyUser(oldStatus: status, newStatus: newValue)
+            }
             statusValue = newValue.rawValue
+            if needsToNotifyUser {
+                NotificationCenter.default.post(name: .featureDidChangeNotification, object: change(from: self))
+            }
         }
     }
 
@@ -151,7 +162,7 @@ public class Feature: ZMManagedObject {
     private func updateNeedsToNotifyUser(oldStatus: Status, newStatus: Status) {
         switch name {
         case .conferenceCalling:
-            needsToNotifyUser = oldStatus != newStatus
+            needsToNotifyUser = (oldStatus != newStatus) && newStatus == .enabled
 
         default:
             break
@@ -181,51 +192,20 @@ public class Feature: ZMManagedObject {
     }
 }
 
-extension Feature: ObjectInSnapshot {
+extension Feature {
 
-    public static var observableKeys: Set<String> {
-        return Set([#keyPath(Feature.statusValue), #keyPath(Feature.configData)])
+    public enum FeatureChange {
+        case conferenceCallingIsAvailable
     }
 
-    public var notificationName: Notification.Name {
-        return .FeatureChange
-    }
+    private func change(from feature: Feature) -> FeatureChange? {
+        switch feature.name {
+        case .conferenceCalling where feature.status == .enabled:
+            return .conferenceCallingIsAvailable
 
-    final class FeatureChangeInfo: ObjectChangeInfo {
-
-        var feature: Feature {
-            return object as! Feature
-        }
-
-        var statusChanged: Bool {
-            return changedKeysContain(keys: #keyPath(Feature.statusValue))
-        }
-
-        var configChanged: Bool {
-            return changedKeysContain(keys: #keyPath(Feature.configData))
+        default:
+            return nil
         }
     }
-
-    static func addObserver(_ observer: FeatureObserver, in context: NSManagedObjectContext) -> Any {
-        return ManagedObjectObserverToken(name: .FeatureChange, managedObjectContext: context) { [weak observer] note in
-            guard
-                let `observer` = observer,
-                let changeInfo = note.changeInfo as? FeatureChangeInfo
-            else {
-                return
-            }
-
-            observer.featureDidChange(changeInfo)
-        }
-
-    }
-
 
 }
-
-protocol FeatureObserver: class {
-
-    func featureDidChange(_ changeInfo: Feature.FeatureChangeInfo)
-
-}
-

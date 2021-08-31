@@ -80,7 +80,6 @@ extension ObjectChangeInfo {
         case let object as Team:            return TeamChangeInfo.changeInfo(for: object, changes: changes)
         case let object as Label:           return LabelChangeInfo.changeInfo(for: object, changes: changes)
         case let object as ParticipantRole: return ParticipantRoleChangeInfo.changeInfo(for: object, changes: changes)
-        case let object as Feature:         return Feature.FeatureChangeInfo(object: object, changes: changes)
         default:
             return nil
         }
