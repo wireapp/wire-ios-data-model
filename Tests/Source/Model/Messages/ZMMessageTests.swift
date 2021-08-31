@@ -20,42 +20,31 @@ import Foundation
 
 extension ZMMessageTests {
     @objc(mockEventOfType:forConversation:sender:data:)
-        func mockEvent(of type: ZMUpdateEventType,
-                                for conversation: ZMConversation?,
-                                sender senderID: UUID?,
-                                data: [AnyHashable: Any]?) -> ZMUpdateEvent {
-            let updateEvent = ZMUpdateEvent()
-            updateEvent.type = type
-
-            let serverTimeStamp: Date
-
-            if let lastServerTimeStamp = conversation?.lastServerTimeStamp {
-                serverTimeStamp = lastServerTimeStamp.addingTimeInterval(5)
-            } else {
-                serverTimeStamp = Date()
-            }
-
-            let from = senderID ?? UUID()
-
-            if let remoteIdentifier = conversation?.remoteIdentifier?.transportString,
-               let data = data {
-                let payload = [
-                    "conversation": remoteIdentifier,
-                    "time": serverTimeStamp.transportString,
-                    "from": from.transportString,
-                    "data": data
-                ] as [String: Any]
-
-                updateEvent.payload = payload
-            }
-
-            ///TODO: mock?
-//            updateEvent.timestamp = serverTimeStamp
-//            updateEvent.conversationUUID = conversation?.remoteIdentifier
-//            updateEvent.senderUUID = from
-
-            return updateEvent
+    func mockEvent(of type: ZMUpdateEventType,
+                   for conversation: ZMConversation?,
+                   sender senderID: UUID?,
+                   data: [AnyHashable: Any]?) -> ZMUpdateEvent {
+        let updateEvent = ZMUpdateEvent()
+        updateEvent.type = type
+        
+        let serverTimeStamp : Date = conversation?.lastServerTimeStamp?.addingTimeInterval(5) ??
+            Date()
+        
+        let from = senderID ?? UUID()
+        
+        if let remoteIdentifier = conversation?.remoteIdentifier?.transportString(),
+           let data = data {
+            
+            updateEvent.payload = [
+                "conversation": remoteIdentifier,
+                "time": serverTimeStamp.transportString(),
+                "from": from.transportString(),
+                "data": data
+            ]
         }
+        
+        return updateEvent
+    }
     
     func testThatSpecialKeysAreNotPartOfTheLocallyModifiedKeysForClientMessages() {
         // when
