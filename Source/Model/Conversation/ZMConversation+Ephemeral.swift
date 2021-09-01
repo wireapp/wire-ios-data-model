@@ -16,6 +16,16 @@
 // along with this program. If not, see http://www.gnu.org/licenses/.
 //
 
+public enum MessageDestructionTimeoutKind {
+
+    // TODO: These need better names
+
+    case team
+    case groupConversation
+    case selfUser
+
+}
+
 
 public enum MessageDestructionTimeoutValue: RawRepresentable, Hashable {
 
@@ -59,6 +69,7 @@ public enum MessageDestructionTimeoutValue: RawRepresentable, Hashable {
 }
 
 extension MessageDestructionTimeoutValue: ExpressibleByIntegerLiteral, ExpressibleByFloatLiteral {
+
     public init(integerLiteral value: TimeInterval) {
         self.init(rawValue: value)
     }
@@ -168,61 +179,53 @@ extension TimeInterval {
 
 public extension ZMConversation {
 
-    /// Defines the time interval until an inserted messages is deleted / "self-destructs" on all clients.
-    /// Can be set to the local or to the synchronized value.
-    ///
-    /// NOTE: If the timeout if forced (according to Feature.SelfDeletingMessages), setting values will
-    /// have no effect.
-    ///
-    /// WARNING: setting the synced value: please update the value on the backend and then update the value of this
-    /// property.
-    ///
-    /// Computed property from @c localMessageDestructionTimeout and @c syncedMessageDestructionTimeout.
-    var messageDestructionTimeout: MessageDestructionTimeout? {
-        get {
-            if let forcedTimeout = forcedMessageDestructionTimeout {
-                return forcedTimeout == 0 ? nil : .local(MessageDestructionTimeoutValue(rawValue: forcedTimeout))
-            } else if syncedMessageDestructionTimeout != 0 {
-                return .synced(MessageDestructionTimeoutValue(rawValue: syncedMessageDestructionTimeout))
-            } else if localMessageDestructionTimeout != 0 {
-                return .local(MessageDestructionTimeoutValue(rawValue: localMessageDestructionTimeout))
-            } else {
-                return nil
-            }
-        }
+    /// The timeout value actively used with new messages.
 
-        set {
-            let currentValue = messageDestructionTimeout
-            
-            if let newTimeout = newValue {
-                switch (currentValue, newTimeout) {
-                case (_, .synced(let value)):
-                    if conversationType == .group {
-                        syncedMessageDestructionTimeout = value.rawValue
-                    }
-                case (.synced?, .local):
-                    // It is not allowed to set a local timeout while a synced timeout is set, this should never happen.
-                    fatal("Not allowed to set local timeout when synced timeout is set")
-                case (.local?, .local(let value)):
-                    localMessageDestructionTimeout = value.rawValue
-                case (nil, .local(let value)):
-                    localMessageDestructionTimeout = value.rawValue
-                }
-            }
-            else {
-                // Reset the currently set field / type when setting to nil
-                switch currentValue {
-                case .local?:
-                    localMessageDestructionTimeout = 0
-                case .synced?:
-                    syncedMessageDestructionTimeout = 0
-                case nil:
-                    syncedMessageDestructionTimeout = 0
-                    localMessageDestructionTimeout = 0
-                }
-            }
+    var activeMessageDestructionTimeoutValue: MessageDestructionTimeoutValue? {
+        guard let kind = activeMessageDestructionTimeoutKind else { return nil }
+        return messageDestructionTimeoutValue(for: kind)
+    }
+
+    /// The type of timeout used with new messages.
+
+    var activeMessageDestructionTimeoutKind: MessageDestructionTimeoutKind? {
+        if forcedMessageDestructionTimeout != nil {
+            return .team
+        } else if hasSyncedMessageDestructionTimeout {
+            return .groupConversation
+        } else if hasLocalMessageDestructionTimeout {
+            return .selfUser
+        } else {
+            return nil
         }
     }
+
+    /// The message destruction timeout value used for the given kind.
+    ///
+    /// This is not necessarily the timeout used when appending new messages. See `activeTimeoutValue`.
+
+    func messageDestructionTimeoutValue(for kind: MessageDestructionTimeoutKind) -> MessageDestructionTimeoutValue {
+        switch kind {
+        case .team:
+            return .init(rawValue: teamMessageDestructionTimeout)
+        case .groupConversation:
+            return .init(rawValue: syncedMessageDestructionTimeout)
+        case .selfUser:
+            return .init(rawValue: localMessageDestructionTimeout)
+        }
+    }
+
+    var hasSyncedMessageDestructionTimeout: Bool {
+        return messageDestructionTimeoutValue(for: .groupConversation) != .none
+    }
+
+    var hasLocalMessageDestructionTimeout: Bool {
+        return messageDestructionTimeoutValue(for: .selfUser) != .none
+    }
+
+    @NSManaged internal var localMessageDestructionTimeout: TimeInterval
+    @NSManaged internal var syncedMessageDestructionTimeout: TimeInterval
+
 
     private var forcedMessageDestructionTimeout: Double? {
         guard let context = managedObjectContext else { return nil }
@@ -237,18 +240,16 @@ public extension ZMConversation {
         }
     }
 
-    @objc var messageDestructionTimeoutValue: TimeInterval {
-        switch messageDestructionTimeout {
-        case .local(let value)?:
-            return value.rawValue
-        case .synced(let value)?:
-            return value.rawValue
-        case nil:
-            return 0
-        }
+    private var teamMessageDestructionTimeout: TimeInterval {
+        guard let context = managedObjectContext else { return 0 }
+        let selfDeletingMessageFeature = FeatureService(context: context).fetchSelfDeletingMesssages()
+        guard selfDeletingMessageFeature.status == .enabled else { return 0 }
+        return TimeInterval(selfDeletingMessageFeature.config.enforcedTimeoutSeconds)
     }
 
-    @discardableResult @objc func appendMessageTimerUpdateMessage(fromUser user: ZMUser, timer: Double, timestamp: Date) -> ZMSystemMessage {
+    @objc
+    @discardableResult
+    func appendMessageTimerUpdateMessage(fromUser user: ZMUser, timer: Double, timestamp: Date) -> ZMSystemMessage {
         let message = appendSystemMessage(
             type: .messageTimerUpdate,
             sender: user,
@@ -265,21 +266,7 @@ public extension ZMConversation {
         managedObjectContext?.enqueueDelayedSave()
         return message
     }
-    
-    @NSManaged internal var localMessageDestructionTimeout: TimeInterval
-    @NSManaged internal var syncedMessageDestructionTimeout: TimeInterval
-    
-    var hasSyncedDestructionTimeout: Bool {
-        guard let timeout = messageDestructionTimeout,
-            case .synced(_) = timeout else { return false }
-        return true
-    }
-    
-    var hasLocalDestructionTimeout: Bool {
-        guard let timeout = messageDestructionTimeout,
-            case .local = timeout else { return false }
-        return true
-    }
+
 }
 
 private extension Feature.SelfDeletingMessages {

@@ -28,7 +28,7 @@ import Foundation
     internal convenience init(asset: WireProtos.Asset,
                               nonce: UUID,
                               managedObjectContext: NSManagedObjectContext,
-                              expiresAfter timeout: TimeInterval = 0) throws {
+                              expiresAfter timeout: TimeInterval?) throws {
 
         self.init(nonce: nonce, managedObjectContext: managedObjectContext)
         
