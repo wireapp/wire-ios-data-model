@@ -51,6 +51,7 @@ public class Feature: ZMManagedObject {
     @NSManaged private var statusValue: String
     @NSManaged private var configData: Data?
     @NSManaged public var needsToNotifyUser: Bool
+    @NSManaged public var hasInitialDefault: Bool
     
     public var config: Data? {
         get {
@@ -58,7 +59,7 @@ public class Feature: ZMManagedObject {
         }
 
         set {
-            if !statusValue.isEmpty {
+            if !statusValue.isEmpty && !hasInitialDefault {
                 updateNeedsToNotifyUser(oldData: configData, newData: newValue)
             }
             configData = newValue
@@ -89,7 +90,7 @@ public class Feature: ZMManagedObject {
         }
 
         set {
-            if !statusValue.isEmpty {
+            if !statusValue.isEmpty && !hasInitialDefault {
                 updateNeedsToNotifyUser(oldStatus: status, newStatus: newValue)
             }
             statusValue = newValue.rawValue
@@ -150,9 +151,11 @@ public class Feature: ZMManagedObject {
         context.performGroupedBlock{
             if let existing = fetch(name: name, context: context) {
                 changes(existing)
+                existing.hasInitialDefault = false
             } else {
                 let feature = Feature.insertNewObject(in: context)
                 feature.name = name
+                feature.hasInitialDefault = true
                 changes(feature)
             }
             context.saveOrRollback()
