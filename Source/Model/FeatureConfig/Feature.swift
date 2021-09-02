@@ -151,7 +151,6 @@ public class Feature: ZMManagedObject {
         context.performGroupedBlock{
             if let existing = fetch(name: name, context: context) {
                 changes(existing)
-                existing.hasInitialDefault = false
             } else {
                 let feature = Feature.insertNewObject(in: context)
                 feature.name = name
