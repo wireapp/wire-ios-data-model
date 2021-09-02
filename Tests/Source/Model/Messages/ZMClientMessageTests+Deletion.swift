@@ -476,7 +476,7 @@ extension ZMClientMessageTests_Deletion {
 
     func testThatItStopsDeletionTimerForEphemeralMessages(){
         // given
-        conversation.messageDestructionTimeout = .local(MessageDestructionTimeoutValue(rawValue: 1000))
+        conversation.localMessageDestructionTimeout = 1000
         let sut = try! conversation.appendText(content: "foo") as! ZMClientMessage
         sut.sender = user1
         _ = uiMOC.zm_messageDeletionTimer?.startDeletionTimer(message: sut, timeout: 1000)
@@ -505,7 +505,7 @@ extension ZMClientMessageTests_Deletion {
         self.syncMOC.performGroupedBlockAndWait {
             // given
             self.syncConversation.conversationType = .group
-            self.syncConversation.messageDestructionTimeout = .local(MessageDestructionTimeoutValue(rawValue: 1000))
+            self.syncConversation.localMessageDestructionTimeout = 1000
             
             // self sends ephemeral
             let sut = try! self.syncConversation.appendText(content: "foo") as! ZMClientMessage
@@ -534,7 +534,7 @@ extension ZMClientMessageTests_Deletion {
     func testThatIfUserDeletesGroupEphemeralThenSelfAndSenderAreRecipientsOfDeleteMessage() {
         // given
         conversation.conversationType = .group
-        conversation.messageDestructionTimeout = .local(MessageDestructionTimeoutValue(rawValue: 1000))
+        conversation.localMessageDestructionTimeout = 1000
         
         // ephemeral received
         let sut = try! conversation.appendText(content: "foo") as! ZMClientMessage

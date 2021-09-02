@@ -16,18 +16,6 @@
 // along with this program. If not, see http://www.gnu.org/licenses/.
 //
 
-
-
-
-
-
-
-public enum MessageDestructionTimeout: Equatable {
-    case local(MessageDestructionTimeoutValue)
-    case synced(MessageDestructionTimeoutValue)
-}
-
-
 public extension ZMConversation {
 
     /// The timeout value actively used with new messages.

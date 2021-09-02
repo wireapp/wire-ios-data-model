@@ -189,7 +189,7 @@ fileprivate let longStyleFormatter: DateComponentsFormatter = {
     return formatter
 }()
 
-private extension TimeInterval {
+extension TimeInterval {
 
     static let tenSeconds: Self = 10
     static let oneMinute: Self = 60
