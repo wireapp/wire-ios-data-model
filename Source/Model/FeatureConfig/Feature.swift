@@ -51,7 +51,7 @@ public class Feature: ZMManagedObject {
     @NSManaged private var statusValue: String
     @NSManaged private var configData: Data?
     @NSManaged public var needsToNotifyUser: Bool
-    @NSManaged var hasInitialDefault: Bool
+    @NSManaged public var hasInitialDefault: Bool
     
     public var config: Data? {
         get {
