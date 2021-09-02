@@ -35,7 +35,7 @@ import Foundation
         transferState = .uploading
         version = 3
         
-        let genericMessage = GenericMessage(content: asset, nonce: nonce, expiresAfter: timeout)
+        let genericMessage = GenericMessage(content: asset, nonce: nonce, expiresAfterTimeInterval: timeout)
         try mergeWithExistingData(message: genericMessage)
     }
     

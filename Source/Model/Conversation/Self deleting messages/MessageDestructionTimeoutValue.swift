@@ -166,19 +166,6 @@ public extension MessageDestructionTimeoutValue {
 
 }
 
-// TODO: check if these are used at all.
-
-extension MessageDestructionTimeoutValue: ExpressibleByIntegerLiteral, ExpressibleByFloatLiteral {
-
-    public init(integerLiteral value: TimeInterval) {
-        self.init(rawValue: value)
-    }
-
-    public init(floatLiteral value: TimeInterval) {
-        self.init(rawValue: value)
-    }
-}
-
 fileprivate let longStyleFormatter: DateComponentsFormatter = {
     let formatter = DateComponentsFormatter()
     formatter.includesApproximationPhrase = false

@@ -99,7 +99,7 @@ extension ZMConversation {
             $0.zoom = locationData.zoomLevel
         }
 
-        let message = GenericMessage(content: locationContent, nonce: nonce, expiresAfter: activeMessageDestructionTimeoutValue?.rawValue)
+        let message = GenericMessage(content: locationContent, nonce: nonce, expiresAfter: activeMessageDestructionTimeoutValue)
         return try appendClientMessage(with: message)
     }
 
@@ -117,7 +117,7 @@ extension ZMConversation {
     @discardableResult
     public func appendKnock(nonce: UUID = UUID()) throws -> ZMConversationMessage {
         let content = Knock.with { $0.hotKnock = false }
-        let message = GenericMessage(content: content, nonce: nonce, expiresAfter: activeMessageDestructionTimeoutValue?.rawValue)
+        let message = GenericMessage(content: content, nonce: nonce, expiresAfter: activeMessageDestructionTimeoutValue)
         return try appendClientMessage(with: message)
     }
 
@@ -148,7 +148,7 @@ extension ZMConversation {
         }
 
         let text = Text(content: content, mentions: mentions, linkPreviews: [], replyingTo: quotedMessage as? ZMOTRMessage)
-        let genericMessage = GenericMessage(content: text, nonce: nonce, expiresAfter: activeMessageDestructionTimeoutValue?.rawValue)
+        let genericMessage = GenericMessage(content: text, nonce: nonce, expiresAfter: activeMessageDestructionTimeoutValue)
 
         let clientMessage = try appendClientMessage(with: genericMessage, expires: true, hidden: false, configure: {
             $0.linkPreviewState = fetchLinkPreview ? .waitingToBeProcessed : .done

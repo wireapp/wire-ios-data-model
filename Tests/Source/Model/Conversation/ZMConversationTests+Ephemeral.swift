@@ -77,7 +77,7 @@ class ZMConversationTests_Ephemeral : BaseZMMessageTests {
         conversation.conversationType = .group
         
         // when
-        conversation.localMessageDestructionTimeout = .tenSeconds
+        conversation.setMessageDestructionTimeoutValue(.tenSeconds, for: .selfUser)
         
         // then
         XCTAssertEqual(conversation.activeMessageDestructionTimeoutType, .selfUser)
@@ -90,7 +90,7 @@ class ZMConversationTests_Ephemeral : BaseZMMessageTests {
         conversation.conversationType = .group
         
         // when
-        conversation.syncedMessageDestructionTimeout = .tenSeconds
+        conversation.setMessageDestructionTimeoutValue(.tenSeconds, for: .groupConversation)
         
         // then
         XCTAssertEqual(conversation.activeMessageDestructionTimeoutType, .groupConversation)
@@ -103,7 +103,7 @@ class ZMConversationTests_Ephemeral : BaseZMMessageTests {
         conversation.conversationType = .oneOnOne
         
         // when
-        conversation.localMessageDestructionTimeout = .tenSeconds
+        conversation.setMessageDestructionTimeoutValue(.tenSeconds, for: .selfUser)
 
         // then
         XCTAssertEqual(conversation.activeMessageDestructionTimeoutType, .selfUser)
@@ -118,14 +118,14 @@ class ZMConversationTests_Ephemeral : BaseZMMessageTests {
         XCTAssertFalse(conversation.hasLocalMessageDestructionTimeout)
         
         // when
-        conversation.localMessageDestructionTimeout = .fiveMinutes
+        conversation.setMessageDestructionTimeoutValue(.fiveMinutes, for: .selfUser)
         
         // then
         XCTAssertTrue(conversation.hasLocalMessageDestructionTimeout)
         XCTAssertFalse(conversation.hasSyncedMessageDestructionTimeout)
         
         // and when
-        conversation.syncedMessageDestructionTimeout = .tenSeconds
+        conversation.setMessageDestructionTimeoutValue(.tenSeconds, for: .groupConversation)
         
         // then both timeouts exist, but synced timeout dominates
         XCTAssertTrue(conversation.hasSyncedMessageDestructionTimeout)
@@ -133,7 +133,7 @@ class ZMConversationTests_Ephemeral : BaseZMMessageTests {
         XCTAssertEqual(conversation.activeMessageDestructionTimeoutType, .groupConversation)
         
         // and when
-        conversation.syncedMessageDestructionTimeout = .zero
+        conversation.setMessageDestructionTimeoutValue(.none, for: .groupConversation)
         
         // then local timeout persists
         XCTAssertFalse(conversation.hasSyncedMessageDestructionTimeout)
@@ -155,8 +155,8 @@ class ZMConversationTests_Ephemeral : BaseZMMessageTests {
 
         syncMOC.performGroupedBlockAndWait {
             let conversation = ZMConversation.insertNewObject(in: self.syncMOC)
-            conversation.localMessageDestructionTimeout = 10
-            conversation.syncedMessageDestructionTimeout = 10
+            conversation.setMessageDestructionTimeoutValue(.tenSeconds, for: .selfUser)
+            conversation.setMessageDestructionTimeoutValue(.tenSeconds, for: .groupConversation)
 
             // Then
             XCTAssertEqual(conversation.activeMessageDestructionTimeoutType, .team)
@@ -180,8 +180,8 @@ class ZMConversationTests_Ephemeral : BaseZMMessageTests {
 
         syncMOC.performGroupedBlockAndWait {
             let conversation = ZMConversation.insertNewObject(in: self.syncMOC)
-            conversation.localMessageDestructionTimeout = 10
-            conversation.syncedMessageDestructionTimeout = 10
+            conversation.setMessageDestructionTimeoutValue(.tenSeconds, for: .selfUser)
+            conversation.setMessageDestructionTimeoutValue(.tenSeconds, for: .groupConversation)
 
             // Then
             XCTAssertEqual(conversation.activeMessageDestructionTimeoutType, .team)

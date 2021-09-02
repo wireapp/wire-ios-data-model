@@ -142,7 +142,8 @@ extension ZMConversation {
         
         if let messageTimerNumber = transportData[PayloadKeys.messageTimer] as? Double {
             // Backend is sending the miliseconds, we need to convert to seconds.
-            self.syncedMessageDestructionTimeout = messageTimerNumber / 1000;
+            setMessageDestructionTimeoutValue(.init(rawValue: messageTimerNumber / 1000), for: .groupConversation)
+
         }
         self.markToDownloadRolesIfNeeded()
     }

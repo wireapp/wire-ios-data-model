@@ -69,6 +69,22 @@ extension ZMConversation {
         }
     }
 
+    /// Set the given timeout value for the given timeout type.
+    ///
+    /// Note: setting a timeout for the `team` type has no effect since this is controlled by the
+    /// `Feature.SelfDeletingMessages` feature config.
+
+    public func setMessageDestructionTimeoutValue(_ value: MessageDestructionTimeoutValue, for type: MessageDestructionTimeoutType) {
+        switch type {
+        case .team:
+            break
+        case .groupConversation:
+            syncedMessageDestructionTimeout = value.rawValue
+        case .selfUser:
+            localMessageDestructionTimeout = value.rawValue
+        }
+    }
+
     // MARK: - Helpers
 
     private var hasForcedMessageDestructionTimeout: Bool {
