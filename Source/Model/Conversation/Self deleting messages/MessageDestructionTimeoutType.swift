@@ -32,8 +32,8 @@ public enum MessageDestructionTimeoutType {
 
     case groupConversation
 
-    /// For timeouts set by the self user and only apply to the self users.
-    ///  This has lowest precedence.
+    /// For timeouts set by the self user and only apply to the self user.
+    /// This has lowest precedence.
 
     case selfUser
 
