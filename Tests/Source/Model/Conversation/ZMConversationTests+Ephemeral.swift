@@ -176,9 +176,7 @@ class ZMConversationTests_Ephemeral : BaseZMMessageTests {
             let feature = featureService.fetchSelfDeletingMesssages()
             XCTAssertEqual(feature.status, .enabled)
             XCTAssertEqual(feature.config.enforcedTimeoutSeconds, 300)
-        }
 
-        syncMOC.performGroupedBlockAndWait {
             let conversation = ZMConversation.insertNewObject(in: self.syncMOC)
             conversation.setMessageDestructionTimeoutValue(.tenSeconds, for: .selfUser)
             conversation.setMessageDestructionTimeoutValue(.tenSeconds, for: .groupConversation)
