@@ -132,7 +132,7 @@ public extension MessageDestructionTimeoutValue {
         }
 
         if isYears {
-            return String(Int(rawValue / .oneYear))
+            return String(Int(rawValue / .oneYearFromNow))
         }
 
         return nil
@@ -155,11 +155,11 @@ public extension MessageDestructionTimeoutValue {
     }
 
     var isWeeks: Bool {
-    return (.oneWeek)..<(.oneYear) ~= rawValue
+        return (.oneWeek)..<(.oneYearFromNow) ~= rawValue
     }
 
     var isYears: Bool {
-        return rawValue >= .oneYear
+        return rawValue >= .oneYearFromNow
     }
 
 }
@@ -183,6 +183,12 @@ extension TimeInterval {
     static let oneDay: Self = 86400
     static let oneWeek: Self = 604800
     static let fourWeeks: Self = 2419200
-    static let oneYear: Self = 31557600
+
+    // Calculate the interval to account for leap years.
+    static var oneYearFromNow: Self {
+        let now = Date()
+        let oneYearFromNow = Calendar.current.date(byAdding: .year, value: 1, to: now)!
+        return oneYearFromNow.timeIntervalSince(now)
+    }
 
 }
