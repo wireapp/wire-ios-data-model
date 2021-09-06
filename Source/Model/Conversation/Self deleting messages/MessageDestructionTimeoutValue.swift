@@ -91,8 +91,6 @@ public enum MessageDestructionTimeoutValue: RawRepresentable, Hashable {
 
 }
 
-// TODO: [John] Move these to the ui project.
-
 public extension MessageDestructionTimeoutValue {
 
     static var all: [Self] {
@@ -134,14 +132,14 @@ public extension MessageDestructionTimeoutValue {
         }
 
         if isYears {
-            return String(Int(rawValue / TimeInterval.oneYearSinceNow))
+            return String(Int(rawValue / .oneYear))
         }
 
         return nil
     }
 
     var isSeconds: Bool {
-        return rawValue < .oneMinute
+        return (.zero)..<(.oneMinute) ~= rawValue
     }
 
     var isMinutes: Bool {
@@ -157,11 +155,11 @@ public extension MessageDestructionTimeoutValue {
     }
 
     var isWeeks: Bool {
-        return rawValue >= .oneWeek && !isYears
+    return (.oneWeek)..<(.oneYear) ~= rawValue
     }
 
     var isYears: Bool {
-        return rawValue >= TimeInterval.oneYearSinceNow
+        return rawValue >= .oneYear
     }
 
 }
@@ -185,11 +183,6 @@ extension TimeInterval {
     static let oneDay: Self = 86400
     static let oneWeek: Self = 604800
     static let fourWeeks: Self = 2419200
-
-    static var oneYearSinceNow: Self {
-        let now = Date()
-        let oneYear = Calendar.current.date(byAdding: .year, value: 1, to: now)
-        return oneYear!.timeIntervalSince(now)
-    }
+    static let oneYear: Self = 31557600
 
 }
