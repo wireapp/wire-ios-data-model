@@ -51,7 +51,7 @@ public class Feature: ZMManagedObject {
     @NSManaged private var statusValue: String
     @NSManaged private var configData: Data?
     @NSManaged public var needsToNotifyUser: Bool
-    @NSManaged public var hasInitialDefault: Bool
+    @NSManaged var hasInitialDefault: Bool
     
     public var config: Data? {
         get {
@@ -97,6 +97,7 @@ public class Feature: ZMManagedObject {
             if needsToNotifyUser {
                 NotificationCenter.default.post(name: .featureDidChangeNotification, object: change(from: self))
             }
+            hasInitialDefault = false
         }
     }
 
@@ -159,8 +160,8 @@ public class Feature: ZMManagedObject {
             } else {
                 let feature = Feature.insertNewObject(in: context)
                 feature.name = name
-                feature.hasInitialDefault = true
                 changes(feature)
+                feature.hasInitialDefault = true
             }
             context.saveOrRollback()
         }
