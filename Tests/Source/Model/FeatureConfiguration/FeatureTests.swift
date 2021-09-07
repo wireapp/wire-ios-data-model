@@ -166,7 +166,7 @@ final class FeatureTests: ZMBaseManagedObjectTest {
         XCTAssertTrue(testObserver.changes.isEmpty)
     }
 
-    class TestObserver: NSObject {
+    private class TestObserver: NSObject {
         var changes : [Feature.FeatureChange] = []
         
         init(for notificationName: Notification.Name) {

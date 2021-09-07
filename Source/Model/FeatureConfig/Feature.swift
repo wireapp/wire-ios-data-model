@@ -59,7 +59,7 @@ public class Feature: ZMManagedObject {
         }
 
         set {
-            if !statusValue.isEmpty && !hasInitialDefault {
+            if hasBeenUpdatedFromBackend {
                 updateNeedsToNotifyUser(oldData: configData, newData: newValue)
             }
             configData = newValue
@@ -90,7 +90,7 @@ public class Feature: ZMManagedObject {
         }
 
         set {
-            if !statusValue.isEmpty && !hasInitialDefault {
+            if hasBeenUpdatedFromBackend {
                 updateNeedsToNotifyUser(oldStatus: status, newStatus: newValue)
             }
             statusValue = newValue.rawValue
@@ -98,6 +98,11 @@ public class Feature: ZMManagedObject {
                 NotificationCenter.default.post(name: .featureDidChangeNotification, object: change(from: self))
             }
         }
+    }
+
+    /// Whether the feature has been updated from backend
+    private var hasBeenUpdatedFromBackend: Bool {
+        return !statusValue.isEmpty && !hasInitialDefault
     }
 
     // MARK: - Methods
