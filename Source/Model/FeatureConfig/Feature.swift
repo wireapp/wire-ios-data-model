@@ -63,6 +63,7 @@ public class Feature: ZMManagedObject {
                 updateNeedsToNotifyUser(oldData: configData, newData: newValue)
             }
             configData = newValue
+            hasInitialDefault = false
         }
     }
     
