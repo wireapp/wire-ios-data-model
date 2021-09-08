@@ -51,6 +51,7 @@ public class Feature: ZMManagedObject {
     @NSManaged private var statusValue: String
     @NSManaged private var configData: Data?
     @NSManaged public var needsToNotifyUser: Bool
+    @NSManaged var hasInitialDefault: Bool
     
     public var config: Data? {
         get {
@@ -58,10 +59,11 @@ public class Feature: ZMManagedObject {
         }
 
         set {
-            if !statusValue.isEmpty {
+            if hasBeenUpdatedFromBackend {
                 updateNeedsToNotifyUser(oldData: configData, newData: newValue)
             }
             configData = newValue
+            hasInitialDefault = false
         }
     }
     
@@ -89,14 +91,20 @@ public class Feature: ZMManagedObject {
         }
 
         set {
-            if !statusValue.isEmpty {
+            if hasBeenUpdatedFromBackend {
                 updateNeedsToNotifyUser(oldStatus: status, newStatus: newValue)
             }
             statusValue = newValue.rawValue
             if needsToNotifyUser {
                 NotificationCenter.default.post(name: .featureDidChangeNotification, object: change(from: self))
             }
+            hasInitialDefault = false
         }
+    }
+
+    /// Whether the feature has been updated from backend
+    private var hasBeenUpdatedFromBackend: Bool {
+        return !statusValue.isEmpty && !hasInitialDefault
     }
 
     // MARK: - Methods
@@ -154,6 +162,7 @@ public class Feature: ZMManagedObject {
                 let feature = Feature.insertNewObject(in: context)
                 feature.name = name
                 changes(feature)
+                feature.hasInitialDefault = true
             }
             context.saveOrRollback()
         }
