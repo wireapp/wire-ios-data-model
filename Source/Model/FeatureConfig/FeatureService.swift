@@ -43,8 +43,6 @@ public class FeatureService {
 
     // MARK: - Accessors
 
-    // We need to avoid the explicits here.
-
     /// The app lock
     public func fetchAppLock() -> Feature.AppLock {
         var result: Feature.AppLock!
