@@ -148,8 +148,8 @@ public class Feature: ZMManagedObject {
     ///     - changes: A closure to mutate the fetched instance.
 
     public static func updateOrCreate(havingName name: Name,
-                               in context: NSManagedObjectContext,
-                               changes: @escaping (Feature) -> Void) {
+                                      in context: NSManagedObjectContext,
+                                      changes: @escaping (Feature) -> Void) {
 
         // There should be at most one instance per feature, so only allow modifications
         // on a single context to avoid race conditions.
