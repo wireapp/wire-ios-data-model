@@ -1651,10 +1651,10 @@
 			children = (
 				06034B6B26A8D31F003624B4 /* FileSharing */,
 				0686649D256FB087001C8747 /* AppLock */,
-				EECFAA3626D52E8B00D9E100 /* SelfDeletingMessages */,
 				EE9AD9152696F01700DD5F51 /* FeatureService.swift */,
 				54CB3FE924A3994400BA86DD /* FeatureFlag.swift */,
 				064F8E07255E04800040371D /* Feature.swift */,
+				EECFAA3726D52EB700D9E100 /* Feature.SelfDeletingMessages.swift */,
 			);
 			path = FeatureConfig;
 			sourceTree = "<group>";
@@ -1815,16 +1815,6 @@
 			name = Reaction;
 			sourceTree = "<group>";
 		};
-		EE5E2C1126DFC2B300C3928A /* Self deleting messages */ = {
-			isa = PBXGroup;
-			children = (
-				F92C99291DAFBC910034AFDD /* ZMConversation+SelfDeletingMessages.swift */,
-				EE5E2C1426DFC31900C3928A /* MessageDestructionTimeoutType.swift */,
-				EE5E2C1826DFC67900C3928A /* MessageDestructionTimeoutValue.swift */,
-			);
-			path = "Self deleting messages";
-			sourceTree = "<group>";
-		};
 		EE68EECC252DCAB80013B242 /* Change detection */ = {
 			isa = PBXGroup;
 			children = (
@@ -1836,14 +1826,6 @@
 				EEAAD759252C6D2700E6A44E /* UnreadMessages.swift */,
 			);
 			path = "Change detection";
-			sourceTree = "<group>";
-		};
-		EECFAA3626D52E8B00D9E100 /* SelfDeletingMessages */ = {
-			isa = PBXGroup;
-			children = (
-				EECFAA3726D52EB700D9E100 /* Feature.SelfDeletingMessages.swift */,
-			);
-			path = SelfDeletingMessages;
 			sourceTree = "<group>";
 		};
 		F1103BD82135471A00EB9ED6 /* Calling */ = {
@@ -1969,7 +1951,9 @@
 			children = (
 				A943BBE725B5A59D003D66BA /* ConversationLike.swift */,
 				F1103BD82135471A00EB9ED6 /* Calling */,
-				EE5E2C1126DFC2B300C3928A /* Self deleting messages */,
+				F92C99291DAFBC910034AFDD /* ZMConversation+SelfDeletingMessages.swift */,
+				EE5E2C1426DFC31900C3928A /* MessageDestructionTimeoutType.swift */,
+				EE5E2C1826DFC67900C3928A /* MessageDestructionTimeoutValue.swift */,
 				F9B71F111CB264EF001DB03F /* ZMConversation+Internal.h */,
 				F9B71F101CB264EF001DB03F /* ZMConversation.m */,
 				63D41E4E2452EA080076826F /* ZMConversation+SelfConversation.swift */,
