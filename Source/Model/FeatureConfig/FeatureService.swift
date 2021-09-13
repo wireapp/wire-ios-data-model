@@ -82,6 +82,15 @@ public class FeatureService {
                 $0.status = conferenceCalling.status
             }
         }
+
+        guard
+            needsToNotifyUser(for: .conferenceCalling),
+            conferenceCalling.status == .enabled
+        else {
+            return
+        }
+
+        notifyChange(.conferenceCallingIsAvailable)
     }
 
     public func fetchFileSharing() -> Feature.FileSharing {
@@ -106,6 +115,19 @@ public class FeatureService {
         Feature.updateOrCreate(havingName: .selfDeletingMessages, in: context) {
             $0.status = selfDeletingMessages.status
             $0.config = config
+        }
+
+        guard needsToNotifyUser(for: .selfDeletingMessages) else { return }
+
+        switch (selfDeletingMessages.status, selfDeletingMessages.config.enforcedTimeoutSeconds) {
+        case (.disabled, _):
+            notifyChange(.selfDeletingMessagesIsDisabled)
+
+        case (.enabled, let enforcedTimeout) where enforcedTimeout > 0:
+            notifyChange(.selfDeletingMessagesIsEnabled(enforcedTimeout: enforcedTimeout))
+
+        case (.enabled, _):
+            notifyChange(.selfDeletingMessagesIsEnabled(enforcedTimeout: nil))
         }
     }
 
@@ -158,5 +180,32 @@ public class FeatureService {
             feature?.needsToNotifyUser = notifyUser
         }
     }
+
+    private func notifyChange(_ change: FeatureChange) {
+        NotificationCenter.default.post(name: .featureDidChangeNotification, object: change)
+    }
+
+}
+
+extension FeatureService {
+
+    /// A type that represents the possible changes to feature configs.
+    ///
+    /// These can be used by the ui layer to determine what kind of alert
+    /// it needs to display to inform the user of changes.
+
+    public enum FeatureChange {
+
+        case conferenceCallingIsAvailable
+        case selfDeletingMessagesIsDisabled
+        case selfDeletingMessagesIsEnabled(enforcedTimeout: UInt?)
+
+    }
+
+}
+
+extension Notification.Name {
+
+    public static let featureDidChangeNotification = Notification.Name("FeatureDidChangeNotification")
 
 }

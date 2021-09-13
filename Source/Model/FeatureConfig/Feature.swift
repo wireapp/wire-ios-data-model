@@ -18,10 +18,6 @@
 
 import Foundation
 
-extension Notification.Name {
-    public static let featureDidChangeNotification = Notification.Name("FeatureDidChangeNotification")
-}
-
 private let zmLog = ZMSLog(tag: "Feature")
 
 @objcMembers
@@ -95,10 +91,8 @@ public class Feature: ZMManagedObject {
             if hasBeenUpdatedFromBackend {
                 updateNeedsToNotifyUser(oldStatus: status, newStatus: newValue)
             }
+
             statusValue = newValue.rawValue
-            if needsToNotifyUser {
-                NotificationCenter.default.post(name: .featureDidChangeNotification, object: change(from: self))
-            }
             hasInitialDefault = false
         }
     }
@@ -215,22 +209,4 @@ public class Feature: ZMManagedObject {
             needsToNotifyUser = oldConfig.enforcedTimeoutSeconds != newConfig.enforcedTimeoutSeconds
         }
     }
-}
-
-extension Feature {
-
-    public enum FeatureChange {
-        case conferenceCallingIsAvailable
-    }
-
-    private func change(from feature: Feature) -> FeatureChange? {
-        switch feature.name {
-        case .conferenceCalling where feature.status == .enabled:
-            return .conferenceCallingIsAvailable
-
-        default:
-            return nil
-        }
-    }
-
 }
