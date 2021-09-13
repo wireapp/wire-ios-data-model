@@ -1,6 +1,6 @@
 //
 // Wire
-// Copyright (C) 2020 Wire Swiss GmbH
+// Copyright (C) 2021 Wire Swiss GmbH
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -18,17 +18,21 @@
 
 import Foundation
 
-extension ZMMessage {
-    static func add(reaction: WireProtos.Reaction, senderID: UUID, conversation: ZMConversation, inContext moc: NSManagedObjectContext) {
-        guard
-            let user = ZMUser.fetch(with: senderID, in: moc),
-            let nonce = UUID(uuidString: reaction.messageID),
-            let localMessage = ZMMessage.fetch(withNonce: nonce, for: conversation, in: moc)
-        else {
-            return
+public extension Feature {
+
+    struct ConferenceCalling: Codable {
+
+        // MARK: - Properties
+
+        public let status: Status
+
+        // MARK: - Life cycle
+
+        public init(status: Feature.Status = .disabled) {
+            self.status = status
         }
-        
-        localMessage.addReaction(reaction.emoji, forUser: user)
-        localMessage.updateCategoryCache()
+
     }
+
 }
+
