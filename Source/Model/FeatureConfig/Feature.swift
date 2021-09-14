@@ -171,7 +171,7 @@ public class Feature: ZMManagedObject {
         case .conferenceCalling:
             needsToNotifyUser = hasStatusChanged && newStatus == .enabled
 
-        case .fileSharing:
+        case .fileSharing, .selfDeletingMessages:
             needsToNotifyUser = hasStatusChanged
 
         default:
