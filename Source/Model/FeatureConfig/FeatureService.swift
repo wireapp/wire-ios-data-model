@@ -56,12 +56,11 @@ public class FeatureService {
     }
 
     public func storeAppLock(_ appLock: Feature.AppLock) {
-        context.performGroupedAndWait {
-            let config = try! JSONEncoder().encode(appLock.config)
-            Feature.updateOrCreate(havingName: .appLock, in: $0) {
-                $0.status = appLock.status
-                $0.config = config
-            }
+        let config = try! JSONEncoder().encode(appLock.config)
+
+        Feature.updateOrCreate(havingName: .appLock, in: context) {
+            $0.status = appLock.status
+            $0.config = config
         }
     }
 
@@ -77,10 +76,8 @@ public class FeatureService {
     }
 
     public func storeConferenceCalling(_ conferenceCalling: Feature.ConferenceCalling) {
-        context.performGroupedAndWait {
-            Feature.updateOrCreate(havingName: .conferenceCalling, in: $0) {
-                $0.status = conferenceCalling.status
-            }
+        Feature.updateOrCreate(havingName: .conferenceCalling, in: context) {
+            $0.status = conferenceCalling.status
         }
 
         guard
@@ -94,13 +91,29 @@ public class FeatureService {
     }
 
     public func fetchFileSharing() -> Feature.FileSharing {
-        let feature = Feature.fetch(name: .fileSharing, context: context)!
-        return .init(status: feature.status)
+        var result: Feature.FileSharing!
+
+        context.performGroupedAndWait {
+            let feature = Feature.fetch(name: .fileSharing, context: $0)!
+            result = .init(status: feature.status)
+        }
+
+        return result
     }
 
     public func storeFileSharing(_ fileSharing: Feature.FileSharing) {
         Feature.updateOrCreate(havingName: .fileSharing, in: context) {
             $0.status = fileSharing.status
+        }
+
+        guard needsToNotifyUser(for: .fileSharing) else { return }
+
+        switch fileSharing.status {
+        case .disabled:
+            self.notifyChange(.fileSharingDisabled)
+
+        case .enabled:
+            self.notifyChange(.fileSharingEnabled)
         }
     }
 
@@ -112,6 +125,7 @@ public class FeatureService {
 
     public func storeSelfDeletingMessages(_ selfDeletingMessages: Feature.SelfDeletingMessages) {
         let config = try! JSONEncoder().encode(selfDeletingMessages.config)
+
         Feature.updateOrCreate(havingName: .selfDeletingMessages, in: context) {
             $0.status = selfDeletingMessages.status
             $0.config = config
@@ -144,6 +158,7 @@ public class FeatureService {
                 
             case .fileSharing:
                 storeFileSharing(.init())
+
             case .selfDeletingMessages:
                 storeSelfDeletingMessages(.init())
             }
@@ -199,6 +214,8 @@ extension FeatureService {
         case conferenceCallingIsAvailable
         case selfDeletingMessagesIsDisabled
         case selfDeletingMessagesIsEnabled(enforcedTimeout: UInt?)
+        case fileSharingEnabled
+        case fileSharingDisabled
 
     }
 
