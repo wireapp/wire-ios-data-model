@@ -178,7 +178,7 @@ public class FeatureService {
         }
     }
 
-    public func needsToNotifyUser(for featureName: Feature.Name) -> Bool {
+    func needsToNotifyUser(for featureName: Feature.Name) -> Bool {
         var result = false
 
         context.performGroupedAndWait {
