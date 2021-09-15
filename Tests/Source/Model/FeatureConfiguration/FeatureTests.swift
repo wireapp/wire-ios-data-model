@@ -26,9 +26,12 @@ final class FeatureTests: ZMBaseManagedObjectTest {
     func testThatItUpdatesFeature() {
         // given
         syncMOC.performGroupedAndWait { context in
-            guard let defaultAppLock = Feature.fetch(name: .appLock, context: context) else { return XCTFail() }
+            guard let defaultAppLock = Feature.fetch(name: .appLock, context: context) else {
+                XCTFail()
+                return
+            }
+
             XCTAssertEqual(defaultAppLock.status, .enabled)
-            return
         }
 
         // when
@@ -42,7 +45,6 @@ final class FeatureTests: ZMBaseManagedObjectTest {
         syncMOC.performGroupedAndWait { context in
             let updatedAppLock = Feature.fetch(name: .appLock, context: context)
             XCTAssertEqual(updatedAppLock?.status, .disabled)
-            return
         }
     }
     
@@ -66,9 +68,12 @@ final class FeatureTests: ZMBaseManagedObjectTest {
         }
 
         syncMOC.performGroupedAndWait { context in
-            guard let feature = Feature.fetch(name: .appLock, context: context) else { return XCTFail() }
+            guard let feature = Feature.fetch(name: .appLock, context: context) else {
+                XCTFail()
+                return
+            }
+
             XCTAssertFalse(feature.needsToNotifyUser)
-            return
         }
 
         // when
@@ -80,9 +85,12 @@ final class FeatureTests: ZMBaseManagedObjectTest {
 
         // then
         syncMOC.performGroupedAndWait { context in
-            guard let feature = Feature.fetch(name: .appLock, context: context) else { return XCTFail() }
+            guard let feature = Feature.fetch(name: .appLock, context: context) else {
+                XCTFail()
+                return
+            }
+
             XCTAssertTrue(feature.needsToNotifyUser)
-            return
         }
     }
     
@@ -97,9 +105,12 @@ final class FeatureTests: ZMBaseManagedObjectTest {
         }
 
         syncMOC.performGroupedAndWait { context in
-            guard let feature = Feature.fetch(name: .appLock, context: context) else { return XCTFail() }
+            guard let feature = Feature.fetch(name: .appLock, context: context) else {
+                XCTFail()
+                return
+            }
+
             XCTAssertFalse(feature.needsToNotifyUser)
-            return
         }
 
         // when
@@ -111,13 +122,16 @@ final class FeatureTests: ZMBaseManagedObjectTest {
 
         // then
         syncMOC.performGroupedAndWait { context in
-            guard let feature = Feature.fetch(name: .appLock, context: context) else { return XCTFail() }
+            guard let feature = Feature.fetch(name: .appLock, context: context) else {
+                XCTFail()
+                return
+            }
+
             XCTAssertTrue(feature.needsToNotifyUser)
-            return
         }
     }
 
-    func testThatItDoesSomething() {
+    func testThatItNeedsToNotifyUser_AfterAChange() {
         // Given
         syncMOC.performGroupedAndWait { context in
             let defaultConferenceCalling = Feature.fetch(name: .conferenceCalling, context: self.syncMOC)
@@ -135,12 +149,16 @@ final class FeatureTests: ZMBaseManagedObjectTest {
 
         // Then
         syncMOC.performGroupedAndWait { context in
-            guard let feature = Feature.fetch(name: .conferenceCalling, context: context) else { XCTFail(); return }
+            guard let feature = Feature.fetch(name: .conferenceCalling, context: context) else {
+                XCTFail()
+                return
+            }
+
             XCTAssertTrue(feature.needsToNotifyUser)
         }
     }
 
-    func testThatItDoesNotNotifyAboutFeatureChanges_IfThePreviousValueIsDefault() {
+    func testThatItDoesNotNeedToNotifyUser_IfThePreviousValueIsDefault() {
         // Given
         syncMOC.performGroupedAndWait { context in
             let defaultConferenceCalling = Feature.fetch(name: .conferenceCalling, context: self.syncMOC)
@@ -157,11 +175,14 @@ final class FeatureTests: ZMBaseManagedObjectTest {
 
         // Then
         syncMOC.performGroupedAndWait { context in
-            guard let feature = Feature.fetch(name: .conferenceCalling, context: context) else { XCTFail(); return }
+            guard let feature = Feature.fetch(name: .conferenceCalling, context: context) else {
+                XCTFail()
+                return
+            }
+
             XCTAssertFalse(feature.needsToNotifyUser)
         }
     }
-    ;
 }
 
 // MARK: - Helpers
