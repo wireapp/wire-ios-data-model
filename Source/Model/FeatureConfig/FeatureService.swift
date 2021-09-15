@@ -110,10 +110,10 @@ public class FeatureService {
 
         switch fileSharing.status {
         case .disabled:
-            self.notifyChange(.fileSharingDisabled)
+            notifyChange(.fileSharingDisabled)
 
         case .enabled:
-            self.notifyChange(.fileSharingEnabled)
+            notifyChange(.fileSharingEnabled)
         }
     }
 
