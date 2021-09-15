@@ -56,12 +56,11 @@ public class FeatureService {
     }
 
     public func storeAppLock(_ appLock: Feature.AppLock) {
-        context.performGroupedAndWait {
-            let config = try! JSONEncoder().encode(appLock.config)
-            Feature.updateOrCreate(havingName: .appLock, in: $0) {
-                $0.status = appLock.status
-                $0.config = config
-            }
+        let config = try! JSONEncoder().encode(appLock.config)
+
+        Feature.updateOrCreate(havingName: .appLock, in: context) {
+            $0.status = appLock.status
+            $0.config = config
         }
     }
 
@@ -77,21 +76,44 @@ public class FeatureService {
     }
 
     public func storeConferenceCalling(_ conferenceCalling: Feature.ConferenceCalling) {
-        context.performGroupedAndWait {
-            Feature.updateOrCreate(havingName: .conferenceCalling, in: $0) {
-                $0.status = conferenceCalling.status
-            }
+        Feature.updateOrCreate(havingName: .conferenceCalling, in: context) {
+            $0.status = conferenceCalling.status
         }
+
+        guard
+            needsToNotifyUser(for: .conferenceCalling),
+            conferenceCalling.status == .enabled
+        else {
+            return
+        }
+
+        notifyChange(.conferenceCallingIsAvailable)
     }
 
     public func fetchFileSharing() -> Feature.FileSharing {
-        let feature = Feature.fetch(name: .fileSharing, context: context)!
-        return .init(status: feature.status)
+        var result: Feature.FileSharing!
+
+        context.performGroupedAndWait {
+            let feature = Feature.fetch(name: .fileSharing, context: $0)!
+            result = .init(status: feature.status)
+        }
+
+        return result
     }
 
     public func storeFileSharing(_ fileSharing: Feature.FileSharing) {
         Feature.updateOrCreate(havingName: .fileSharing, in: context) {
             $0.status = fileSharing.status
+        }
+
+        guard needsToNotifyUser(for: .fileSharing) else { return }
+
+        switch fileSharing.status {
+        case .disabled:
+            notifyChange(.fileSharingDisabled)
+
+        case .enabled:
+            notifyChange(.fileSharingEnabled)
         }
     }
 
@@ -103,9 +125,23 @@ public class FeatureService {
 
     public func storeSelfDeletingMessages(_ selfDeletingMessages: Feature.SelfDeletingMessages) {
         let config = try! JSONEncoder().encode(selfDeletingMessages.config)
+
         Feature.updateOrCreate(havingName: .selfDeletingMessages, in: context) {
             $0.status = selfDeletingMessages.status
             $0.config = config
+        }
+
+        guard needsToNotifyUser(for: .selfDeletingMessages) else { return }
+
+        switch (selfDeletingMessages.status, selfDeletingMessages.config.enforcedTimeoutSeconds) {
+        case (.disabled, _):
+            notifyChange(.selfDeletingMessagesIsDisabled)
+
+        case (.enabled, let enforcedTimeout) where enforcedTimeout > 0:
+            notifyChange(.selfDeletingMessagesIsEnabled(enforcedTimeout: enforcedTimeout))
+
+        case (.enabled, _):
+            notifyChange(.selfDeletingMessagesIsEnabled(enforcedTimeout: nil))
         }
     }
 
@@ -122,6 +158,7 @@ public class FeatureService {
                 
             case .fileSharing:
                 storeFileSharing(.init())
+
             case .selfDeletingMessages:
                 storeSelfDeletingMessages(.init())
             }
@@ -141,7 +178,7 @@ public class FeatureService {
         }
     }
 
-    public func needsToNotifyUser(for featureName: Feature.Name) -> Bool {
+    func needsToNotifyUser(for featureName: Feature.Name) -> Bool {
         var result = false
 
         context.performGroupedAndWait {
@@ -158,5 +195,34 @@ public class FeatureService {
             feature?.needsToNotifyUser = notifyUser
         }
     }
+
+    private func notifyChange(_ change: FeatureChange) {
+        NotificationCenter.default.post(name: .featureDidChangeNotification, object: change)
+    }
+
+}
+
+extension FeatureService {
+
+    /// A type that represents the possible changes to feature configs.
+    ///
+    /// These can be used by the ui layer to determine what kind of alert
+    /// it needs to display to inform the user of changes.
+
+    public enum FeatureChange {
+
+        case conferenceCallingIsAvailable
+        case selfDeletingMessagesIsDisabled
+        case selfDeletingMessagesIsEnabled(enforcedTimeout: UInt?)
+        case fileSharingEnabled
+        case fileSharingDisabled
+
+    }
+
+}
+
+extension Notification.Name {
+
+    public static let featureDidChangeNotification = Notification.Name("FeatureDidChangeNotification")
 
 }

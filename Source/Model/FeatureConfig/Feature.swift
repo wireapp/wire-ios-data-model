@@ -18,10 +18,6 @@
 
 import Foundation
 
-extension Notification.Name {
-    public static let featureDidChangeNotification = Notification.Name("FeatureDidChangeNotification")
-}
-
 private let zmLog = ZMSLog(tag: "Feature")
 
 @objcMembers
@@ -95,10 +91,8 @@ public class Feature: ZMManagedObject {
             if hasBeenUpdatedFromBackend {
                 updateNeedsToNotifyUser(oldStatus: status, newStatus: newValue)
             }
+
             statusValue = newValue.rawValue
-            if needsToNotifyUser {
-                NotificationCenter.default.post(name: .featureDidChangeNotification, object: change(from: self))
-            }
             hasInitialDefault = false
         }
     }
@@ -156,7 +150,7 @@ public class Feature: ZMManagedObject {
         // on a single context to avoid race conditions.
         assert(context.zm_isSyncContext, "Modifications of `Feature` can only occur on the sync context")
 
-        context.performGroupedBlock{
+        context.performGroupedAndWait { context in
             if let existing = fetch(name: name, context: context) {
                 changes(existing)
             } else {
@@ -165,14 +159,20 @@ public class Feature: ZMManagedObject {
                 changes(feature)
                 feature.hasInitialDefault = true
             }
+
             context.saveOrRollback()
         }
     }
 
     private func updateNeedsToNotifyUser(oldStatus: Status, newStatus: Status) {
+        let hasStatusChanged = oldStatus != newStatus
+
         switch name {
         case .conferenceCalling:
-            needsToNotifyUser = (oldStatus != newStatus) && newStatus == .enabled
+            needsToNotifyUser = hasStatusChanged && newStatus == .enabled
+
+        case .fileSharing, .selfDeletingMessages:
+            needsToNotifyUser = hasStatusChanged
 
         default:
             break
@@ -215,22 +215,4 @@ public class Feature: ZMManagedObject {
             needsToNotifyUser = oldConfig.enforcedTimeoutSeconds != newConfig.enforcedTimeoutSeconds
         }
     }
-}
-
-extension Feature {
-
-    public enum FeatureChange {
-        case conferenceCallingIsAvailable
-    }
-
-    private func change(from feature: Feature) -> FeatureChange? {
-        switch feature.name {
-        case .conferenceCalling where feature.status == .enabled:
-            return .conferenceCallingIsAvailable
-
-        default:
-            return nil
-        }
-    }
-
 }
