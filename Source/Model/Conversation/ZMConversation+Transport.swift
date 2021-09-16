@@ -172,7 +172,7 @@ extension ZMConversation {
     }
 
     /// Update the muted status when from event or response payloads
-    func updateMutedStatus(referenceDate: Date, status: Int32) {
+    public func updateMutedStatus(status: Int32, referenceDate: Date) {
         guard updateMuted(referenceDate, synchronize: false) else {
             return
         }

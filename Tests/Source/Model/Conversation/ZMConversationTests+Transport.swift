@@ -107,7 +107,7 @@ class ZMConversationTests_Transport: ZMConversationTestsBase {
             let mutedMessages: MutedMessageTypes = .all
 
             // when
-            conversation.updateMutedStatus(referenceDate: timestamp, status: mutedMessages.rawValue)
+            conversation.updateMutedStatus(status: mutedMessages.rawValue, referenceDate: timestamp)
 
             // then
             XCTAssertEqual(conversation.mutedMessageTypes, .all)
