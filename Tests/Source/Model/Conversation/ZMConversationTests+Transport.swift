@@ -40,31 +40,18 @@ class ZMConversationTests_Transport: ZMConversationTestsBase {
 
     // MARK: Receipt Mode
 
-    func testThatItUpdateReadReceiptStatusAndInsertsSystemMessage_WhenEnabled() {
+    func testThatItUpdateReadReceiptStatusAndInsertsSystemMessage_ForNonEmptyConversations() {
         syncMOC.performGroupedBlockAndWait {
+            // given
             let conversation = ZMConversation.insertNewObject(in: self.syncMOC)
+            conversation.appendNewConversationSystemMessage(at: Date(), users: Set())
+            conversation.hasReadReceiptsEnabled = false
 
             // when
             conversation.updateReceiptMode(1)
 
             // then
-            XCTAssertEqual(conversation.hasReadReceiptsEnabled, true)
-            XCTAssertEqual(conversation.lastMessage?.systemMessageData?.systemMessageType, .readReceiptsEnabled)
-        }
-    }
-
-    func testThatItUpdateReadReceiptStatusAndInsertsSystemMessage_WhenDisabled() {
-        syncMOC.performGroupedBlockAndWait {
-            // given
-            let conversation = ZMConversation.insertNewObject(in: self.syncMOC)
-            conversation.hasReadReceiptsEnabled = true
-
-            // when
-            conversation.updateReceiptMode(0)
-
-            // then
-            XCTAssertEqual(conversation.hasReadReceiptsEnabled, false)
-            XCTAssertEqual(conversation.lastMessage?.systemMessageData?.systemMessageType, .readReceiptsDisabled)
+            XCTAssertEqual(conversation.lastMessage?.systemMessageData?.systemMessageType, .readReceiptsOn)
         }
     }
 
