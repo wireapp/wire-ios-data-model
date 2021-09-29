@@ -65,17 +65,17 @@ extension ZMConversation {
         }
 
         // Calculate the external participants state
-        let canDisplayGuests = !selfUser.isGuest(in: self)
+        let canDisplayGuests = selfUser.isTeamMember
         let canDisplayExternals = selfUser.teamRole != .partner
         var state = ExternalParticipantsState()
 
         for user in otherUsers {
             if user.isServiceUser {
                 state.insert(.visibleServices)
-            } else if canDisplayGuests && user.isGuest(in: self) {
-                state.insert(.visibleGuests)
             } else if canDisplayExternals && user.isExternalPartner {
                 state.insert(.visibleExternals)
+            } else if canDisplayGuests && !user.isTeamMember {
+                state.insert(.visibleGuests)
             }
 
             // Early exit to avoid going through all users if we can avoid it
@@ -97,4 +97,13 @@ extension ZMConversation {
         return localParticipants.any { $0.isGuest(in: self) }
     }
 
+}
+
+private extension ZMUser {
+    var isGuest: Bool {
+        return !isServiceUser // Bots are never guests
+            && !isFederated // Federated uesrs are never guests
+            && ZMUser.selfUser(in: managedObjectContext!).hasTeam // There can't be guests in a team that doesn't exist
+            && membership == nil
+    }
 }
