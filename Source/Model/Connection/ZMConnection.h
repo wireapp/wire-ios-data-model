@@ -34,7 +34,6 @@ typedef NS_ENUM(int16_t, ZMConnectionStatus) {
 };
 
 
-
 @interface ZMConnection : ZMManagedObject
 
 + (instancetype)insertNewSentConnectionToUser:(ZMUser *)user;
@@ -47,6 +46,3 @@ typedef NS_ENUM(int16_t, ZMConnectionStatus) {
 @property (nonatomic,readonly) BOOL hasValidConversation;
 
 @end
-
-
-
