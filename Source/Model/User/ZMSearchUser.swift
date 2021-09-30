@@ -582,61 +582,89 @@ public class ZMSearchUser: NSObject, UserType {
     public func refreshTeamData() {
         user?.refreshTeamData()
     }
-    
-    public func ignore() {
-        user?.ignore()
-    }
-    
-    public func block() {
-        user?.block()
-    }
-    
-    public func accept() {
-        connect(message: "")
-    }
-    
-    public func connect(message: String) {
-        
-        guard canBeConnected else {
-            return
-        }
-        
-        internalPendingApprovalByOtherUser = true
-        internalConnectionRequestMessage = message
-        
-        if let user = user {
-            user.connect(message: message)
-        } else {
-            guard let remoteIdentifier = remoteIdentifier,
-                  let syncManagedObjectContext = contextProvider?.syncContext,
-                  let managedObjectContext = contextProvider?.viewContext else { return }
-            
-            let name = self.name
-            let accentColorValue = self.accentColorValue
-            
-            syncManagedObjectContext.performGroupedBlock {
-                let user = ZMUser.fetchOrCreate(with: remoteIdentifier, domain: nil, in: syncManagedObjectContext)
-                user.name = name
-                user.accentColorValue = accentColorValue
-                user.needsToBeUpdatedFromBackend = true
-                
-                let connection = ZMConnection.insertNewSentConnection(to: user)
-                connection?.message = message
-                syncManagedObjectContext.saveOrRollback()
-                
-                let objectId = user.objectID
-                
-                managedObjectContext.performGroupedBlock {
-                    self.user = managedObjectContext.object(with: objectId) as? ZMUser
-                    managedObjectContext.searchUserObserverCenter.notifyUpdatedSearchUser(self)
-                }
+
+    public func connect(completion: @escaping (Error?) -> Void) {
+        let selfUser = ZMUser.selfUser(inUserSession: contextProvider!)
+        selfUser.sendConnectionRequest(to: self) { result in
+            switch result {
+            case .success:
+                completion(nil)
+            case .failure(let error):
+                completion(error)
             }
         }
     }
-    
-    public func cancelConnectionRequest() {
-        user?.cancelConnectionRequest()
+
+    public func accept(completion: @escaping (Error?) -> Void) {
+        user?.accept(completion: completion)
     }
+
+    public func ignore(completion: @escaping (Error?) -> Void) {
+        user?.ignore(completion: completion)
+    }
+
+    public func block(completion: @escaping (Error?) -> Void) {
+        user?.block(completion: completion)
+    }
+
+    public func cancelConnectionRequest(completion: @escaping (Error?) -> Void) {
+        user?.cancelConnectionRequest(completion: completion)
+    }
+    
+//    public func ignore() {
+//        user?.ignore()
+//    }
+//    
+//    public func block() {
+//        user?.block()
+//    }
+//    
+//    public func accept() {
+//        connect(message: "")
+//    }
+//    
+//    public func connect(message: String) {
+//        
+//        guard canBeConnected else {
+//            return
+//        }
+//        
+//        internalPendingApprovalByOtherUser = true
+//        internalConnectionRequestMessage = message
+//        
+//        if let user = user {
+//            user.connect(message: message)
+//        } else {
+//            guard let remoteIdentifier = remoteIdentifier,
+//                  let syncManagedObjectContext = contextProvider?.syncContext,
+//                  let managedObjectContext = contextProvider?.viewContext else { return }
+//            
+//            let name = self.name
+//            let accentColorValue = self.accentColorValue
+//            
+//            syncManagedObjectContext.performGroupedBlock {
+//                let user = ZMUser.fetchOrCreate(with: remoteIdentifier, domain: nil, in: syncManagedObjectContext)
+//                user.name = name
+//                user.accentColorValue = accentColorValue
+//                user.needsToBeUpdatedFromBackend = true
+//                
+//                let connection = ZMConnection.insertNewSentConnection(to: user)
+//                connection?.message = message
+//                syncManagedObjectContext.saveOrRollback()
+//                
+//                let objectId = user.objectID
+//                
+//                managedObjectContext.performGroupedBlock {
+//                    self.user = managedObjectContext.object(with: objectId) as? ZMUser
+//                    managedObjectContext.searchUserObserverCenter.notifyUpdatedSearchUser(self)
+//                }
+//            }
+//        }
+//    }
+//    
+//    public func cancelConnectionRequest() {
+//        user?.cancelConnectionRequest()
+//    }
     
     @objc
     public var canBeConnected: Bool {
