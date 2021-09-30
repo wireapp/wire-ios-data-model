@@ -1003,7 +1003,7 @@ class ZMConversationTests_SecurityLevel: ZMConversationTestsBase {
         let conversation = self.setupVerifiedConversation()
         let participant = conversation.participantRoles.first!.user
         XCTAssertEqual(conversation.securityLevel, .secure)
-        participant.block()
+        participant.connection?.status = .blocked
         
         // when
         conversation.addParticipantAndUpdateConversationState(user: participant, role: nil)
