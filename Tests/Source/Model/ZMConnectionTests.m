@@ -24,6 +24,7 @@
 #import "ZMConnection+Internal.h"
 #import "NSManagedObjectContext+zmessaging.h"
 #import "ZMManagedObject+Internal.h"
+#import "ZMConnection+Helper.h"
 
 
 @interface ZMConnection(Testing)

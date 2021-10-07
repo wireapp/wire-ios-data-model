@@ -325,7 +325,7 @@ extension ZMUser {
         user.name = name
         user.handle = handle
         let connection = ZMConnection.insertNewSentConnection(to: user)
-        connection?.status = connectionStatus
+        connection.status = connectionStatus
 
         return user
     }
@@ -542,7 +542,7 @@ extension ZMUserTests_Swift {
 
         for user in usersToConnect {
             let connection = ZMConnection.insertNewSentConnection(to: user)
-            connection?.status = .accepted
+            connection.status = .accepted
         }
 
         // when
@@ -568,14 +568,14 @@ extension ZMUserTests_Swift {
 
         for user in usersToConnect {
             let connection = ZMConnection.insertNewSentConnection(to: user)
-            connection?.status = .accepted
+            connection.status = .accepted
         }
 
         // other team users with unaccepted connections
         for connectionStatus in [ZMConnectionStatus.pending, .blocked, .cancelled, .ignored, .sent, .invalid] {
             let (user, _) = createUserAndAddMember(to: otherTeam)
             let connection = ZMConnection.insertNewSentConnection(to: user)
-            connection?.status = connectionStatus
+            connection.status = connectionStatus
         }
 
         // when
@@ -633,7 +633,7 @@ extension ZMUserTests_Swift {
 
         for user in usersToConnect {
             let connection = ZMConnection.insertNewSentConnection(to: user)
-            connection?.status = .accepted
+            connection.status = .accepted
         }
 
         createConversation(in: uiMOC, with: [selfUser, selfTeamUser1])
@@ -690,7 +690,7 @@ extension ZMUserTests_Swift {
 
         for user in usersToConnect {
             let connection = ZMConnection.insertNewSentConnection(to: user)
-            connection?.status = .accepted
+            connection.status = .accepted
         }
 
         let allRecipients = [

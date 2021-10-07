@@ -53,35 +53,6 @@ static NSString * const LastUpdateDateInGMTKey = @"lastUpdateDateInGMT";
     return LastUpdateDateInGMTKey;
 }
 
-+ (instancetype)insertNewSentConnectionToUser:(ZMUser *)user existingConversation:(ZMConversation *)conversation
-{
-    VerifyReturnValue(user.connection == nil, user.connection);
-    RequireString(user != nil, "Can not create a connection to <nil> user.");
-    ZMConnection *connection = [self insertNewObjectInManagedObjectContext:user.managedObjectContext];
-    connection.to = user;
-    connection.lastUpdateDate = [NSDate date];
-    connection.status = ZMConnectionStatusSent;
-    if (conversation == nil) {
-        connection.conversation = [ZMConversation insertNewObjectInManagedObjectContext:user.managedObjectContext];
-       
-        [connection addWithUser:user];
-        
-        connection.conversation.creator = [ZMUser selfUserInContext:user.managedObjectContext];
-    }
-    else {
-        connection.conversation = conversation;
-        ///TODO: add user if not exists in participantRoles??
-    }
-    connection.conversation.conversationType = ZMConversationTypeConnection;
-    connection.conversation.lastModifiedDate = connection.lastUpdateDate;
-    return connection;
-}
-
-+ (instancetype)insertNewSentConnectionToUser:(ZMUser *)user;
-{
-    return [self insertNewSentConnectionToUser:user existingConversation:nil];
-}
-
 - (BOOL)hasValidConversation
 {
     return (self.status != ZMConnectionStatusPending) && (self.conversation.conversationType != ZMConversationTypeInvalid);

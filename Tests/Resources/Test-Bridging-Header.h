@@ -32,3 +32,4 @@
 #import "MockModelObjectContextFactory.h"
 #import "MockEntity.h"
 #import "MockEntity2.h"
+#import "ZMConnection+Helper.h"
