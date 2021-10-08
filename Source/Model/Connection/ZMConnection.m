@@ -82,6 +82,10 @@ static NSString * const LastUpdateDateInGMTKey = @"lastUpdateDateInGMT";
 @dynamic existsOnBackend;
 @dynamic lastUpdateDateInGMT;
 
++ (BOOL)isTrackingLocalModifications {
+    return NO;
+}
+
 - (NSString *)statusAsString
 {
     return [[self class] stringForStatus:self.status];
@@ -173,20 +177,6 @@ struct stringAndStatus {
 - (void)updateConversationType
 {
     self.conversation.conversationType = [self.class conversationTypeForConnectionStatus:self.status];
-}
-
-- (NSSet *)ignoredKeys;
-{
-    static NSSet *ignoredKeys;
-    static dispatch_once_t onceToken;
-    dispatch_once(&onceToken, ^{
-        NSMutableArray *keys = [NSMutableArray array];
-        [keys addObjectsFromArray:self.entity.attributesByName.allKeys];
-        [keys addObjectsFromArray:self.entity.relationshipsByName.allKeys];
-        [keys removeObject:ZMConnectionStatusKey];
-        ignoredKeys = [NSSet setWithArray:keys];
-    });
-    return ignoredKeys;
 }
 
 + (NSPredicate *)predicateForFilteringResults

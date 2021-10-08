@@ -72,13 +72,6 @@
     [self checkAttributeForClass:[ZMConnection class] key:key value:value];
 }
 
-- (void)testThatItHasLocallyModifiedDataFields
-{
-    XCTAssertTrue([ZMConnection isTrackingLocalModifications]);
-    NSEntityDescription *entity = self.uiMOC.persistentStoreCoordinator.managedObjectModel.entitiesByName[ZMConnection.entityName];
-    XCTAssertNotNil(entity.attributesByName[@"modifiedKeys"]);
-}
-
 - (void)testStatusFromString
 {
     XCTAssertEqual([ZMConnection statusFromString:@"accepted"], ZMConnectionStatusAccepted);
@@ -243,43 +236,6 @@
     token = nil;
 }
 
-- (void)testThatItInsertsNewSentConnections;
-{
-    // given
-    __block NSManagedObjectID *userMOID;
-    [self.syncMOC performGroupedBlockAndWait:^{
-        ZMUser *selfUser = [ZMUser selfUserInContext:self.syncMOC];
-        selfUser.remoteIdentifier = [NSUUID createUUID];
-        selfUser.name = @"Neal Stephenson";
-        ZMUser *user = [ZMUser insertNewObjectInManagedObjectContext:self.syncMOC];
-        user.name = @"John";
-        user.remoteIdentifier = [NSUUID createUUID];
-        XCTAssert([self.syncMOC saveOrRollback]);
-        userMOID = user.objectID;
-    }];
-    WaitForAllGroupsToBeEmpty(0.5);
-    ZMUser *selfUser = [ZMUser selfUserInContext:self.uiMOC];
-    ZMUser *user = (id) [self.uiMOC objectWithID:userMOID];
-    
-    // when
-    ZMConnection *connection = [ZMConnection insertNewSentConnectionToUser:user];
-    
-    // then
-    XCTAssertNotNil(connection);
-    XCTAssertNotNil(connection.conversation);
-    XCTAssertEqual(connection.conversation.conversationType, ZMConversationTypeConnection);
-    XCTAssertEqual(connection.conversation.creator, selfUser);
-    AssertDateIsRecent(connection.conversation.lastModifiedDate);
-    NSSet *participants = [NSSet setWithObject:user];
-    XCTAssertEqualObjects(connection.conversation.localParticipants, participants);
-    XCTAssertFalse(connection.existsOnBackend);
-    XCTAssertEqual(connection.status, ZMConnectionStatusSent);
-    XCTAssertEqual(connection.to, user);
-    AssertDateIsRecent(connection.lastUpdateDate);
-    XCTAssert([self.uiMOC saveOrRollback]);
-    XCTAssertEqualObjects(connection.keysThatHaveLocalModifications, [NSSet setWithObject:@"status"]);
-}
-
 - (void)testThatItDoesNotCreateANewSentConnectionToAUserThatAlreadyHasAConnection;
 {
     // given
@@ -313,18 +269,6 @@
     XCTAssertEqualObjects(connection.objectID, connectionMOID);
     XCTAssertNotNil(connection.conversation);
     XCTAssertEqualObjects(connection.conversation.objectID, conversationMOID);
-}
-
-- (void)testThatItTracksOnlyStatusKey
-{
-    // given
-    ZMUser *user = [ZMUser insertNewObjectInManagedObjectContext:self.uiMOC];
-    
-    // when
-    ZMConnection *connection = [ZMConnection insertNewSentConnectionToUser:user];
-    
-    // then
-    XCTAssertEqualObjects(connection.keysTrackedForLocalModifications, [NSSet setWithObject:@"status"]);
 }
 
 // MARK: - Helpers

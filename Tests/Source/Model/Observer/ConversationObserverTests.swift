@@ -663,8 +663,7 @@ final class ConversationObserverTests : NotificationDispatcherTestBase {
             },
                                                      expectedChangedFields: ["connectionStateChanged",
                                                                              "nameChanged"],
-                                                     expectedChangedKeys: ["relatedConnectionState",
-                                                                           "displayName"])
+                                                     expectedChangedKeys: ["relatedConnectionState"])
     }
     
     func testThatItNotifiesTheObserverOfChangedConnectionStatusWhenUpdatingAConnection()
