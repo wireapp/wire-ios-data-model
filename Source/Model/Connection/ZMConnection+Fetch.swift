@@ -53,7 +53,7 @@ extension ZMConnection {
         let isSearchingLocalDomain = domain == nil || localDomain == nil || localDomain == domain
 
         return internalFetch(userID: userID,
-                             domain: domain,
+                             domain: domain ?? localDomain,
                              searchingLocalDomain: isSearchingLocalDomain,
                              in: context)
     }
