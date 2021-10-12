@@ -86,6 +86,7 @@ public class UserClient: ZMManagedObject, UserClientType {
     @NSManaged public var needsToUploadSignalingKeys: Bool
     @NSManaged public var needsToUpdateCapabilities: Bool
     @NSManaged public var needsToNotifyOtherUserAboutSessionReset: Bool
+    @NSManaged public var needsSessionMigration: Bool
     @NSManaged public var discoveredByMessage: ZMOTRMessage?
 
     private enum Keys {
@@ -233,6 +234,7 @@ public class UserClient: ZMManagedObject, UserClientType {
             newClient.user = user
             newClient.needsToBeUpdatedFromBackend = true
             newClient.discoveryDate = Date()
+            newClient.needsSessionMigration = user.domain == nil
             // Form reverse relationship
             user.mutableSetValue(forKey: "clients").add(newClient)
             return newClient
