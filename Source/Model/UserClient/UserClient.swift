@@ -408,6 +408,10 @@ public extension UserClient {
         let selfUser = ZMUser.selfUser(in: context)
         client.user = client.user ?? selfUser
 
+        if isNewClient {
+            client.needsSessionMigration = selfUser.domain == nil
+        }
+
         if client.isLegalHoldDevice, isNewClient {
             selfUser.legalHoldRequest = nil
             selfUser.needsToAcknowledgeLegalHoldStatus = true
