@@ -145,6 +145,7 @@
 		1693155525A329FE00709F15 /* NSManagedObjectContext+UpdateRequest.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1693155425A329FE00709F15 /* NSManagedObjectContext+UpdateRequest.swift */; };
 		169315EF25AC4C8100709F15 /* MigrateSenderClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = 169315EE25AC4C8100709F15 /* MigrateSenderClient.swift */; };
 		169315F125AC501300709F15 /* MigrateSenderClientTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 169315F025AC501300709F15 /* MigrateSenderClientTests.swift */; };
+		169FF3A527157B3900330C2E /* MockActionHandler.swift in Sources */ = {isa = PBXBuildFile; fileRef = 169FF3A427157B3800330C2E /* MockActionHandler.swift */; };
 		16A86B4A22A6BF5B00A674F8 /* store2-71-0.wiredatabase in Resources */ = {isa = PBXBuildFile; fileRef = 16A86B4922A6BF5B00A674F8 /* store2-71-0.wiredatabase */; };
 		16A9E354220CAB790062CFCD /* store2-60-0.wiredatabase in Resources */ = {isa = PBXBuildFile; fileRef = 16A9E353220CAB790062CFCD /* store2-60-0.wiredatabase */; };
 		16AD86BA1F75426C00E4C797 /* NSManagedObjectContext+NotificationContext.swift in Sources */ = {isa = PBXBuildFile; fileRef = 16AD86B91F75426C00E4C797 /* NSManagedObjectContext+NotificationContext.swift */; };
@@ -849,6 +850,7 @@
 		169315DD25A76E4600709F15 /* zmessaging2.89.0.xcdatamodel */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcdatamodel; path = zmessaging2.89.0.xcdatamodel; sourceTree = "<group>"; };
 		169315EE25AC4C8100709F15 /* MigrateSenderClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MigrateSenderClient.swift; sourceTree = "<group>"; };
 		169315F025AC501300709F15 /* MigrateSenderClientTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MigrateSenderClientTests.swift; sourceTree = "<group>"; };
+		169FF3A427157B3800330C2E /* MockActionHandler.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MockActionHandler.swift; sourceTree = "<group>"; };
 		16A86B23229EC29800A674F8 /* zmessaging2.71.0.xcdatamodel */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcdatamodel; path = zmessaging2.71.0.xcdatamodel; sourceTree = "<group>"; };
 		16A86B4922A6BF5B00A674F8 /* store2-71-0.wiredatabase */ = {isa = PBXFileReference; lastKnownFileType = file; path = "store2-71-0.wiredatabase"; sourceTree = "<group>"; };
 		16A9E353220CAB790062CFCD /* store2-60-0.wiredatabase */ = {isa = PBXFileReference; lastKnownFileType = file; name = "store2-60-0.wiredatabase"; path = "Tests/Resources/store2-60-0.wiredatabase"; sourceTree = SOURCE_ROOT; };
@@ -2340,6 +2342,7 @@
 				16F7341324F9573C00AB93B1 /* XCTestCase+EncryptionKeys.swift */,
 				16E70F97270F1F5700718E5D /* ZMConnection+Helper.h */,
 				16E70FA6270F212000718E5D /* ZMConnection+Helper.m */,
+				169FF3A427157B3800330C2E /* MockActionHandler.swift */,
 			);
 			name = Helper;
 			path = Tests/Source/Helper;
@@ -3487,6 +3490,7 @@
 				1645ECC4243B69A1007A82D6 /* UserTypeTests+Materialize.swift in Sources */,
 				16F7341224F9567000AB93B1 /* ZMConversationTests+DraftMessage.swift in Sources */,
 				EE174FCE2522756700482A70 /* ZMConversationPerformanceTests.swift in Sources */,
+				169FF3A527157B3900330C2E /* MockActionHandler.swift in Sources */,
 				1621E59220E62BD2006B2D17 /* ZMConversationTests+Silencing.swift in Sources */,
 				F14FA377221DB05B005E7EF5 /* MockBackgroundActivityManager.swift in Sources */,
 				544034341D6DFE8500860F2D /* ZMAddressBookContactTests.swift in Sources */,
