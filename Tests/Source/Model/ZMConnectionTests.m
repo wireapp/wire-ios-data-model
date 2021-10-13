@@ -104,7 +104,7 @@
     [self.uiMOC processPendingChanges];
     
     // when
-    NSArray *fetchedConnections = [ZMConnection connectionsInMangedObjectContext:self.uiMOC];
+    NSArray *fetchedConnections = [ZMConnection connectionsInManagedObjectContext:self.uiMOC];
     
     // then
     XCTAssertNotNil(fetchedConnections);
