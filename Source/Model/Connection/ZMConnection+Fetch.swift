@@ -29,11 +29,11 @@ extension ZMConnection {
     }
 
     public static func fetchOrCreate(userID: UUID, domain: String?, in context: NSManagedObjectContext) -> ZMConnection {
-        if let connection = fetch(userID: userID, domain: domain, in: context) {
-            return connection
-        } else {
+        guard let connection = fetch(userID: userID, domain: domain, in: context) {
             return create(userID: userID, domain: domain, in: context)
-        }
+        } 
+        
+        return connection
     }
 
     public static func create(userID: UUID, domain: String?, in context: NSManagedObjectContext) -> ZMConnection {
