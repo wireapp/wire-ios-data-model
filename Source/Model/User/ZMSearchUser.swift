@@ -446,8 +446,9 @@ public class ZMSearchUser: NSObject, UserType {
         guard let uuidString = payload["id"] as? String,
               let remoteIdentifier = UUID(uuidString: uuidString) else { return nil }
 
+        let domain = payload.optionalDictionary(forKey: "qualified_id")?.string(forKey: "domain")
         let localUser = ZMUser.fetch(with: remoteIdentifier,
-                                     domain: nil,
+                                     domain: domain,
                                      in: contextProvider.viewContext)
         
         if let searchUser = contextProvider.viewContext.zm_searchUserCache?.object(forKey: remoteIdentifier as NSUUID) {
