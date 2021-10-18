@@ -590,12 +590,24 @@ public class ZMSearchUser: NSObject, UserType {
             switch result {
             case .success:
                 self?.internalPendingApprovalByOtherUser = true
+                self?.updateLocalUser()
                 self?.notifySearchUserChanged()
                 completion(nil)
             case .failure(let error):
                 completion(error)
             }
         }
+    }
+
+    private func updateLocalUser() {
+        guard
+            let userID = remoteIdentifier,
+            let viewContext = contextProvider?.viewContext
+        else {
+            return
+        }
+
+        user = ZMUser.fetch(with: userID, domain: domain, in: viewContext)
     }
 
     private func notifySearchUserChanged() {
