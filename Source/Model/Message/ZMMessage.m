@@ -310,12 +310,13 @@ NSString * const ZMMessageDecryptionErrorCodeKey = @"decryptionErrorCode";
     NSUUID *conversationUUID = event.conversationUUID;
     
     VerifyReturnNil(conversationUUID != nil);
-    
-    if (nil != prefetchResult.conversationsByRemoteIdentifier[conversationUUID]) {
-        return prefetchResult.conversationsByRemoteIdentifier[conversationUUID];
+
+    ZMConversation *conversation = prefetchResult.conversationsByRemoteIdentifier[conversationUUID];
+    if (nil != conversation && (conversation.domain == nil || conversation.domain == event.conversationDomain)) {
+        return conversation;
     }
 
-    return [ZMConversation fetchOrCreateWith:conversationUUID domain:event.senderDomain in:moc];
+    return [ZMConversation fetchOrCreateWith:conversationUUID domain:event.conversationDomain in:moc];
 }
 
 - (void)removeMessageClearingSender:(BOOL)clearingSender
@@ -803,9 +804,12 @@ NSString * const ZMMessageDecryptionErrorCodeKey = @"decryptionErrorCode";
     NSString *name = [[[updateEvent.payload dictionaryForKey:@"data"] optionalStringForKey:@"name"] stringByRemovingExtremeCombiningCharacters];
     
     NSMutableSet *usersSet = [NSMutableSet set];
-    for(NSString *userId in [[updateEvent.payload dictionaryForKey:@"data"] optionalArrayForKey:@"user_ids"]) {
-        ZMUser *user = [ZMUser fetchOrCreateWith:[NSUUID uuidWithTransportString:userId]
-                                          domain:nil
+    for(NSDictionary *userDict in [[updateEvent.payload dictionaryForKey:@"data"] optionalArrayForKey:@"users"]) {
+        NSUUID *userID = [userDict uuidForKey:@"id"];
+        NSString *domain = [[userDict optionalDictionaryForKey:@"qualified_id"] stringForKey:@"domain"];
+
+        ZMUser *user = [ZMUser fetchOrCreateWith:userID
+                                          domain:domain
                                               in:moc];
         [usersSet addObject:user];
     }
