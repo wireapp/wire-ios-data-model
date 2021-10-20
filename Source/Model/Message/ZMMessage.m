@@ -802,18 +802,8 @@ NSString * const ZMMessageDecryptionErrorCodeKey = @"decryptionErrorCode";
     
     NSString *messageText = [[[updateEvent.payload dictionaryForKey:@"data"] optionalStringForKey:@"message"] stringByRemovingExtremeCombiningCharacters];
     NSString *name = [[[updateEvent.payload dictionaryForKey:@"data"] optionalStringForKey:@"name"] stringByRemovingExtremeCombiningCharacters];
-    
-    NSMutableSet *usersSet = [NSMutableSet set];
-    for(NSDictionary *userDict in [[updateEvent.payload dictionaryForKey:@"data"] optionalArrayForKey:@"users"]) {
-        NSUUID *userID = [userDict uuidForKey:@"id"];
-        NSString *domain = [[userDict optionalDictionaryForKey:@"qualified_id"] stringForKey:@"domain"];
 
-        ZMUser *user = [ZMUser fetchOrCreateWith:userID
-                                          domain:domain
-                                              in:moc];
-        [usersSet addObject:user];
-    }
-    
+    NSMutableSet *usersSet = [NSMutableSet setWithArray:[self usersFromUpdateEvent:updateEvent context:moc]];
     ZMSystemMessage *message = [[ZMSystemMessage alloc] initWithNonce:NSUUID.UUID managedObjectContext:moc];
     message.systemMessageType = type;
     message.visibleInConversation = conversation;

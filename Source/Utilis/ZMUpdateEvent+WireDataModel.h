@@ -33,6 +33,4 @@
 @property (readonly, nullable) NSString *senderClientID;
 @property (readonly, nullable) NSString *recipientClientID;
 
-- (nonnull NSMutableSet *)usersFromUserIDsInManagedObjectContext:(nonnull NSManagedObjectContext *)context createIfNeeded:(BOOL)createIfNeeded;
-
 @end

@@ -85,29 +85,6 @@
     return nil;
 }
 
-- (NSMutableSet *)usersFromUserIDsInManagedObjectContext:(NSManagedObjectContext *)context createIfNeeded:(BOOL)createIfNeeded;
-{
-    NSMutableSet *users = [NSMutableSet set];
-    for (NSDictionary *userDict in [[self.payload optionalDictionaryForKey:@"data"] optionalArrayForKey:@"users"] ) {
-        NSUUID *userID = [userDict uuidForKey:@"id"];
-        NSString *domain = [[userDict optionalDictionaryForKey:@"qualified_id"] stringForKey:@"domain"];
-
-        VerifyAction(userID != nil, return [NSMutableSet set]);
-
-        ZMUser *user = nil;
-        if (createIfNeeded) {
-            user = [ZMUser fetchOrCreateWith:userID domain:domain in:context];
-        } else {
-            user = [ZMUser fetchWith:userID domain:domain in:context];
-        }
-
-        if (user != nil) {
-            [users addObject:user];
-        }
-    }
-    return users;
-}
-
 @end
 
 
