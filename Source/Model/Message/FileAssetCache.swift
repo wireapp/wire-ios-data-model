@@ -222,15 +222,17 @@ private struct FileCache : Cache {
         return cache.assetData(key)
     }
 
+    //TODO
     /// Returns the team logo image asset data for a team. This will probably cause I/O
     ///
     /// - Parameters:
-    ///   - team: the team of the logo image
+    ///   - team: the team of the image
+    ///   - imageType: the team image type (logo or splash image)
     ///   - format: the format of the image
     ///   - encrypted: encrypted or not
     /// - Returns: the image data
-    open func assetData(for team : Team, format: ZMImageFormat, encrypted: Bool) -> Data? {
-        guard let key = type(of: self).cacheKeyForAsset(for: team, format: format, encrypted: encrypted) else { return nil }
+    open func assetData(for team : Team, imageType: TeamImageType, format: ZMImageFormat, encrypted: Bool) -> Data? {
+        guard let key = type(of: self).cacheKeyForAsset(for: team, imageType: imageType, format: format, encrypted: encrypted) else { return nil }
         return self.cache.assetData(key)
     }
 
@@ -258,8 +260,8 @@ private struct FileCache : Cache {
         return cache.assetURL(key)
     }
 
-    open func hasDataOnDisk(for team : Team, format: ZMImageFormat, encrypted: Bool) -> Bool {
-        guard let key = type(of: self).cacheKeyForAsset(for: team, format: format, encrypted: encrypted) else { return false }
+    open func hasDataOnDisk(for team : Team, imageType: TeamImageType, format: ZMImageFormat, encrypted: Bool) -> Bool {
+        guard let key = type(of: self).cacheKeyForAsset(for: team, imageType: imageType, format: format, encrypted: encrypted) else { return false }
         return cache.hasDataForKey(key)
     }
 
@@ -273,18 +275,21 @@ private struct FileCache : Cache {
         return cache.hasDataForKey(key)
     }
 
+    //TODO
     /// Sets the image asset data for a team. This will cause I/O
     ///
     /// - Parameters:
     ///   - team: the team of the logo image
+    ///
     ///   - format: the format of the image
     ///   - encrypted: encrypted or not
     ///   - data: the image data
     open func storeAssetData(for team: Team,
+                             imageType: TeamImageType,
                              format: ZMImageFormat,
                              encrypted: Bool,
                              data: Data) {
-        guard let key = type(of: self).cacheKeyForAsset(for: team, format: format, encrypted: encrypted) else { return }
+        guard let key = type(of: self).cacheKeyForAsset(for: team, imageType: imageType, format: format, encrypted: encrypted) else { return }
         self.cache.storeAssetData(data, key: key, createdAt: Date())
     }
 
@@ -313,14 +318,19 @@ private struct FileCache : Cache {
         cache.deleteAssetData(key)
     }
 
+    //TODO
     /// Deletes the image data for a given message. This will cause I/O
     ///
     /// - Parameters:
     ///   - team: the team of the logo image
+    ///
     ///   - format: the format of the image
     ///   - encrypted: encrypted or not
-    open func deleteAssetData(for team : Team, format: ZMImageFormat, encrypted: Bool) {
-        guard let key = type(of: self).cacheKeyForAsset(for: team, format: format, encrypted: encrypted) else { return }
+    open func deleteAssetData(for team : Team,
+                              imageType: TeamImageType,
+                              format: ZMImageFormat,
+                              encrypted: Bool) {
+        guard let key = type(of: self).cacheKeyForAsset(for: team, imageType: imageType, format: format, encrypted: encrypted) else { return }
         cache.deleteAssetData(key)
     }
 
@@ -381,12 +391,27 @@ private struct FileCache : Cache {
 
     // MARK: - Team cache key
 
-    public static func cacheKeyForAsset(for team : Team, format: ZMImageFormat, encrypted: Bool = false) -> String? {
-        return cacheKeyForAsset(for: team, identifier: StringFromImageFormat(format), encrypted: encrypted)
+    public static func cacheKeyForAsset(for team : Team,
+                                        imageType: TeamImageType,
+                                        format: ZMImageFormat,
+                                        encrypted: Bool = false) -> String? {
+        return cacheKeyForAsset(for: team, imageType: imageType, identifier: StringFromImageFormat(format), encrypted: encrypted)
     }
 
-    public static func cacheKeyForAsset(for team : Team, identifier: String? = nil, encrypted: Bool = false) -> String? {
-        guard let teamID = team.remoteIdentifier?.uuidString, let assetID = team.pictureAssetId else {
+
+    public static func cacheKeyForAsset(for team : Team,
+                                        imageType: TeamImageType,
+                                        identifier: String? = nil,
+                                        encrypted: Bool = false) -> String? {
+        var asset: String?
+        switch imageType {
+        case .logo:
+            asset = team.pictureAssetId
+        case .splashImage:
+            asset = team.splashImageId
+        }
+        guard let teamID = team.remoteIdentifier?.uuidString,
+              let assetID = asset else {
             return nil
         }
         

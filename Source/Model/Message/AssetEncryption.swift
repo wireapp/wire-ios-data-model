@@ -100,21 +100,22 @@ fileprivate extension Cache {
     }
 }
 
+//TODO
 extension FileAssetCache {
     // MARK: - team logo
 
     public func decryptImageIfItMatchesDigest(for team: Team,
                                               format: ZMImageFormat,
                                               encryptionKey: Data) -> Bool {
-        guard let plaintextCacheKey = type(of: self).cacheKeyForAsset(for: team, format: format, encrypted: true),
-            let encryptedCacheKey = type(of: self).cacheKeyForAsset(for: team, format: format, encrypted: true) else { return false }
+        guard let plaintextCacheKey = type(of: self).cacheKeyForAsset(for: team, imageType: .logo, format: format, encrypted: true),
+            let encryptedCacheKey = type(of: self).cacheKeyForAsset(for: team, imageType: .logo, format: format, encrypted: true) else { return false }
 
         return self.cache.decryptAssetIfItMatchesDigest(plaintextCacheKey, encryptedEntryKey: encryptedCacheKey, encryptionKey: encryptionKey, sha256Digest: nil, createdAt: Date())
     }
 
     public func encryptImageAndComputeSHA256Digest(for team: Team, format: ZMImageFormat) -> ZMImageAssetEncryptionKeys? {
-        guard let plaintextCacheKey = type(of: self).cacheKeyForAsset(for: team, format: format, encrypted: false),
-            let encryptedCacheKey = type(of: self).cacheKeyForAsset(for: team, format: format, encrypted: true) else { return nil }
+        guard let plaintextCacheKey = type(of: self).cacheKeyForAsset(for: team, imageType: .logo, format: format, encrypted: false),
+            let encryptedCacheKey = type(of: self).cacheKeyForAsset(for: team, imageType: .logo, format: format, encrypted: true) else { return nil }
 
         return cache.encryptFileAndComputeSHA256Digest(plaintextCacheKey, encryptedEntryKey: encryptedCacheKey)
     }

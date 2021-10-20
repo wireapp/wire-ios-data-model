@@ -26,11 +26,17 @@ public protocol TeamType: class {
     var name: String? { get }
     var pictureAssetId: String? { get }
     var pictureAssetKey: String? { get }
+    var splashImageId: String? { get }
     var remoteIdentifier: UUID? { get }
     var imageData: Data? { get set }
 
     func requestImage()
     func refreshMetadata()
+}
+
+public enum TeamImageType: String {
+    case logo
+    case splashImage
 }
 
 @objcMembers
@@ -42,6 +48,7 @@ public class Team: ZMManagedObject, TeamType {
     @NSManaged public var name: String?
     @NSManaged public var pictureAssetId: String?
     @NSManaged public var pictureAssetKey: String?
+    @NSManaged public var splashImageId: String?
     @NSManaged public var creator: ZMUser?
     @NSManaged public var featureFlags: Set<FeatureFlag>
 
@@ -122,7 +129,7 @@ extension Team {
 
     public var imageData: Data? {
         get {
-            return managedObjectContext?.zm_fileAssetCache.assetData(for: self, format: Team.defaultLogoFormat, encrypted: false)
+            return managedObjectContext?.zm_fileAssetCache.assetData(for: self, imageType: .logo, format: Team.defaultLogoFormat, encrypted: false)
         }
 
         set {
@@ -134,16 +141,16 @@ extension Team {
             }
             
             guard let newValue = newValue else {
-                managedObjectContext?.zm_fileAssetCache.deleteAssetData(for: self, format: Team.defaultLogoFormat, encrypted: false)
+                managedObjectContext?.zm_fileAssetCache.deleteAssetData(for: self, imageType: .logo, format: Team.defaultLogoFormat, encrypted: false)
                 return
             }
 
-            managedObjectContext?.zm_fileAssetCache.storeAssetData(for: self, format: Team.defaultLogoFormat, encrypted: false, data: newValue)
+            managedObjectContext?.zm_fileAssetCache.storeAssetData(for: self, imageType: .logo, format: Team.defaultLogoFormat, encrypted: false, data: newValue)
         }
     }
 
     public func requestImage() {
-        guard let moc = self.managedObjectContext, moc.zm_isUserInterfaceContext, !moc.zm_fileAssetCache.hasDataOnDisk(for: self, format: Team.defaultLogoFormat, encrypted: false) else { return }
+        guard let moc = self.managedObjectContext, moc.zm_isUserInterfaceContext, !moc.zm_fileAssetCache.hasDataOnDisk(for: self, imageType: .logo, format: Team.defaultLogoFormat, encrypted: false) else { return }
 
         NotificationInContext(name: .teamDidRequestAsset,
                               context: moc.notificationContext,
@@ -158,5 +165,54 @@ extension Team {
         }
         return NSCompoundPredicate(andPredicateWithSubpredicates: [assetIdExists, notCached])
     }
+
+}
+
+
+// MARK: - Splash Image
+
+extension Team {
+
+    @objc static let splashImageIdKey = #keyPath(Team.splashImageId)
+
+    public var splashImageData: Data? {
+        get {
+            return managedObjectContext?.zm_fileAssetCache.assetData(for: self, imageType: .splashImage, format: Team.defaultLogoFormat, encrypted: false)
+        }
+
+        set {
+            defer {
+                if let uiContext = managedObjectContext?.zm_userInterface {
+                    // Notify about a non core data change since the image is persisted in the file cache
+                    NotificationDispatcher.notifyNonCoreDataChanges(objectID: objectID, changedKeys: [#keyPath(Team.splashImageData)], uiContext: uiContext)
+                }
+            }
+
+            guard let newValue = newValue else {
+                managedObjectContext?.zm_fileAssetCache.deleteAssetData(for: self, imageType: .splashImage, format: Team.defaultLogoFormat, encrypted: false)
+                return
+            }
+
+            managedObjectContext?.zm_fileAssetCache.storeAssetData(for: self, imageType: .splashImage, format: Team.defaultLogoFormat, encrypted: false, data: newValue)
+        }
+    }
+
+    public func requestSplashIImage() {
+        guard let moc = self.managedObjectContext, moc.zm_isUserInterfaceContext, !moc.zm_fileAssetCache.hasDataOnDisk(for: self, imageType: .splashImage, format: Team.defaultLogoFormat, encrypted: false) else { return }
+
+        // TODO:
+        NotificationInContext(name: .teamDidRequestAsset,
+                              context: moc.notificationContext,
+                              object: objectID).post()
+    }
+
+//    public static var imageDownloadFilter: NSPredicate {
+//        let assetIdExists = NSPredicate(format: "(%K != nil)", Team.pictureAssetIdKey)
+//        let notCached = NSPredicate() { (team, _) -> Bool in
+//            guard let team = team as? Team else { return false }
+//            return team.imageData == nil
+//        }
+//        return NSCompoundPredicate(andPredicateWithSubpredicates: [assetIdExists, notCached])
+//    }
 
 }
