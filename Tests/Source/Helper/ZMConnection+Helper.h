@@ -1,6 +1,6 @@
-////
+//
 // Wire
-// Copyright (C) 2019 Wire Swiss GmbH
+// Copyright (C) 2021 Wire Swiss GmbH
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -16,12 +16,18 @@
 // along with this program. If not, see http://www.gnu.org/licenses/.
 //
 
-@interface ZMConversationTransportTests : ZMConversationTestsBase
-- (NSDictionary *)payloadForMetaDataOfConversation:(ZMConversation *)conversation
-                                  conversationType:(ZMBackendConversationType)conversationType
-                                        isArchived:(BOOL)isArchived
-                                       archivedRef:(NSDate *)archivedRef
-                                        isSilenced:(BOOL)isSilenced
-                                       silencedRef:(NSDate *)silencedRef
-                                    silencedStatus:(NSNumber *)silencedStatus;
+#import <WireDataModel/WireDataModel.h>
+
+@class ZMUser;
+@class ZMConversation;
+
+NS_ASSUME_NONNULL_BEGIN
+
+@interface ZMConnection (Helper)
+
++ (instancetype)insertNewSentConnectionToUser:(ZMUser *)user;
++ (instancetype)insertNewSentConnectionToUser:(ZMUser *)user existingConversation:(ZMConversation * _Nullable)conversation;
+
 @end
+
+NS_ASSUME_NONNULL_END
