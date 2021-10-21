@@ -35,6 +35,7 @@ public final class Account: NSObject, Codable {
     public let userIdentifier: UUID
     public var imageData: Data?
     public var teamImageData: Data?
+    public var splashImageData: Data?
     public var loginCredentials: LoginCredentials?
 
     public var unreadConversationCount: Int = 0 {
@@ -51,6 +52,7 @@ public final class Account: NSObject, Codable {
         case userIdentifier = "identifier"
         case imageData = "image"
         case teamImageData = "teamImage"
+        case splashImageData = "splashImage"
         case unreadConversationCount = "unreadConversationCount"
         case loginCredentials = "loginCredentials"
     }
@@ -60,6 +62,7 @@ public final class Account: NSObject, Codable {
                          teamName: String? = nil,
                          imageData: Data? = nil,
                          teamImageData: Data? = nil,
+                         splashImageData: Data? = nil,
                          unreadConversationCount: Int = 0,
                          loginCredentials: LoginCredentials? = nil) {
         self.userName = userName
@@ -67,6 +70,7 @@ public final class Account: NSObject, Codable {
         self.teamName = teamName
         self.imageData = imageData
         self.teamImageData = teamImageData
+        self.splashImageData = splashImageData
         self.unreadConversationCount = unreadConversationCount
         self.loginCredentials = loginCredentials
         super.init()
@@ -82,6 +86,7 @@ public final class Account: NSObject, Codable {
         self.teamName = account.teamName
         self.imageData = account.imageData
         self.teamImageData = account.teamImageData
+        self.splashImageData = account.splashImageData
         self.loginCredentials = account.loginCredentials
     }
 
@@ -95,7 +100,7 @@ public final class Account: NSObject, Codable {
     }
 
     public override var debugDescription: String {
-        return "<Account>:\n\tname: \(userName)\n\tid: \(userIdentifier)\n\tcredentials:\n\t\(String(describing: loginCredentials?.debugDescription))\n\tteam: \(String(describing: teamName))\n\timage: \(String(describing: imageData?.count))\n\tteamImageData: \(String(describing: teamImageData?.count))\n"
+        return "<Account>:\n\tname: \(userName)\n\tid: \(userIdentifier)\n\tcredentials:\n\t\(String(describing: loginCredentials?.debugDescription))\n\tteam: \(String(describing: teamName))\n\timage: \(String(describing: imageData?.count))\n\tteamImageData: \(String(describing: teamImageData?.count))\n\tsplashImageData: \(String(describing: splashImageData?.count))\n"
     }
 
 }

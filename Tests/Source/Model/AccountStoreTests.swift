@@ -178,6 +178,7 @@ final class AccountStoreTests: ZMConversationTestsBase {
         XCTAssertEqual(account.teamName, team)
         XCTAssertNil(account.imageData)
         XCTAssertNil(account.teamImageData)
+        XCTAssertNil(account.splashImageData)
     }
     
     func testThatItUpdatesAnExistingAccount_WithImages() {
@@ -194,7 +195,12 @@ final class AccountStoreTests: ZMConversationTestsBase {
         // when
         let name = "Marco", team = "Wire", image = verySmallJPEGData()
         do {
-            let account = Account(userName: name, userIdentifier: uuid, teamName: team, imageData: image, teamImageData: image)
+            let account = Account(userName: name,
+                                  userIdentifier: uuid,
+                                  teamName: team,
+                                  imageData: image,
+                                  teamImageData: image,
+                                  splashImageData: image)
             XCTAssert(store.add(account))
         }
         
@@ -204,6 +210,7 @@ final class AccountStoreTests: ZMConversationTestsBase {
         XCTAssertEqual(account.teamName, team)
         XCTAssertEqual(account.imageData, image)
         XCTAssertEqual(account.teamImageData, image)
+        XCTAssertEqual(account.splashImageData, image)
     }
 
     func testThatItCanLoadAnAccountByUUID() {
@@ -314,7 +321,14 @@ final class AccountStoreTests: ZMConversationTestsBase {
         let account = store.load(accountID)
 
         // then
-        let expectedAccount = Account(userName: "Alexis", userIdentifier: accountID, teamName: "Wire", imageData: Data(), teamImageData: nil, unreadConversationCount: 1, loginCredentials: nil)
+        let expectedAccount = Account(userName: "Alexis",
+                                      userIdentifier: accountID,
+                                      teamName: "Wire",
+                                      imageData: Data(),
+                                      teamImageData: nil,
+                                      splashImageData: nil,
+                                      unreadConversationCount: 1,
+                                      loginCredentials: nil)
         XCTAssertEqual(account, expectedAccount)
     }
 
@@ -345,7 +359,14 @@ final class AccountStoreTests: ZMConversationTestsBase {
 
         // then
         let expectedCredentials = LoginCredentials(emailAddress: "alexis@example.com", phoneNumber: nil, hasPassword: true, usesCompanyLogin: false)
-        let expectedAccount = Account(userName: "Alexis", userIdentifier: accountID, teamName: "Wire", imageData: Data(), teamImageData: nil, unreadConversationCount: 0, loginCredentials: expectedCredentials)
+        let expectedAccount = Account(userName: "Alexis",
+                                      userIdentifier: accountID,
+                                      teamName: "Wire",
+                                      imageData: Data(),
+                                      teamImageData: nil,
+                                      splashImageData: nil,
+                                      unreadConversationCount: 0,
+                                      loginCredentials: expectedCredentials)
         XCTAssertEqual(account, expectedAccount)
     }
 

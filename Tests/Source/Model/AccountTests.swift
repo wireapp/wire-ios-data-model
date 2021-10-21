@@ -36,6 +36,7 @@ final class AccountTests: ZMConversationTestsBase {
             teamName: "Wire",
             imageData: verySmallJPEGData(),
             teamImageData: verySmallJPEGData(),
+            splashImageData: verySmallJPEGData(),
             loginCredentials: credentials
         )
 
@@ -58,6 +59,7 @@ final class AccountTests: ZMConversationTestsBase {
                                   teamName: team,
                                   imageData: image,
                                   teamImageData: image,
+                                  splashImageData: image,
                                   unreadConversationCount: count,
                                   loginCredentials: nil)
             try account.write(to: url)
@@ -72,6 +74,7 @@ final class AccountTests: ZMConversationTestsBase {
         XCTAssertEqual(account.userIdentifier, id)
         XCTAssertEqual(account.imageData, image)
         XCTAssertEqual(account.teamImageData, image)
+        XCTAssertEqual(account.splashImageData, image)
         XCTAssertEqual(account.unreadConversationCount, count)
         XCTAssertNil(account.loginCredentials)
     }
@@ -90,6 +93,7 @@ final class AccountTests: ZMConversationTestsBase {
                                   teamName: team,
                                   imageData: image,
                                   teamImageData: image,
+                                  splashImageData: image,
                                   unreadConversationCount: count,
                                   loginCredentials: credentials)
             try account.write(to: url)
@@ -104,6 +108,7 @@ final class AccountTests: ZMConversationTestsBase {
         XCTAssertEqual(account.userIdentifier, id)
         XCTAssertEqual(account.imageData, image)
         XCTAssertEqual(account.teamImageData, image)
+        XCTAssertEqual(account.splashImageData, image)
         XCTAssertEqual(account.unreadConversationCount, count)
         XCTAssertEqual(account.loginCredentials, credentials)
     }
@@ -118,6 +123,7 @@ final class AccountTests: ZMConversationTestsBase {
                               teamName: team,
                               imageData: image,
                               teamImageData: image,
+                              splashImageData: image,
                               unreadConversationCount: count)
 
         let sameAccount = Account(userName: "",
@@ -125,6 +131,7 @@ final class AccountTests: ZMConversationTestsBase {
                                   teamName: "",
                                   imageData: nil,
                                   teamImageData: nil,
+                                  splashImageData: nil,
                                   unreadConversationCount: 0)
 
         XCTAssertEqual(account, sameAccount)
