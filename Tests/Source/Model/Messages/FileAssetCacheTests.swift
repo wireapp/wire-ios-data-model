@@ -449,13 +449,13 @@ extension FileAssetCacheTests {
 
             let plainData = self.testData()
 
-            sut.storeAssetData(for: team, format: .medium, encrypted: false, data: plainData)
+            sut.storeAssetData(for: team, imageType: .logo, format: .medium, encrypted: false, data: plainData)
 
             // when
             let encryptionKeys = sut.encryptImageAndComputeSHA256Digest(for: team, format: .medium)
 
             // then
-            let encryptedData = sut.assetData(for: team, format: .medium, encrypted: true)
+            let encryptedData = sut.assetData(for: team, imageType: .logo, format: .medium, encrypted: true)
             AssertOptionalNotNil(encryptionKeys, "Result") { result in
                 AssertOptionalNotNil(encryptedData, "Encrypted data") { encryptedData in
                     let decodedData = encryptedData.zmDecryptPrefixedPlainTextIV(key: result.otrKey)
@@ -466,7 +466,10 @@ extension FileAssetCacheTests {
             }
 
             // when
-            let decryptResult = sut.decryptImageIfItMatchesDigest(for: team, format: .medium, encryptionKey: encryptionKeys!.otrKey)
+            let decryptResult = sut.decryptImageIfItMatchesDigest(for: team,
+                                                                  imageType: .logo,
+                                                                  format: .medium,
+                                                                  encryptionKey: encryptionKeys!.otrKey)
 
             // then
             XCTAssert(decryptResult)
@@ -483,12 +486,14 @@ extension FileAssetCacheTests {
             team.pictureAssetId = "abc123"
 
             sut.storeAssetData(for: team,
+                               imageType: .logo,
                                format: .medium,
                                encrypted: false,
                                data: self.testData())
 
             // when
             let data = sut.hasDataOnDisk(for: team,
+                                         imageType: .logo,
                                          format: .medium,
                                          encrypted: false)
 
@@ -505,15 +510,18 @@ extension FileAssetCacheTests {
             team.pictureAssetId = "abc123"
             let sut = FileAssetCache()
             sut.storeAssetData(for: team,
+                               imageType: .logo,
                                format: .medium,
                                encrypted: false,
                                data: self.testData())
 
             // when
             sut.deleteAssetData(for: team,
+                                imageType: .logo,
                                 format: .medium,
                                 encrypted: false)
             let extractedData = sut.assetData(for: team,
+                                              imageType: .logo,
                                               format: .medium,
                                               encrypted: false)
 

@@ -17,7 +17,8 @@
 //
 
 public extension NSNotification.Name {
-    static let teamDidRequestAsset = Notification.Name("TeamDidRequestAsset")
+    static let teamDidRequestLogoImage = Notification.Name("TeamDidRequestLogoImage")
+    static let teamDidRequestSplashImage = Notification.Name("TeamDidRequestSplashImage")
 }
 
 public protocol TeamType: class {
@@ -28,9 +29,11 @@ public protocol TeamType: class {
     var pictureAssetKey: String? { get }
     var splashImageId: String? { get }
     var remoteIdentifier: UUID? { get }
-    var imageData: Data? { get set }
+    var logoImageData: Data? { get set }
+    var splashImageData: Data? { get set }
 
-    func requestImage()
+    func requestLogoImage()
+    func requestSplashImage()
     func refreshMetadata()
 }
 
@@ -127,7 +130,7 @@ extension Team {
 
     @objc static let pictureAssetIdKey = #keyPath(Team.pictureAssetId)
 
-    public var imageData: Data? {
+    public var logoImageData: Data? {
         get {
             return managedObjectContext?.zm_fileAssetCache.assetData(for: self, imageType: .logo, format: Team.defaultLogoFormat, encrypted: false)
         }
@@ -136,7 +139,7 @@ extension Team {
             defer {
                 if let uiContext = managedObjectContext?.zm_userInterface {
                     // Notify about a non core data change since the image is persisted in the file cache
-                    NotificationDispatcher.notifyNonCoreDataChanges(objectID: objectID, changedKeys: [#keyPath(Team.imageData)], uiContext: uiContext)
+                    NotificationDispatcher.notifyNonCoreDataChanges(objectID: objectID, changedKeys: [#keyPath(Team.logoImageData)], uiContext: uiContext)
                 }
             }
             
@@ -149,19 +152,23 @@ extension Team {
         }
     }
 
-    public func requestImage() {
-        guard let moc = self.managedObjectContext, moc.zm_isUserInterfaceContext, !moc.zm_fileAssetCache.hasDataOnDisk(for: self, imageType: .logo, format: Team.defaultLogoFormat, encrypted: false) else { return }
+    public func requestLogoImage() {
+        guard let moc = self.managedObjectContext,
+              moc.zm_isUserInterfaceContext,
+              !moc.zm_fileAssetCache.hasDataOnDisk(for: self, imageType: .logo, format: Team.defaultLogoFormat, encrypted: false) else {
+            return
+        }
 
-        NotificationInContext(name: .teamDidRequestAsset,
+        NotificationInContext(name: .teamDidRequestLogoImage,
                               context: moc.notificationContext,
                               object: objectID).post()
     }
 
-    public static var imageDownloadFilter: NSPredicate {
+    public static var logoDownloadFilter: NSPredicate {
         let assetIdExists = NSPredicate(format: "(%K != nil)", Team.pictureAssetIdKey)
         let notCached = NSPredicate() { (team, _) -> Bool in
             guard let team = team as? Team else { return false }
-            return team.imageData == nil
+            return team.logoImageData == nil
         }
         return NSCompoundPredicate(andPredicateWithSubpredicates: [assetIdExists, notCached])
     }
@@ -197,22 +204,21 @@ extension Team {
         }
     }
 
-    public func requestSplashIImage() {
+    public func requestSplashImage() {
         guard let moc = self.managedObjectContext, moc.zm_isUserInterfaceContext, !moc.zm_fileAssetCache.hasDataOnDisk(for: self, imageType: .splashImage, format: Team.defaultLogoFormat, encrypted: false) else { return }
 
-        // TODO:
-        NotificationInContext(name: .teamDidRequestAsset,
+        NotificationInContext(name: .teamDidRequestSplashImage,
                               context: moc.notificationContext,
                               object: objectID).post()
     }
 
-//    public static var imageDownloadFilter: NSPredicate {
-//        let assetIdExists = NSPredicate(format: "(%K != nil)", Team.pictureAssetIdKey)
-//        let notCached = NSPredicate() { (team, _) -> Bool in
-//            guard let team = team as? Team else { return false }
-//            return team.imageData == nil
-//        }
-//        return NSCompoundPredicate(andPredicateWithSubpredicates: [assetIdExists, notCached])
-//    }
+    public static var splashImageDownloadFilter: NSPredicate {
+        let assetIdExists = NSPredicate(format: "(%K != nil)", Team.splashImageIdKey)
+        let notCached = NSPredicate() { (team, _) -> Bool in
+            guard let team = team as? Team else { return false }
+            return team.splashImageData == nil
+        }
+        return NSCompoundPredicate(andPredicateWithSubpredicates: [assetIdExists, notCached])
+    }
 
 }

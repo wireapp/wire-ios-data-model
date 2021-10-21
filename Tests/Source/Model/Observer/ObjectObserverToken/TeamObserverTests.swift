@@ -51,7 +51,8 @@ class TeamObserverTests: NotificationDispatcherTestBase {
         return [
             #keyPath(TeamChangeInfo.membersChanged),
             #keyPath(TeamChangeInfo.nameChanged),
-            #keyPath(TeamChangeInfo.imageDataChanged)
+            #keyPath(TeamChangeInfo.logoImageDataChanged),
+            #keyPath(TeamChangeInfo.splashImageDataChanged)
         ]
     }
     
@@ -95,16 +96,28 @@ class TeamObserverTests: NotificationDispatcherTestBase {
         )
         
     }
-    
-    func testThatItNotifiesTheObserverOfChangedImageData() {
+
+    func testThatItNotifiesTheObserverOfChangedLogoImageData() {
         // given
         let team = Team.insertNewObject(in: self.uiMOC)
         self.uiMOC.saveOrRollback()
         
         // when
         self.checkThatItNotifiesTheObserverOfAChange(team,
-                                                     modifier: { $0.imageData = "image".data(using: .utf8)! },
-                                                     expectedChangedFields: [#keyPath(TeamChangeInfo.imageDataChanged)]
+                                                     modifier: { $0.logoImageData = "image".data(using: .utf8)! },
+                                                     expectedChangedFields: [#keyPath(TeamChangeInfo.logoImageDataChanged)]
+        )
+    }
+
+    func testThatItNotifiesTheObserverOfChangedSplashImageData() {
+        // given
+        let team = Team.insertNewObject(in: self.uiMOC)
+        self.uiMOC.saveOrRollback()
+
+        // when
+        self.checkThatItNotifiesTheObserverOfAChange(team,
+                                                     modifier: { $0.splashImageData = "image".data(using: .utf8)! },
+                                                     expectedChangedFields: [#keyPath(TeamChangeInfo.splashImageDataChanged)]
         )
     }
 

@@ -222,8 +222,7 @@ private struct FileCache : Cache {
         return cache.assetData(key)
     }
 
-    //TODO
-    /// Returns the team logo image asset data for a team. This will probably cause I/O
+    /// Returns the team image asset data for a team. This will probably cause I/O
     ///
     /// - Parameters:
     ///   - team: the team of the image
@@ -275,12 +274,11 @@ private struct FileCache : Cache {
         return cache.hasDataForKey(key)
     }
 
-    //TODO
     /// Sets the image asset data for a team. This will cause I/O
     ///
     /// - Parameters:
     ///   - team: the team of the logo image
-    ///
+    ///   - imageType: the team image type (logo or splash image)
     ///   - format: the format of the image
     ///   - encrypted: encrypted or not
     ///   - data: the image data
@@ -318,12 +316,11 @@ private struct FileCache : Cache {
         cache.deleteAssetData(key)
     }
 
-    //TODO
     /// Deletes the image data for a given message. This will cause I/O
     ///
     /// - Parameters:
     ///   - team: the team of the logo image
-    ///
+    ///   - imageType: the team image type (logo or splash image)
     ///   - format: the format of the image
     ///   - encrypted: encrypted or not
     open func deleteAssetData(for team : Team,

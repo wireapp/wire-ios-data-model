@@ -26,8 +26,10 @@ extension Team : ObjectInSnapshot {
         return [
             #keyPath(Team.name),
             #keyPath(Team.members),
-            #keyPath(Team.imageData),
+            #keyPath(Team.logoImageData),
             #keyPath(Team.pictureAssetId),
+            #keyPath(Team.splashImageData),
+            #keyPath(Team.splashImageId)
         ]
     }
     
@@ -57,9 +59,13 @@ extension Team : ObjectInSnapshot {
     public var nameChanged : Bool {
         return changedKeys.contains(#keyPath(Team.name))
     }
-    
-    public var imageDataChanged : Bool {
-        return changedKeysContain(keys: #keyPath(Team.imageData), #keyPath(Team.pictureAssetId))
+
+    public var logoImageDataChanged : Bool {
+        return changedKeysContain(keys: #keyPath(Team.logoImageData), #keyPath(Team.pictureAssetId))
+    }
+
+    public var splashImageDataChanged : Bool {
+        return changedKeysContain(keys: #keyPath(Team.splashImageData), #keyPath(Team.splashImageId))
     }
 
 }
