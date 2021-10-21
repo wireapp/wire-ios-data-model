@@ -85,8 +85,8 @@ extension ZMConversation {
         }
     }
 
-    public func appendMessageTimerUpdateMessage(fromUser user: ZMUser, timer: Double, timestamp: Date) -> ZMSystemMessage {
-        let message = appendSystemMessage(
+    public func appendMessageTimerUpdateMessage(fromUser user: ZMUser, timer: Double, timestamp: Date) {
+        appendSystemMessage(
             type: .messageTimerUpdate,
             sender: user,
             users: [user],
@@ -100,7 +100,6 @@ extension ZMConversation {
         }
 
         managedObjectContext?.enqueueDelayedSave()
-        return message
     }
 
     // MARK: - Helpers
