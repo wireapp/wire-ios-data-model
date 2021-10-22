@@ -58,7 +58,7 @@ public extension ZMUser {
             created.pointee = true
             let user = ZMUser.insertNewObject(in: context)
             user.remoteIdentifier = remoteIdentifier
-            user.domain = domain?.isEmpty == true ? nil : domain
+            user.domain = domain?.selfOrNilIfEmpty
             return user
         }
     }
