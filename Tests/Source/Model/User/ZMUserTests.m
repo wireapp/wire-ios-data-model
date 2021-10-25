@@ -175,6 +175,21 @@ static NSString *const ImageSmallProfileDataKey = @"imageSmallProfileData";
     }];
 }
 
+- (void)testThatItTreatsEmptyDomainAsNil
+{
+    // given
+    NSUUID *uuid = [NSUUID createUUID];
+
+    [self.syncMOC performBlockAndWait:^{
+        // when
+        ZMUser *found = [ZMUser fetchOrCreateWith:uuid domain:@"" in:self.syncMOC];
+
+        // then
+        XCTAssertNotNil(found);
+        XCTAssertEqualObjects(uuid, found.remoteIdentifier);
+        XCTAssertEqualObjects(nil, found.domain);
+    }];
+}
 
 - (void)testThatItReturnsAnExistingUserByPhone
 {
@@ -1337,7 +1352,7 @@ static NSString *const ImageSmallProfileDataKey = @"imageSmallProfileData";
     XCTAssertFalse(user.isConnected);
     XCTAssertFalse(user.isBlocked);
     XCTAssertFalse(user.isPendingApprovalByOtherUser);
-    XCTAssertTrue(user.isPendingApprovalBySelfUser);
+    XCTAssertFalse(user.isPendingApprovalBySelfUser);
     XCTAssertTrue(user.canBeConnected);
 }
 
