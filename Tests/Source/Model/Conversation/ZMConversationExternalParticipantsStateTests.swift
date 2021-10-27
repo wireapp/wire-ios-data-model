@@ -67,6 +67,7 @@ class ZMConversationExternalParticipantsStateTests: ZMConversationTestsBase {
         case memberOfHostingTeam
         case service
         case external
+        case federated
     }
 
     func testOneToOneCases() {
@@ -96,6 +97,10 @@ class ZMConversationExternalParticipantsStateTests: ZMConversationTestsBase {
         assertMatrixRow(.group, selfUser: .external, otherUsers: [.memberOfHostingTeam], expectedResult: [])
         assertMatrixRow(.group, selfUser: .external, otherUsers: [.service], expectedResult: [])
 
+        // Only Remotes
+        assertMatrixRow(.group, selfUser: .memberOfHostingTeam, otherUsers: [.federated], expectedResult: [.visibleRemotes])
+        assertMatrixRow(.group, selfUser: .external, otherUsers: [.federated], expectedResult: [.visibleRemotes])
+
         // Only Guests
         assertMatrixRow(.group, selfUser: .memberOfHostingTeam, otherUsers: [.personal], expectedResult: [.visibleGuests])
         assertMatrixRow(.group, selfUser: .external, otherUsers: [.personal], expectedResult: [.visibleGuests])
@@ -120,8 +125,8 @@ class ZMConversationExternalParticipantsStateTests: ZMConversationTestsBase {
         assertMatrixRow(.group, selfUser: .memberOfHostingTeam, otherUsers: [.external, .service], expectedResult: [.visibleExternals, .visibleServices])
         assertMatrixRow(.group, selfUser: .personal, otherUsers: [.external, .service], expectedResult: [.visibleExternals, .visibleServices])
 
-        // Guests and Services and Externals
-        assertMatrixRow(.group, selfUser: .memberOfHostingTeam, otherUsers: [.personal, .service, .external], expectedResult: [.visibleGuests, .visibleServices, .visibleExternals])
+        // Guests and Services and Externals and Remotes
+        assertMatrixRow(.group, selfUser: .memberOfHostingTeam, otherUsers: [.personal, .service, .external, .federated], expectedResult: [.visibleGuests, .visibleServices, .visibleExternals, .visibleRemotes])
     }
 
     // MARK: - Helpers
@@ -143,6 +148,8 @@ class ZMConversationExternalParticipantsStateTests: ZMConversationTestsBase {
 
         var hostingTeam: Team?
 
+        selfUser.domain = "self.com"
+
         switch selfUserType {
         case .memberOfHostingTeam:
             let team = createTeam(in: uiMOC)
@@ -152,6 +159,9 @@ class ZMConversationExternalParticipantsStateTests: ZMConversationTestsBase {
             createMembership(in: uiMOC, user: selfUser, team: team)
 
         case .personal:
+            break
+
+        case .federated:
             break
 
         case .service:
@@ -185,7 +195,10 @@ class ZMConversationExternalParticipantsStateTests: ZMConversationTestsBase {
             case .external:
                 let external = createExternal(in: uiMOC)
                 conversation.addParticipantAndUpdateConversationState(user: external, role: nil)
-
+            case .federated:
+                let otherUser = createUser(in: uiMOC)
+                otherUser.domain = "other.com"
+                conversation.addParticipantAndUpdateConversationState(user: otherUser, role: nil)
             }
         }
 
