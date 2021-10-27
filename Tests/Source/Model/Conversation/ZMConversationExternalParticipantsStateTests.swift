@@ -74,16 +74,19 @@ class ZMConversationExternalParticipantsStateTests: ZMConversationTestsBase {
         // Personal Users
         assertMatrixRow(.oneOnOne, selfUser: .personal, otherUsers: [.personal], expectedResult: [])
         assertMatrixRow(.oneOnOne, selfUser: .personal, otherUsers: [.memberOfHostingTeam], expectedResult: [])
+        assertMatrixRow(.oneOnOne, selfUser: .personal, otherUsers: [.federated], expectedResult: [])
 
         // Team
         assertMatrixRow(.oneOnOne, selfUser: .memberOfHostingTeam, otherUsers: [.memberOfHostingTeam], expectedResult: [])
         assertMatrixRow(.oneOnOne, selfUser: .memberOfHostingTeam, otherUsers: [.personal], expectedResult: [])
         assertMatrixRow(.oneOnOne, selfUser: .memberOfHostingTeam, otherUsers: [.service], expectedResult: [])
         assertMatrixRow(.oneOnOne, selfUser: .memberOfHostingTeam, otherUsers: [.external], expectedResult: [])
+        assertMatrixRow(.oneOnOne, selfUser: .memberOfHostingTeam, otherUsers: [.federated], expectedResult: [])
 
         // External
         assertMatrixRow(.oneOnOne, selfUser: .external, otherUsers: [.external], expectedResult: [])
         assertMatrixRow(.oneOnOne, selfUser: .external, otherUsers: [.memberOfHostingTeam], expectedResult: [])
+        assertMatrixRow(.oneOnOne, selfUser: .external, otherUsers: [.federated], expectedResult: [])
     }
 
     func testGroupCases() {
