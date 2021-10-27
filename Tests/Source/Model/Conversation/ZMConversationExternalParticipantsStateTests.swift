@@ -114,17 +114,6 @@ class ZMConversationExternalParticipantsStateTests: ZMConversationTestsBase {
         assertMatrixRow(.group, selfUser: .memberOfHostingTeam, otherUsers: [.external], expectedResult: [.visibleExternals])
         assertMatrixRow(.group, selfUser: .personal, otherUsers: [.external], expectedResult: [.visibleExternals])
 
-        // Guests and Services
-        assertMatrixRow(.group, selfUser: .memberOfHostingTeam, otherUsers: [.personal, .service], expectedResult: [.visibleGuests, .visibleServices])
-        assertMatrixRow(.group, selfUser: .external, otherUsers: [.personal, .service], expectedResult: [.visibleGuests, .visibleServices])
-
-        // Guests and Externals
-        assertMatrixRow(.group, selfUser: .memberOfHostingTeam, otherUsers: [.personal, .external], expectedResult: [.visibleGuests, .visibleExternals])
-
-        // Externals and Services
-        assertMatrixRow(.group, selfUser: .memberOfHostingTeam, otherUsers: [.external, .service], expectedResult: [.visibleExternals, .visibleServices])
-        assertMatrixRow(.group, selfUser: .personal, otherUsers: [.external, .service], expectedResult: [.visibleExternals, .visibleServices])
-
         // Guests and Services and Externals and Remotes
         assertMatrixRow(.group, selfUser: .memberOfHostingTeam, otherUsers: [.personal, .service, .external, .federated], expectedResult: [.visibleGuests, .visibleServices, .visibleExternals, .visibleRemotes])
     }
