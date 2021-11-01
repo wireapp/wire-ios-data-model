@@ -32,6 +32,7 @@ extension ZMManagedObject {
     ///
     /// If the domain is nil only objects belonging to your own domain will be returned. Similarily if the self user aren't associated with a domain the domain parameter will be ignored.
     @objc public static func fetch(with remoteIdentifier: UUID, domain: String?, in context: NSManagedObjectContext) -> Self? {
+        let domain = domain?.selfOrNilIfEmpty
         let localDomain = ZMUser.selfUser(in: context).domain
         let isSearchingLocalDomain = domain == nil || localDomain == nil || localDomain == domain
 
@@ -41,4 +42,20 @@ extension ZMManagedObject {
                              in: context)
     }
 
+}
+
+public extension ZMManagedObject {
+
+    static func existingObject(for id: NSManagedObjectID, in context: NSManagedObjectContext) -> Self? {
+        return try? context.existingObject(with: id) as? Self
+    }
+
+}
+
+public extension Collection where Element == NSManagedObjectID {
+
+    func existingObjects<T: ZMManagedObject>(in context: NSManagedObjectContext) -> [T]? {
+        let objects = compactMap({ T.existingObject(for: $0, in: context) })
+        return objects.count == self.count ? objects : nil
+    }
 }

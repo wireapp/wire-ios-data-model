@@ -18,7 +18,7 @@
 
 import XCTest
 
-class ZMManagedObjectFetchingTests: DatabaseBaseTest {
+class ZMConnectionFetchingTests: DatabaseBaseTest {
 
     var mocs: CoreDataStack!
 
@@ -33,34 +33,22 @@ class ZMManagedObjectFetchingTests: DatabaseBaseTest {
         super.tearDown()
     }
 
-    // MARK - Fetch using remote identifier and domain
+    // MARK - Fetch using remote identifier
 
-    func testItFetchesEntityByRemoteIdentifier_WhenObjectIsRegisteredInContext() throws {
+    func testItFetchesEntityByRemoteIdentifier() throws {
         // given
         let uuid = UUID()
         let user = ZMUser.insertNewObject(in: mocs.viewContext)
         user.remoteIdentifier = uuid
-
-        // when
-        let fetched = ZMUser.fetch(with: uuid, in: mocs.viewContext)
-
-        // then
-        XCTAssertEqual(user, fetched)
-    }
-
-    func testItFetchesEntityByRemoteIdentifier_WhenObjectIsNotRegisteredInContext() throws {
-        // given
-        let uuid = UUID()
-        let user = ZMUser.insertNewObject(in: mocs.viewContext)
-        user.remoteIdentifier = uuid
+        let connection = ZMConnection.insertNewObject(in: mocs.viewContext)
+        connection.to = user
         try mocs.viewContext.save()
-        mocs.viewContext.refresh(user, mergeChanges: false)
 
         // when
-        let fetched = ZMUser.fetch(with: uuid, in: mocs.viewContext)
+        let fetched = ZMConnection.fetch(userID: uuid, domain: nil, in: mocs.viewContext)
 
         // then
-        XCTAssertEqual(user.objectID, fetched?.objectID)
+        XCTAssertEqual(connection.objectID, fetched?.objectID)
     }
 
     func testItDoesntFetchEntityByRemoteIdentifier_WhenRemoteIdentifierDoesntMatch() throws {
@@ -68,22 +56,12 @@ class ZMManagedObjectFetchingTests: DatabaseBaseTest {
         let uuid = UUID()
         let user = ZMUser.insertNewObject(in: mocs.viewContext)
         user.remoteIdentifier = uuid
+        let connection = ZMConnection.insertNewObject(in: mocs.viewContext)
+        connection.to = user
+        try mocs.viewContext.save()
 
         // when
-        let fetched = ZMUser.fetch(with: UUID(), in: mocs.viewContext)
-
-        // then
-        XCTAssertNil(fetched)
-    }
-
-    func testItDoesntFetchEntityByRemoteIdentifier_WhenEntityDoesntMatch() throws {
-        // given
-        let uuid = UUID()
-        let conversation = ZMConversation.insertNewObject(in: mocs.viewContext)
-        conversation.remoteIdentifier = uuid
-
-        // when
-        let fetched = ZMUser.fetch(with: uuid, in: mocs.viewContext)
+        let fetched = ZMConnection.fetch(userID: UUID(), domain: nil, in: mocs.viewContext)
 
         // then
         XCTAssertNil(fetched)
@@ -91,7 +69,7 @@ class ZMManagedObjectFetchingTests: DatabaseBaseTest {
 
     // MARK - Fetch using remote identifier and domain
 
-    func testThatItFetchesEntityByDomain_WhenObjectIsRegisteredInContext() throws {
+    func testThatItFetchesEntityByDomain() throws {
         // given
         let domain = "example.com"
         let selfUser = ZMUser.selfUser(in: mocs.viewContext)
@@ -101,52 +79,17 @@ class ZMManagedObjectFetchingTests: DatabaseBaseTest {
         let user = ZMUser.insertNewObject(in: mocs.viewContext)
         user.remoteIdentifier = uuid
         user.domain = domain
-
-        // when
-        let fetched = ZMUser.fetch(with: uuid, domain: domain, in: mocs.viewContext)
-
-        // then
-        XCTAssertEqual(user.objectID, fetched?.objectID)
-    }
-
-    func testThatItFetchesEntityByDomain_WhenObjectIsNotRegisteredInContext() throws {
-        // given
-        let selfUser = ZMUser.selfUser(in: mocs.viewContext)
-        selfUser.domain = "example.com"
-
-        let uuid = UUID()
-        let user = ZMUser.insertNewObject(in: mocs.viewContext)
-        user.remoteIdentifier = uuid
-        user.domain = "example.com"
+        let connection = ZMConnection.insertNewObject(in: mocs.viewContext)
+        connection.to = user
         try mocs.viewContext.save()
-        mocs.viewContext.refresh(user, mergeChanges: false)
 
         // when
-        let fetched = ZMUser.fetch(with: uuid, in: mocs.viewContext)
+        let fetched = ZMConnection.fetch(userID: uuid, domain: domain, in: mocs.viewContext)
 
         // then
-        XCTAssertEqual(user.objectID, fetched?.objectID)
+        XCTAssertEqual(connection.objectID, fetched?.objectID)
     }
-
-    func testThatEmptyDomainIsTreatedAsNilDomain() throws {
-        // given
-        let selfUser = ZMUser.selfUser(in: mocs.viewContext)
-        selfUser.domain = "example.com"
-
-        let uuid = UUID()
-        let user = ZMUser.insertNewObject(in: mocs.viewContext)
-        user.remoteIdentifier = uuid
-        user.domain = "example.com"
-        try mocs.viewContext.save()
-        mocs.viewContext.refresh(user, mergeChanges: false)
-
-        // when
-        let fetched = ZMUser.fetch(with: uuid, domain: "", in: mocs.viewContext)
-
-        // then
-        XCTAssertEqual(user.objectID, fetched?.objectID)
-    }
-
+    
     func testEntityFetching_WhenSearchingForLocalEntity() {
         let localDomain = "example.com"
         let remoteDomain = "remote.com"
@@ -226,15 +169,23 @@ class ZMManagedObjectFetchingTests: DatabaseBaseTest {
         user.remoteIdentifier = uuid
         user.domain = entityDomain
 
+        let connection = ZMConnection.insertNewObject(in: mocs.viewContext)
+        connection.to = user
+
         // when
-        let fetchedUser = ZMUser.fetch(with: uuid, domain: searchDomain, in: mocs.viewContext)
+        let fetchedConnection = ZMConnection.fetch(userID: uuid, domain: searchDomain, in: mocs.viewContext)
 
         // then
         if fetched {
-            XCTAssertEqual(user.objectID, fetchedUser?.objectID)
+            XCTAssertEqual(connection.objectID, fetchedConnection?.objectID)
         } else {
-            XCTAssertNil(fetchedUser)
+            XCTAssertNil(fetchedConnection)
         }
+
+        // cleanup
+        mocs.viewContext.delete(user)
+        mocs.viewContext.delete(connection)
     }
+
 
 }
