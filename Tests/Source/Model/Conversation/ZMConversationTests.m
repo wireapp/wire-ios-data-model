@@ -372,6 +372,40 @@
     }];
 }
 
+- (void)testThatItIgnoresDomainWhenFederationIsDisabled
+{
+    // given
+    NSUUID *uuid = [NSUUID createUUID];
+
+    [self.syncMOC performBlockAndWait:^{
+        // when
+        self.syncMOC.zm_isFederationEnabled = NO;
+        ZMConversation *found = [ZMConversation fetchOrCreateWith:uuid domain:@"a.com" in:self.syncMOC];
+
+        // then
+        XCTAssertNotNil(found);
+        XCTAssertEqualObjects(uuid, found.remoteIdentifier);
+        XCTAssertEqualObjects(nil, found.domain);
+    }];
+}
+
+- (void)testThatItAssignsDomainWhenFederationIsEnabled
+{
+    // given
+    NSUUID *uuid = [NSUUID createUUID];
+    NSString *domain = @"a.com";
+
+    [self.syncMOC performBlockAndWait:^{
+        // when
+        self.syncMOC.zm_isFederationEnabled = YES;
+        ZMConversation *found = [ZMConversation fetchOrCreateWith:uuid domain:domain in:self.syncMOC];
+
+        // then
+        XCTAssertNotNil(found);
+        XCTAssertEqualObjects(uuid, found.remoteIdentifier);
+        XCTAssertEqualObjects(domain, found.domain);
+    }];
+}
 
 - (void)testThatConversationsDoNotGetInsertedUpstreamUnlessTheyAreGroupConversations;
 {
