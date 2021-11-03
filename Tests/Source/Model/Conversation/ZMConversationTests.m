@@ -365,10 +365,10 @@
         NSUUID *uuid = NSUUID.createUUID;
         
         // when
-        ZMConversation *found = [ZMConversation fetchOrCreateWith:uuid domain:nil in:self.syncMOC];
+        ZMConversation *created = [ZMConversation fetchOrCreateWith:uuid domain:nil in:self.syncMOC];
         
         // then
-        XCTAssertEqualObjects(uuid, found.remoteIdentifier);
+        XCTAssertEqualObjects(uuid, created.remoteIdentifier);
     }];
 }
 
@@ -379,11 +379,11 @@
         NSUUID *uuid = NSUUID.createUUID;
 
         // when
-        ZMConversation *found = [ZMConversation fetchOrCreateWith:uuid domain:@"" in:self.syncMOC];
+        ZMConversation *created = [ZMConversation fetchOrCreateWith:uuid domain:@"" in:self.syncMOC];
 
         // then
-        XCTAssertEqualObjects(uuid, found.remoteIdentifier);
-        XCTAssertEqualObjects(nil, found.domain);
+        XCTAssertEqualObjects(uuid, created.remoteIdentifier);
+        XCTAssertEqualObjects(nil, created.domain);
     }];
 }
 
@@ -395,12 +395,12 @@
     [self.syncMOC performBlockAndWait:^{
         // when
         self.syncMOC.zm_isFederationEnabled = NO;
-        ZMConversation *found = [ZMConversation fetchOrCreateWith:uuid domain:@"a.com" in:self.syncMOC];
+        ZMConversation *created = [ZMConversation fetchOrCreateWith:uuid domain:@"a.com" in:self.syncMOC];
 
         // then
-        XCTAssertNotNil(found);
-        XCTAssertEqualObjects(uuid, found.remoteIdentifier);
-        XCTAssertEqualObjects(nil, found.domain);
+        XCTAssertNotNil(created);
+        XCTAssertEqualObjects(uuid, created.remoteIdentifier);
+        XCTAssertEqualObjects(nil, created.domain);
     }];
 }
 
@@ -413,12 +413,12 @@
     [self.syncMOC performBlockAndWait:^{
         // when
         self.syncMOC.zm_isFederationEnabled = YES;
-        ZMConversation *found = [ZMConversation fetchOrCreateWith:uuid domain:domain in:self.syncMOC];
+        ZMConversation *created = [ZMConversation fetchOrCreateWith:uuid domain:domain in:self.syncMOC];
 
         // then
-        XCTAssertNotNil(found);
-        XCTAssertEqualObjects(uuid, found.remoteIdentifier);
-        XCTAssertEqualObjects(domain, found.domain);
+        XCTAssertNotNil(created);
+        XCTAssertEqualObjects(uuid, created.remoteIdentifier);
+        XCTAssertEqualObjects(domain, created.domain);
     }];
 }
 

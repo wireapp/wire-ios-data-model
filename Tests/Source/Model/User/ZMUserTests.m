@@ -167,11 +167,11 @@ static NSString *const ImageSmallProfileDataKey = @"imageSmallProfileData";
 
     [self.syncMOC performBlockAndWait:^{
         // when
-        ZMUser *found = [ZMUser fetchOrCreateWith:uuid domain:nil in:self.syncMOC];
+        ZMUser *created = [ZMUser fetchOrCreateWith:uuid domain:nil in:self.syncMOC];
         
         // then
-        XCTAssertNotNil(found);
-        XCTAssertEqualObjects(uuid, found.remoteIdentifier);
+        XCTAssertNotNil(created);
+        XCTAssertEqualObjects(uuid, created.remoteIdentifier);
     }];
 }
 
@@ -182,12 +182,12 @@ static NSString *const ImageSmallProfileDataKey = @"imageSmallProfileData";
 
     [self.syncMOC performBlockAndWait:^{
         // when
-        ZMUser *found = [ZMUser fetchOrCreateWith:uuid domain:@"" in:self.syncMOC];
+        ZMUser *created = [ZMUser fetchOrCreateWith:uuid domain:@"" in:self.syncMOC];
 
         // then
-        XCTAssertNotNil(found);
-        XCTAssertEqualObjects(uuid, found.remoteIdentifier);
-        XCTAssertEqualObjects(nil, found.domain);
+        XCTAssertNotNil(created);
+        XCTAssertEqualObjects(uuid, created.remoteIdentifier);
+        XCTAssertEqualObjects(nil, created.domain);
     }];
 }
 
@@ -199,12 +199,12 @@ static NSString *const ImageSmallProfileDataKey = @"imageSmallProfileData";
     [self.syncMOC performBlockAndWait:^{
         // when
         self.syncMOC.zm_isFederationEnabled = NO;
-        ZMUser *found = [ZMUser fetchOrCreateWith:uuid domain:@"a.com" in:self.syncMOC];
+        ZMUser *created = [ZMUser fetchOrCreateWith:uuid domain:@"a.com" in:self.syncMOC];
 
         // then
-        XCTAssertNotNil(found);
-        XCTAssertEqualObjects(uuid, found.remoteIdentifier);
-        XCTAssertEqualObjects(nil, found.domain);
+        XCTAssertNotNil(created);
+        XCTAssertEqualObjects(uuid, created.remoteIdentifier);
+        XCTAssertEqualObjects(nil, created.domain);
     }];
 }
 
@@ -217,12 +217,12 @@ static NSString *const ImageSmallProfileDataKey = @"imageSmallProfileData";
     [self.syncMOC performBlockAndWait:^{
         // when
         self.syncMOC.zm_isFederationEnabled = YES;
-        ZMUser *found = [ZMUser fetchOrCreateWith:uuid domain:domain in:self.syncMOC];
+        ZMUser *created = [ZMUser fetchOrCreateWith:uuid domain:domain in:self.syncMOC];
 
         // then
-        XCTAssertNotNil(found);
-        XCTAssertEqualObjects(uuid, found.remoteIdentifier);
-        XCTAssertEqualObjects(domain, found.domain);
+        XCTAssertNotNil(created);
+        XCTAssertEqualObjects(uuid, created.remoteIdentifier);
+        XCTAssertEqualObjects(domain, created.domain);
     }];
 }
 
