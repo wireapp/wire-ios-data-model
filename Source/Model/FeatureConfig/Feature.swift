@@ -56,11 +56,10 @@ public class Feature: ZMManagedObject {
         }
 
         set {
-            if hasBeenUpdatedFromBackend {
+            if configHasBeenUpdatedFromBackend {
                 updateNeedsToNotifyUser(oldData: configData, newData: newValue)
             }
             configData = newValue
-            hasInitialDefault = false
         }
     }
     
@@ -88,18 +87,21 @@ public class Feature: ZMManagedObject {
         }
 
         set {
-            if hasBeenUpdatedFromBackend {
+            if statusHasBeenUpdatedFromBackend {
                 updateNeedsToNotifyUser(oldStatus: status, newStatus: newValue)
             }
-
             statusValue = newValue.rawValue
-            hasInitialDefault = false
         }
     }
 
-    /// Whether the feature has been updated from backend
-    private var hasBeenUpdatedFromBackend: Bool {
+    /// Whether the feature status has been updated from backend
+    private var statusHasBeenUpdatedFromBackend: Bool {
         return !statusValue.isEmpty && !hasInitialDefault
+    }
+
+    /// Whether the feature config has been updated from backend
+    private var configHasBeenUpdatedFromBackend: Bool {
+        return configData != nil && !hasInitialDefault
     }
 
     // MARK: - Methods
@@ -153,6 +155,7 @@ public class Feature: ZMManagedObject {
         context.performGroupedAndWait { context in
             if let existing = fetch(name: name, context: context) {
                 changes(existing)
+                existing.hasInitialDefault = false
             } else {
                 let feature = Feature.insertNewObject(in: context)
                 feature.name = name

@@ -107,13 +107,6 @@ public extension ZMUser {
     
     @objc(canModifyEphemeralSettingsInConversation:)
     func canModifyEphemeralSettings(in conversation: ConversationLike) -> Bool {
-        guard
-            let featureService = managedObjectContext.map(FeatureService.init),
-            featureService.fetchSelfDeletingMesssages().status == .enabled
-        else {
-            return false
-        }
-
         if conversation.conversationType == .group {
             return hasRoleWithAction(actionName: ConversationAction.modifyConversationMessageTimer.name, conversation: conversation)
         } else {
