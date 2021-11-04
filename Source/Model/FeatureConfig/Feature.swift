@@ -56,7 +56,7 @@ public class Feature: ZMManagedObject {
         }
 
         set {
-            if configHasBeenUpdatedFromBackend {
+            if hasBeenUpdatedFromBackend {
                 updateNeedsToNotifyUser(oldData: configData, newData: newValue)
             }
             configData = newValue
@@ -87,21 +87,16 @@ public class Feature: ZMManagedObject {
         }
 
         set {
-            if statusHasBeenUpdatedFromBackend {
+            if hasBeenUpdatedFromBackend {
                 updateNeedsToNotifyUser(oldStatus: status, newStatus: newValue)
             }
             statusValue = newValue.rawValue
         }
     }
 
-    /// Whether the feature status has been updated from backend
-    private var statusHasBeenUpdatedFromBackend: Bool {
+    /// Whether the feature has been updated from backend
+    private var hasBeenUpdatedFromBackend: Bool {
         return !statusValue.isEmpty && !hasInitialDefault
-    }
-
-    /// Whether the feature config has been updated from backend
-    private var configHasBeenUpdatedFromBackend: Bool {
-        return configData != nil && !hasInitialDefault
     }
 
     // MARK: - Methods
