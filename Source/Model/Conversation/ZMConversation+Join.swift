@@ -27,7 +27,7 @@ public enum ConversationJoinError: Error {
     
 }
 
-public class JoinAction: EntityAction {
+public class JoinConversationAction: EntityAction {
     
     public var resultHandler: ResultHandler?
     
@@ -46,11 +46,11 @@ public class JoinAction: EntityAction {
 
 extension ZMConversation {
     
-    public static func join(context: NotificationContext,
-                            key: String,
+    public static func join(key: String,
                             code: String,
-                            completion: @escaping JoinAction.ResultHandler) {
-        var action = JoinAction(key: key, code: code)
+                            context: NotificationContext,
+                            completion: @escaping JoinConversationAction.ResultHandler) {
+        var action = JoinConversationAction(key: key, code: code)
         action.onResult(resultHandler: completion)
         action.send(in: context)
     }

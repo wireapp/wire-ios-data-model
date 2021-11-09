@@ -18,7 +18,7 @@
 
 import Foundation
 
-public enum ConversationFetchIDAndNameError: Error {
+public enum ConversationFetchError: Error {
     
     case unknown,
          noTeamMember,
@@ -28,12 +28,12 @@ public enum ConversationFetchIDAndNameError: Error {
     
 }
 
-public class FetchIDAndNameAction: EntityAction {
+public class FetchConversationAction: EntityAction {
     
     public var resultHandler: ResultHandler?
     
     public typealias Result = (UUID, String)
-    public typealias Failure = ConversationFetchIDAndNameError
+    public typealias Failure = ConversationFetchError
     
     public let key: String
     public let code: String
@@ -47,11 +47,11 @@ public class FetchIDAndNameAction: EntityAction {
 
 extension ZMConversation {
     
-    public static func fetchIDAndName(context: NotificationContext,
-                                      key: String,
-                                      code: String,
-                                      completion: @escaping FetchIDAndNameAction.ResultHandler) {
-        var action = FetchIDAndNameAction(key: key, code: code)
+    public static func fetch(key: String,
+                             code: String,
+                             context: NotificationContext,
+                             completion: @escaping FetchConversationAction.ResultHandler) {
+        var action = FetchConversationAction(key: key, code: code)
         action.onResult(resultHandler: completion)
         action.send(in: context)
     }
