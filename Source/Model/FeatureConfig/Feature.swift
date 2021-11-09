@@ -60,7 +60,6 @@ public class Feature: ZMManagedObject {
                 updateNeedsToNotifyUser(oldData: configData, newData: newValue)
             }
             configData = newValue
-            hasInitialDefault = false
         }
     }
     
@@ -91,9 +90,7 @@ public class Feature: ZMManagedObject {
             if hasBeenUpdatedFromBackend {
                 updateNeedsToNotifyUser(oldStatus: status, newStatus: newValue)
             }
-
             statusValue = newValue.rawValue
-            hasInitialDefault = false
         }
     }
 
@@ -153,6 +150,7 @@ public class Feature: ZMManagedObject {
         context.performGroupedAndWait { context in
             if let existing = fetch(name: name, context: context) {
                 changes(existing)
+                existing.hasInitialDefault = false
             } else {
                 let feature = Feature.insertNewObject(in: context)
                 feature.name = name
