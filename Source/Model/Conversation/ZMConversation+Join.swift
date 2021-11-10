@@ -36,10 +36,14 @@ public class JoinConversationAction: EntityAction {
     
     public let key: String
     public let code: String
+    public let viewContext: NSManagedObjectContext
     
-    public required init(key: String, code: String) {
+    public required init(key: String,
+                         code: String,
+                         viewContext: NSManagedObjectContext) {
         self.key = key
         self.code = code
+        self.viewContext = viewContext
     }
     
 }
@@ -48,11 +52,12 @@ extension ZMConversation {
     
     public static func join(key: String,
                             code: String,
-                            context: NotificationContext,
+                            syncContext: NSManagedObjectContext,
+                            viewContext: NSManagedObjectContext,
                             completion: @escaping JoinConversationAction.ResultHandler) {
-        var action = JoinConversationAction(key: key, code: code)
+        var action = JoinConversationAction(key: key, code: code, viewContext: viewContext)
         action.onResult(resultHandler: completion)
-        action.send(in: context)
+        action.send(in: syncContext.notificationContext)
     }
     
 }
