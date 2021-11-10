@@ -31,7 +31,7 @@ public class JoinConversationAction: EntityAction {
     
     public var resultHandler: ResultHandler?
     
-    public typealias Result = String
+    public typealias Result = ZMConversation
     public typealias Failure = ConversationJoinError
     
     public let key: String
