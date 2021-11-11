@@ -1,3 +1,4 @@
+//
 // Wire
 // Copyright (C) 2021 Wire Swiss GmbH
 //
@@ -41,11 +42,10 @@ public class DeleteConversationAction: EntityAction {
 
 extension ZMConversation {
     
-    public func delete(syncContext: NSManagedObjectContext,
-                       viewContext: NSManagedObjectContext,
-                       completion: @escaping DeleteConversationAction.ResultHandler) {
+    public func delete(completion: @escaping DeleteConversationAction.ResultHandler) {
         guard
-            ZMUser.selfUser(in: viewContext).canDeleteConversation(self),
+            let context = managedObjectContext,
+            ZMUser.selfUser(in: context).canDeleteConversation(self),
             let conversationID = remoteIdentifier,
             let teamID = teamRemoteIdentifier
         else {
@@ -54,7 +54,7 @@ extension ZMConversation {
         
         var action = DeleteConversationAction(conversationID: conversationID, teamID: teamID)
         action.onResult(resultHandler: completion)
-        action.send(in: syncContext.notificationContext)
+        action.send(in: context.notificationContext)
     }
     
 }
