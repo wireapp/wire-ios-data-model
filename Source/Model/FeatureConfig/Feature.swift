@@ -147,7 +147,7 @@ public class Feature: ZMManagedObject {
         // on a single context to avoid race conditions.
         assert(context.zm_isSyncContext, "Modifications of `Feature` can only occur on the sync context")
 
-        context.performGroupedAndWait { context in
+        context.performGroupedBlock {
             if let existing = fetch(name: name, context: context) {
                 changes(existing)
                 existing.hasInitialDefault = false

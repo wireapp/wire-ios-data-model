@@ -56,11 +56,12 @@ public class FeatureService {
     }
 
     public func storeAppLock(_ appLock: Feature.AppLock) {
-        let config = try! JSONEncoder().encode(appLock.config)
-
-        Feature.updateOrCreate(havingName: .appLock, in: context) {
-            $0.status = appLock.status
-            $0.config = config
+        context.performGroupedAndWait {
+            let config = try! JSONEncoder().encode(appLock.config)
+            Feature.updateOrCreate(havingName: .appLock, in: $0) {
+                $0.status = appLock.status
+                $0.config = config
+            }
         }
     }
 
@@ -76,8 +77,10 @@ public class FeatureService {
     }
 
     public func storeConferenceCalling(_ conferenceCalling: Feature.ConferenceCalling) {
-        Feature.updateOrCreate(havingName: .conferenceCalling, in: context) {
-            $0.status = conferenceCalling.status
+        context.performGroupedAndWait {
+            Feature.updateOrCreate(havingName: .conferenceCalling, in: $0) {
+                $0.status = conferenceCalling.status
+            }
         }
 
         guard
@@ -102,8 +105,10 @@ public class FeatureService {
     }
 
     public func storeFileSharing(_ fileSharing: Feature.FileSharing) {
-        Feature.updateOrCreate(havingName: .fileSharing, in: context) {
-            $0.status = fileSharing.status
+        context.performGroupedAndWait {
+            Feature.updateOrCreate(havingName: .fileSharing, in: $0) {
+                $0.status = fileSharing.status
+            }
         }
 
         guard needsToNotifyUser(for: .fileSharing) else { return }
@@ -118,17 +123,25 @@ public class FeatureService {
     }
 
     public func fetchSelfDeletingMesssages() -> Feature.SelfDeletingMessages {
-        let feature = Feature.fetch(name: .selfDeletingMessages, context: context)!
-        let config = try! JSONDecoder().decode(Feature.SelfDeletingMessages.Config.self, from: feature.config!)
-        return .init(status: feature.status, config: config)
+        var result: Feature.SelfDeletingMessages!
+
+        context.performGroupedAndWait {
+            let feature = Feature.fetch(name: .selfDeletingMessages, context: $0)!
+            let config = try! JSONDecoder().decode(Feature.SelfDeletingMessages.Config.self, from: feature.config!)
+            result = .init(status: feature.status, config: config)
+        }
+
+        return result
     }
 
     public func storeSelfDeletingMessages(_ selfDeletingMessages: Feature.SelfDeletingMessages) {
-        let config = try! JSONEncoder().encode(selfDeletingMessages.config)
+        context.performGroupedAndWait {
+            let config = try! JSONEncoder().encode(selfDeletingMessages.config)
 
-        Feature.updateOrCreate(havingName: .selfDeletingMessages, in: context) {
-            $0.status = selfDeletingMessages.status
-            $0.config = config
+            Feature.updateOrCreate(havingName: .selfDeletingMessages, in: $0) {
+                $0.status = selfDeletingMessages.status
+                $0.config = config
+            }
         }
 
         guard needsToNotifyUser(for: .selfDeletingMessages) else { return }
