@@ -285,8 +285,6 @@ public class CoreDataStack: NSObject, ContextProvider {
         context.mergePolicy = NSMergePolicy(merge: .rollbackMergePolicyType)
         ZMUser.selfUser(in: context)
         Label.fetchOrCreateFavoriteLabel(in: context, create: true)
-        FeatureService(context: context).createDefaultConfigsIfNeeded()
-        context.saveOrRollback()
     }
 
     func configureContextReferences() {
@@ -308,6 +306,9 @@ public class CoreDataStack: NSObject, ContextProvider {
                                       applicationContainer: applicationContainer)
             context.undoManager = nil
             context.mergePolicy = NSMergePolicy(merge: .mergeByPropertyObjectTrumpMergePolicyType)
+
+            FeatureService(context: context).createDefaultConfigsIfNeeded()
+            context.saveOrRollback()
         }
 
         // this will be done async, not to block the UI thread, but
