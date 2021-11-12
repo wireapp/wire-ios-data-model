@@ -77,20 +77,20 @@ public class FeatureService {
     }
 
     public func storeConferenceCalling(_ conferenceCalling: Feature.ConferenceCalling) {
-        context.performGroupedAndWait {
+        context.performGroupedAndWait { [self] in
             Feature.updateOrCreate(havingName: .conferenceCalling, in: $0) {
                 $0.status = conferenceCalling.status
             }
-        }
 
-        guard
-            needsToNotifyUser(for: .conferenceCalling),
-            conferenceCalling.status == .enabled
-        else {
-            return
-        }
+            guard
+                needsToNotifyUser(for: .conferenceCalling),
+                conferenceCalling.status == .enabled
+            else {
+                return
+            }
 
-        notifyChange(.conferenceCallingIsAvailable)
+            notifyChange(.conferenceCallingIsAvailable)
+        }
     }
 
     public func fetchFileSharing() -> Feature.FileSharing {
@@ -105,20 +105,20 @@ public class FeatureService {
     }
 
     public func storeFileSharing(_ fileSharing: Feature.FileSharing) {
-        context.performGroupedAndWait {
+        context.performGroupedAndWait { [self] in
             Feature.updateOrCreate(havingName: .fileSharing, in: $0) {
                 $0.status = fileSharing.status
             }
-        }
 
-        guard needsToNotifyUser(for: .fileSharing) else { return }
+            guard needsToNotifyUser(for: .fileSharing) else { return }
 
-        switch fileSharing.status {
-        case .disabled:
-            notifyChange(.fileSharingDisabled)
+            switch fileSharing.status {
+            case .disabled:
+                notifyChange(.fileSharingDisabled)
 
-        case .enabled:
-            notifyChange(.fileSharingEnabled)
+            case .enabled:
+                notifyChange(.fileSharingEnabled)
+            }
         }
     }
 
@@ -135,26 +135,26 @@ public class FeatureService {
     }
 
     public func storeSelfDeletingMessages(_ selfDeletingMessages: Feature.SelfDeletingMessages) {
-        context.performGroupedAndWait {
+        context.performGroupedAndWait { [self] in
             let config = try! JSONEncoder().encode(selfDeletingMessages.config)
 
             Feature.updateOrCreate(havingName: .selfDeletingMessages, in: $0) {
                 $0.status = selfDeletingMessages.status
                 $0.config = config
             }
-        }
 
-        guard needsToNotifyUser(for: .selfDeletingMessages) else { return }
+            guard needsToNotifyUser(for: .selfDeletingMessages) else { return }
 
-        switch (selfDeletingMessages.status, selfDeletingMessages.config.enforcedTimeoutSeconds) {
-        case (.disabled, _):
-            notifyChange(.selfDeletingMessagesIsDisabled)
+            switch (selfDeletingMessages.status, selfDeletingMessages.config.enforcedTimeoutSeconds) {
+            case (.disabled, _):
+                notifyChange(.selfDeletingMessagesIsDisabled)
 
-        case (.enabled, let enforcedTimeout) where enforcedTimeout > 0:
-            notifyChange(.selfDeletingMessagesIsEnabled(enforcedTimeout: enforcedTimeout))
+            case (.enabled, let enforcedTimeout) where enforcedTimeout > 0:
+                notifyChange(.selfDeletingMessagesIsEnabled(enforcedTimeout: enforcedTimeout))
 
-        case (.enabled, _):
-            notifyChange(.selfDeletingMessagesIsEnabled(enforcedTimeout: nil))
+            case (.enabled, _):
+                notifyChange(.selfDeletingMessagesIsEnabled(enforcedTimeout: nil))
+            }
         }
     }
 
