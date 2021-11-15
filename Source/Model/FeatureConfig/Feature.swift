@@ -147,7 +147,7 @@ public class Feature: ZMManagedObject {
         // on a single context to avoid race conditions.
         assert(context.zm_isSyncContext, "Modifications of `Feature` can only occur on the sync context")
 
-        context.performGroupedBlock {
+        context.performGroupedAndWait { context in
             if let existing = fetch(name: name, context: context) {
                 changes(existing)
                 existing.hasInitialDefault = false
@@ -158,7 +158,12 @@ public class Feature: ZMManagedObject {
                 feature.hasInitialDefault = true
             }
 
-            context.saveOrRollback()
+//            context.saveOrRollback()
+            do {
+                try context.save()
+            } catch {
+                fatal("Can't create feature " + name.rawValue)
+            }
         }
     }
 

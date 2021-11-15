@@ -56,12 +56,10 @@ public class FeatureService {
     }
 
     public func storeAppLock(_ appLock: Feature.AppLock) {
-        context.performGroupedAndWait {
-            let config = try! JSONEncoder().encode(appLock.config)
-            Feature.updateOrCreate(havingName: .appLock, in: $0) {
-                $0.status = appLock.status
-                $0.config = config
-            }
+        let config = try! JSONEncoder().encode(appLock.config)
+        Feature.updateOrCreate(havingName: .appLock, in: context) {
+            $0.status = appLock.status
+            $0.config = config
         }
     }
 
@@ -77,20 +75,18 @@ public class FeatureService {
     }
 
     public func storeConferenceCalling(_ conferenceCalling: Feature.ConferenceCalling) {
-        context.performGroupedAndWait { [self] in
-            Feature.updateOrCreate(havingName: .conferenceCalling, in: $0) {
-                $0.status = conferenceCalling.status
-            }
-
-            guard
-                needsToNotifyUser(for: .conferenceCalling),
-                conferenceCalling.status == .enabled
-            else {
-                return
-            }
-
-            notifyChange(.conferenceCallingIsAvailable)
+        Feature.updateOrCreate(havingName: .conferenceCalling, in: context) {
+            $0.status = conferenceCalling.status
         }
+
+        guard
+            needsToNotifyUser(for: .conferenceCalling),
+            conferenceCalling.status == .enabled
+        else {
+            return
+        }
+
+        notifyChange(.conferenceCallingIsAvailable)
     }
 
     public func fetchFileSharing() -> Feature.FileSharing {
@@ -105,56 +101,46 @@ public class FeatureService {
     }
 
     public func storeFileSharing(_ fileSharing: Feature.FileSharing) {
-        context.performGroupedAndWait { [self] in
-            Feature.updateOrCreate(havingName: .fileSharing, in: $0) {
-                $0.status = fileSharing.status
-            }
+        Feature.updateOrCreate(havingName: .fileSharing, in: context) {
+            $0.status = fileSharing.status
+        }
 
-            guard needsToNotifyUser(for: .fileSharing) else { return }
+        guard needsToNotifyUser(for: .fileSharing) else { return }
 
-            switch fileSharing.status {
-            case .disabled:
-                notifyChange(.fileSharingDisabled)
+        switch fileSharing.status {
+        case .disabled:
+            notifyChange(.fileSharingDisabled)
 
-            case .enabled:
-                notifyChange(.fileSharingEnabled)
-            }
+        case .enabled:
+            notifyChange(.fileSharingEnabled)
         }
     }
 
     public func fetchSelfDeletingMesssages() -> Feature.SelfDeletingMessages {
-        var result: Feature.SelfDeletingMessages!
-
-        context.performGroupedAndWait {
-            let feature = Feature.fetch(name: .selfDeletingMessages, context: $0)!
-            let config = try! JSONDecoder().decode(Feature.SelfDeletingMessages.Config.self, from: feature.config!)
-            result = .init(status: feature.status, config: config)
-        }
-
-        return result
+        let feature = Feature.fetch(name: .selfDeletingMessages, context: context)!
+        let config = try! JSONDecoder().decode(Feature.SelfDeletingMessages.Config.self, from: feature.config!)
+        return .init(status: feature.status, config: config)
     }
 
     public func storeSelfDeletingMessages(_ selfDeletingMessages: Feature.SelfDeletingMessages) {
-        context.performGroupedAndWait { [self] in
-            let config = try! JSONEncoder().encode(selfDeletingMessages.config)
+        let config = try! JSONEncoder().encode(selfDeletingMessages.config)
 
-            Feature.updateOrCreate(havingName: .selfDeletingMessages, in: $0) {
-                $0.status = selfDeletingMessages.status
-                $0.config = config
-            }
+        Feature.updateOrCreate(havingName: .selfDeletingMessages, in: context) {
+            $0.status = selfDeletingMessages.status
+            $0.config = config
+        }
 
-            guard needsToNotifyUser(for: .selfDeletingMessages) else { return }
+        guard needsToNotifyUser(for: .selfDeletingMessages) else { return }
 
-            switch (selfDeletingMessages.status, selfDeletingMessages.config.enforcedTimeoutSeconds) {
-            case (.disabled, _):
-                notifyChange(.selfDeletingMessagesIsDisabled)
+        switch (selfDeletingMessages.status, selfDeletingMessages.config.enforcedTimeoutSeconds) {
+        case (.disabled, _):
+            notifyChange(.selfDeletingMessagesIsDisabled)
 
-            case (.enabled, let enforcedTimeout) where enforcedTimeout > 0:
-                notifyChange(.selfDeletingMessagesIsEnabled(enforcedTimeout: enforcedTimeout))
+        case (.enabled, let enforcedTimeout) where enforcedTimeout > 0:
+            notifyChange(.selfDeletingMessagesIsEnabled(enforcedTimeout: enforcedTimeout))
 
-            case (.enabled, _):
-                notifyChange(.selfDeletingMessagesIsEnabled(enforcedTimeout: nil))
-            }
+        case (.enabled, _):
+            notifyChange(.selfDeletingMessagesIsEnabled(enforcedTimeout: nil))
         }
     }
 
