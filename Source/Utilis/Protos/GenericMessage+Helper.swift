@@ -600,12 +600,13 @@ public extension WireDataModel.Mention {
             $0.length = Int32(range.length)
             $0.userID = userID
             
-            if user.isFederated,
-               let domain = user.domain {
-                $0.qualifiedUserID =  WireProtos.QualifiedUserId.with{
-                    $0.id = userID
-                    $0.domain = domain
-                }
+            
+            
+            guard let domain = user.domain else { return }
+            
+            $0.qualifiedUserID =  WireProtos.QualifiedUserId.with{
+                $0.id = userID
+                $0.domain = domain
             }
         }
     }
