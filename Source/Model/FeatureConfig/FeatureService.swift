@@ -57,6 +57,7 @@ public class FeatureService {
 
     public func storeAppLock(_ appLock: Feature.AppLock) {
         let config = try! JSONEncoder().encode(appLock.config)
+
         Feature.updateOrCreate(havingName: .appLock, in: context) {
             $0.status = appLock.status
             $0.config = config
