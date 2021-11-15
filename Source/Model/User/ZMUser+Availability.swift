@@ -91,6 +91,9 @@ extension ZMUser {
             .prefix(remainingSlots)
 
         recipients.formUnion(teamUsers)
+        
+        guard let domain = ZMUser.selfUser(in: context).domain else { return recipients }
+        recipients = recipients.filter { $0.domain == domain }
 
         return recipients
     }
