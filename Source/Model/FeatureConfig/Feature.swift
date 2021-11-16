@@ -219,3 +219,11 @@ public class Feature: ZMManagedObject {
         }
     }
 }
+
+extension String: SafeForLoggingStringConvertible {
+
+    public var safeForLoggingDescription: String {
+        return self
+    }
+
+}

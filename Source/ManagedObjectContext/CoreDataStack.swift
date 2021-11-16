@@ -19,8 +19,6 @@
 import Foundation
 import CoreData
 
-private let zmLog = ZMSLog(tag: "Core Data")
-
 @objc
 public protocol ContextProvider {
 
@@ -310,12 +308,6 @@ public class CoreDataStack: NSObject, ContextProvider {
             context.mergePolicy = NSMergePolicy(merge: .mergeByPropertyObjectTrumpMergePolicyType)
 
             FeatureService(context: context).createDefaultConfigsIfNeeded()
-
-            do {
-                try context.save()
-            } catch {
-                zmLog.safePublic("Failed to save context: \(error.localizedDescription)")
-            }
         }
 
         // this will be done async, not to block the UI thread, but
@@ -415,12 +407,4 @@ extension NSPersistentStoreCoordinator {
         ]
     }
     
-}
-
-extension String: SafeForLoggingStringConvertible {
-
-    public var safeForLoggingDescription: String {
-        return self
-    }
-
 }
