@@ -92,8 +92,7 @@ extension ZMUser {
 
         recipients.formUnion(teamUsers)
         
-        guard let domain = ZMUser.selfUser(in: context).domain else { return recipients }
-        recipients = recipients.filter { $0.domain == domain }
+        recipients = recipients.filter { !$0.isFederated }
 
         return recipients
     }

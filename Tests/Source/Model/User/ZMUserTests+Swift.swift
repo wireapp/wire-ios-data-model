@@ -666,8 +666,8 @@ extension ZMUserTests_Swift {
         createUserAndAddMember(to: otherFederatedTeam, with: otherDomain)
         createUserAndAddMember(to: otherFederatedTeam, with: otherDomain)
 
-        let (connectedTeamUser1, _) = createUserAndAddMember(to: otherFederatedTeam)
-        let (connectedTeamUser2, _) = createUserAndAddMember(to: otherFederatedTeam)
+        let (connectedTeamUser1, _) = createUserAndAddMember(to: otherFederatedTeam, with: otherDomain)
+        let (connectedTeamUser2, _) = createUserAndAddMember(to: otherFederatedTeam, with: otherDomain)
 
         let usersToConnect = [connectedTeamUser1, connectedTeamUser2]
 
