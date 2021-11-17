@@ -219,11 +219,3 @@ extension Feature {
     }
 
 }
-
-extension String: SafeForLoggingStringConvertible {
-
-    public var safeForLoggingDescription: String {
-        return self
-    }
-
-}
