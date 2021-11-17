@@ -45,12 +45,15 @@ public class FeatureService {
 
     /// The app lock
     public func fetchAppLock() -> Feature.AppLock {
-        guard let feature = Feature.fetch(name: .appLock, context: context),
-              let featureConfig = feature.config else {
-                  return .init()
-              }
-        let config = try! JSONDecoder().decode(Feature.AppLock.Config.self, from: featureConfig)
-        return.init(status: feature.status, config: config)
+        var result: Feature.AppLock!
+
+        context.performGroupedAndWait {
+            let feature = Feature.fetch(name: .appLock, context: $0)!
+            let config = try! JSONDecoder().decode(Feature.AppLock.Config.self, from: feature.config!)
+            result = .init(status: feature.status, config: config)
+        }
+
+        return result
     }
 
     public func storeAppLock(_ appLock: Feature.AppLock) {
@@ -64,10 +67,14 @@ public class FeatureService {
     }
 
     public func fetchConferenceCalling() -> Feature.ConferenceCalling {
-        guard let feature = Feature.fetch(name: .conferenceCalling, context: context) else {
-            return .init()
+        var result: Feature.ConferenceCalling!
+
+        context.performGroupedAndWait {
+            let feature = Feature.fetch(name: .conferenceCalling, context: $0)!
+            result = .init(status: feature.status)
         }
-        return .init(status: feature.status)
+
+        return result
     }
 
     public func storeConferenceCalling(_ conferenceCalling: Feature.ConferenceCalling) {
