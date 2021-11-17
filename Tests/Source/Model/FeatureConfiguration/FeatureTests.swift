@@ -24,42 +24,58 @@ final class FeatureTests: ZMBaseManagedObjectTest {
     // MARK: - Tests
 
     func testThatItUpdatesFeature() {
-        // given
+        // GIVEN
         syncMOC.performGroupedAndWait { context in
             guard let defaultAppLock = Feature.fetch(name: .appLock, context: context) else {
                 XCTFail()
                 return
             }
 
+            guard let defaultDigitalSignature = Feature.fetch(name: .digitalSignature, context: context) else {
+                XCTFail()
+                return
+            }
+
+
             XCTAssertEqual(defaultAppLock.status, .enabled)
+            XCTAssertEqual(defaultDigitalSignature.status, .disabled)
         }
 
-        // when
+        // WHEN
         syncMOC.performGroupedAndWait { context in
             Feature.updateOrCreate(havingName: .appLock, in: context) {
                 $0.status = .disabled
             }
+
+            Feature.updateOrCreate(havingName: .digitalSignature, in: context) {
+                $0.status = .enabled
+            }
         }
 
-        // then
+        // THEN
         syncMOC.performGroupedAndWait { context in
             let updatedAppLock = Feature.fetch(name: .appLock, context: context)
             XCTAssertEqual(updatedAppLock?.status, .disabled)
+
+            let updatedDigitalSignature = Feature.fetch(name: .digitalSignature, context: context)
+            XCTAssertEqual(updatedDigitalSignature?.status, .enabled)
         }
     }
     
     func testThatItFetchesFeature() {
         syncMOC.performGroupedAndWait { context in
-            // when
+            // WHEN
             let defaultAppLock = Feature.fetch(name: .appLock, context: context)
+            let defaultDigitalSignature  = Feature.fetch(name: .digitalSignature, context: context)
 
-            // then
+            // THEN
             XCTAssertNotNil(defaultAppLock)
+            XCTAssertNotNil(defaultDigitalSignature)
         }
     }
 
     func testThatItUpdatesNeedsToNotifyUserFlag_IfAppLockBecameForced() {
-        // given
+        // GIVEN
         syncMOC.performGroupedAndWait { context in
             Feature.updateOrCreate(havingName: .appLock, in: context) {
                 $0.config = self.configData(enforced: false)
@@ -137,6 +153,10 @@ final class FeatureTests: ZMBaseManagedObjectTest {
             let defaultConferenceCalling = Feature.fetch(name: .conferenceCalling, context: self.syncMOC)
             defaultConferenceCalling?.hasInitialDefault = false
             XCTAssertNotNil(defaultConferenceCalling)
+
+            let defaultDigitalSignature = Feature.fetch(name: .digitalSignature, context: self.syncMOC)
+            defaultDigitalSignature?.hasInitialDefault = false
+            XCTAssertNotNil(defaultDigitalSignature)
         }
 
         // When
@@ -144,6 +164,13 @@ final class FeatureTests: ZMBaseManagedObjectTest {
             Feature.updateOrCreate(havingName: .conferenceCalling, in: self.syncMOC) { (feature) in
                 feature.needsToNotifyUser = false
                 feature.status = .enabled
+
+            }
+
+            Feature.updateOrCreate(havingName: .digitalSignature, in: self.syncMOC) { (feature) in
+                feature.needsToNotifyUser = false
+                feature.status = .enabled
+
             }
         }
 
@@ -154,7 +181,13 @@ final class FeatureTests: ZMBaseManagedObjectTest {
                 return
             }
 
+            guard let digitalSignatureFeature = Feature.fetch(name: .digitalSignature, context: context) else {
+                XCTFail()
+                return
+            }
+
             XCTAssertTrue(feature.needsToNotifyUser)
+            XCTAssertTrue(digitalSignatureFeature.needsToNotifyUser)
         }
     }
 
@@ -164,11 +197,19 @@ final class FeatureTests: ZMBaseManagedObjectTest {
             let defaultConferenceCalling = Feature.fetch(name: .conferenceCalling, context: self.syncMOC)
             XCTAssertNotNil(defaultConferenceCalling)
             XCTAssertTrue(defaultConferenceCalling!.hasInitialDefault)
+
+            let defaultDigitalSignature = Feature.fetch(name: .digitalSignature, context: self.syncMOC)
+            XCTAssertNotNil(defaultDigitalSignature)
+            XCTAssertTrue(defaultDigitalSignature!.hasInitialDefault)
         }
 
         // When
         syncMOC.performGroupedAndWait { context in
             Feature.updateOrCreate(havingName: .conferenceCalling, in: self.syncMOC) { (feature) in
+                feature.status = .enabled
+            }
+
+            Feature.updateOrCreate(havingName: .digitalSignature, in: self.syncMOC) { (feature) in
                 feature.status = .enabled
             }
         }
@@ -180,7 +221,14 @@ final class FeatureTests: ZMBaseManagedObjectTest {
                 return
             }
 
+            guard let digitalSignatureFeature = Feature.fetch(name: .digitalSignature, context: context) else {
+                XCTFail()
+                return
+            }
+
+
             XCTAssertFalse(feature.needsToNotifyUser)
+            XCTAssertFalse(digitalSignatureFeature.needsToNotifyUser)
         }
     }
 }

@@ -45,6 +45,28 @@ class FeatureServiceTests: ZMBaseManagedObjectTest {
         }
     }
 
+    func testThatItStoresDigitalSignature() {
+        // GIVEN
+        let sut = FeatureService(context: syncMOC)
+        let digitalSignature = Feature.DigitalSignature(status: .enabled)
+
+        syncMOC.performGroupedAndWait { context -> Void in
+            guard let existing = Feature.fetch(name: .digitalSignature, context: context) else { return XCTFail() }
+            XCTAssertNotEqual(existing.status, digitalSignature.status)
+        }
+
+        // WHEN
+        syncMOC.performGroupedAndWait { context in
+            sut.storeDigitalSignature(digitalSignature)
+        }
+
+        //THEN
+        syncMOC.performGroupedAndWait { context -> Void in
+            guard let result = Feature.fetch(name: .digitalSignature, context: context) else { return XCTFail() }
+            XCTAssertEqual(result.status, digitalSignature.status)
+    }
+    }
+
     func testItCreatesADefaultInstance() throws {
         // Given
         let sut = FeatureService(context: syncMOC)
@@ -54,7 +76,12 @@ class FeatureServiceTests: ZMBaseManagedObjectTest {
                 context.delete(existingDefault)
             }
 
+            if let existingDefaultForDigitalSignature = Feature.fetch(name: .digitalSignature, context: context) {
+                context.delete(existingDefaultForDigitalSignature)
+            }
+
             XCTAssertNil(Feature.fetch(name: .appLock, context: context))
+            XCTAssertNil(Feature.fetch(name: .digitalSignature, context: context))
         }
 
         // When
@@ -65,6 +92,8 @@ class FeatureServiceTests: ZMBaseManagedObjectTest {
         // Then
         syncMOC.performGroupedAndWait { context in
             XCTAssertNotNil(Feature.fetch(name: .appLock, context: context))
+            XCTAssertNotNil(Feature.fetch(name: .digitalSignature, context: context))
+
         }
     }
 
@@ -75,17 +104,24 @@ class FeatureServiceTests: ZMBaseManagedObjectTest {
         syncMOC.performGroupedAndWait { context -> Void in
             guard let feature = Feature.fetch(name: .appLock, context: context) else { return XCTFail() }
             XCTAssertFalse(feature.needsToBeUpdatedFromBackend)
+
+            guard let digitalSignatureFeature = Feature.fetch(name: .digitalSignature, context: context) else { return XCTFail() }
+            XCTAssertFalse(digitalSignatureFeature.needsToBeUpdatedFromBackend)
         }
 
         // When
         syncMOC.performGroupedAndWait { context in
             sut.enqueueBackendRefresh(for: .appLock)
+            sut.enqueueBackendRefresh(for: .digitalSignature)
         }
 
         // Then
         syncMOC.performGroupedAndWait { context -> Void in
             guard let feature = Feature.fetch(name: .appLock, context: context) else { return XCTFail() }
             XCTAssertTrue(feature.needsToBeUpdatedFromBackend)
+
+            guard let digitalSignatureFeature = Feature.fetch(name: .digitalSignature, context: context) else { return XCTFail() }
+            XCTAssertTrue(digitalSignatureFeature.needsToBeUpdatedFromBackend)
         }
     }
 
