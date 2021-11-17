@@ -35,6 +35,7 @@ public class Feature: ZMManagedObject {
         case conferenceCalling
         case fileSharing
         case selfDeletingMessages
+        case digitalSignature
     }
 
     public enum Status: String, Codable {
@@ -169,7 +170,7 @@ public class Feature: ZMManagedObject {
         case .conferenceCalling:
             needsToNotifyUser = hasStatusChanged && newStatus == .enabled
 
-        case .fileSharing, .selfDeletingMessages:
+        case .fileSharing, .selfDeletingMessages, .digitalSignature:
             needsToNotifyUser = hasStatusChanged
 
         default:
@@ -194,7 +195,7 @@ public class Feature: ZMManagedObject {
 
             needsToNotifyUser = oldConfig.enforceAppLock != newConfig.enforceAppLock
 
-        case .conferenceCalling, .fileSharing:
+        case .conferenceCalling, .fileSharing, .digitalSignature:
             return
 
         case .selfDeletingMessages:
@@ -209,6 +210,7 @@ public class Feature: ZMManagedObject {
             else {
                 return
             }
+
 
             needsToNotifyUser = oldConfig.enforcedTimeoutSeconds != newConfig.enforcedTimeoutSeconds
         }

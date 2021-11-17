@@ -145,6 +145,33 @@ public class FeatureService {
         }
     }
 
+    public func fetchDigitalSignature() -> Feature.DigitalSignature {
+        var result: Feature.DigitalSignature!
+
+        context.performGroupedAndWait {
+            let feature = Feature.fetch(name: .digitalSignature, context: $0)!
+            result = .init(status: feature.status)
+        }
+
+        return result
+    }
+
+    public func storeDigitalSignature(_ digitalSignature: Feature.DigitalSignature) {
+        Feature.updateOrCreate(havingName: .digitalSignature, in: context) {
+            $0.status = digitalSignature.status
+        }
+
+        guard needsToNotifyUser(for: .digitalSignature) else { return }
+
+        switch digitalSignature.status {
+        case .disabled:
+            notifyChange(.digitalSignatureDisabled)
+
+        case .enabled:
+            notifyChange(.digitalSignatureEnabled)
+        }
+    }
+
     // MARK: - Helpers
 
     func createDefaultConfigsIfNeeded() {
@@ -161,6 +188,9 @@ public class FeatureService {
 
             case .selfDeletingMessages:
                 storeSelfDeletingMessages(.init())
+
+            case .digitalSignature:
+                storeDigitalSignature(.init())
             }
         }
     }
@@ -216,6 +246,8 @@ extension FeatureService {
         case selfDeletingMessagesIsEnabled(enforcedTimeout: UInt?)
         case fileSharingEnabled
         case fileSharingDisabled
+        case digitalSignatureEnabled
+        case digitalSignatureDisabled
 
     }
 
