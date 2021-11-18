@@ -173,7 +173,7 @@ public extension ZMUser {
             return false
         }
 
-        return selfUserTeamID == otherUserTeamID && !otherUser.isFederated
+        return selfUserTeamID == otherUserTeamID && !isFederating(with: otherUser)
     }
     
     @objc func _isGuest(in conversation: ConversationLike) -> Bool {
