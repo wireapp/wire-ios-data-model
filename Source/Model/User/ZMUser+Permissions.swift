@@ -110,7 +110,10 @@ public extension ZMUser {
         if conversation.conversationType == .group {
             return hasRoleWithAction(actionName: ConversationAction.modifyConversationMessageTimer.name, conversation: conversation)
         } else {
-            guard  conversation.teamRemoteIdentifier == nil || !isGuest(in: conversation), conversation.isSelfAnActiveMember else { return false }
+            guard
+                conversation.teamRemoteIdentifier == nil || !isGuest(in: conversation),
+                conversation.isSelfAnActiveMember
+            else { return false }
             return permissions?.contains(.modifyConversationMetaData) ?? true
         }
     }
@@ -187,10 +190,11 @@ public extension ZMUser {
             if conversation.creator == self {
                 return false
             }
-            
+
             if let team = team {
                 // If the self user belongs to a team he/she's a guest in every non team conversation
-                return conversation.teamRemoteIdentifier != team.remoteIdentifier
+                // If the self user domain is different from the conversation's ...
+                return conversation.teamRemoteIdentifier != team.remoteIdentifier || conversation.domain != domain
             } else {
                 // If the self user doesn't belong to a team he/she's a guest in all team conversations
                 return conversation.teamRemoteIdentifier != nil
@@ -201,7 +205,7 @@ public extension ZMUser {
             }
 
             return !isServiceUser // Bots are never guests
-                && !isFederated // Federated uesrs are never guests
+                && !isFederated // Federated users are never guests
                 && ZMUser.selfUser(in: context).hasTeam // There can't be guests in a team that doesn't exist
                 && conversation.localParticipantsContain(user: self)
                 && membership == nil
