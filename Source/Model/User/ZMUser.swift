@@ -45,7 +45,8 @@ extension ZMUser: UserType {
     }
     
     public var hasDigitalSignatureEnabled: Bool {
-        return team?.fetchFeatureFlag(with: .digitalSignature)?.isEnabled ?? false
+        guard let context = managedObjectContext else { return false }
+        return FeatureService(context: context).fetchDigitalSignature().status == .enabled
     }
     
     public var previewImageData: Data? {
