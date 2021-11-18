@@ -187,14 +187,14 @@ public extension ZMUser {
             // We store the teamRemoteIdentifier of the team to check if we don't have a local team,
             // but received a teamId in the conversation payload, which means we are a guest in the conversation.
 
-            if conversation.creator == self {
+            // Federated users and conversation creators are never guests
+            if conversation.creator == self || conversation.isFederating(with: self) {
                 return false
             }
 
             if let team = team {
                 // If the self user belongs to a team he/she's a guest in every non team conversation
-                // If the self user domain is different from the conversation's ...
-                return conversation.teamRemoteIdentifier != team.remoteIdentifier || conversation.domain != domain
+                return conversation.teamRemoteIdentifier != team.remoteIdentifier
             } else {
                 // If the self user doesn't belong to a team he/she's a guest in all team conversations
                 return conversation.teamRemoteIdentifier != nil
