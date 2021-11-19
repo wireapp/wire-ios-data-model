@@ -39,6 +39,7 @@ final class FeatureTests: ZMBaseManagedObjectTest {
 
             XCTAssertEqual(defaultAppLock.status, .enabled)
             XCTAssertEqual(defaultDigitalSignature.status, .disabled)
+
         }
 
         // WHEN
@@ -59,6 +60,7 @@ final class FeatureTests: ZMBaseManagedObjectTest {
 
             let updatedDigitalSignature = Feature.fetch(name: .digitalSignature, context: context)
             XCTAssertEqual(updatedDigitalSignature?.status, .enabled)
+
         }
     }
     
@@ -84,12 +86,9 @@ final class FeatureTests: ZMBaseManagedObjectTest {
         }
 
         syncMOC.performGroupedAndWait { context in
-            guard let feature = Feature.fetch(name: .appLock, context: context) else {
-                XCTFail()
-                return
-            }
-
+            guard let feature = Feature.fetch(name: .appLock, context: context) else { return XCTFail() }
             XCTAssertFalse(feature.needsToNotifyUser)
+            return
         }
 
         // when
@@ -101,12 +100,9 @@ final class FeatureTests: ZMBaseManagedObjectTest {
 
         // then
         syncMOC.performGroupedAndWait { context in
-            guard let feature = Feature.fetch(name: .appLock, context: context) else {
-                XCTFail()
-                return
-            }
-
+            guard let feature = Feature.fetch(name: .appLock, context: context) else { return XCTFail() }
             XCTAssertTrue(feature.needsToNotifyUser)
+            return
         }
     }
     
@@ -121,12 +117,9 @@ final class FeatureTests: ZMBaseManagedObjectTest {
         }
 
         syncMOC.performGroupedAndWait { context in
-            guard let feature = Feature.fetch(name: .appLock, context: context) else {
-                XCTFail()
-                return
-            }
-
+            guard let feature = Feature.fetch(name: .appLock, context: context) else { return XCTFail() }
             XCTAssertFalse(feature.needsToNotifyUser)
+            return
         }
 
         // when
@@ -138,17 +131,14 @@ final class FeatureTests: ZMBaseManagedObjectTest {
 
         // then
         syncMOC.performGroupedAndWait { context in
-            guard let feature = Feature.fetch(name: .appLock, context: context) else {
-                XCTFail()
-                return
-            }
-
+            guard let feature = Feature.fetch(name: .appLock, context: context) else { return XCTFail() }
             XCTAssertTrue(feature.needsToNotifyUser)
+            return
         }
     }
 
-    func testThatItNeedsToNotifyUser_AfterAChange() {
-        // Given
+    func testThatItNotifiesAboutFeatureChanges() {
+        // given
         syncMOC.performGroupedAndWait { context in
             let defaultConferenceCalling = Feature.fetch(name: .conferenceCalling, context: self.syncMOC)
             defaultConferenceCalling?.hasInitialDefault = false
@@ -159,7 +149,15 @@ final class FeatureTests: ZMBaseManagedObjectTest {
             XCTAssertNotNil(defaultDigitalSignature)
         }
 
-        // When
+        // expect
+        let expectation = self.expectation(description: "Notification fired")
+        NotificationCenter.default.addObserver(forName: .featureDidChangeNotification, object: nil, queue: nil) { (note) in
+            guard let object = note.object as? Feature.FeatureChange else { return }
+            XCTAssertEqual(object, .conferenceCallingIsAvailable)
+            expectation.fulfill()
+        }
+
+        // when
         syncMOC.performGroupedAndWait { context in
             Feature.updateOrCreate(havingName: .conferenceCalling, in: self.syncMOC) { (feature) in
                 feature.needsToNotifyUser = false
@@ -173,6 +171,7 @@ final class FeatureTests: ZMBaseManagedObjectTest {
 
             }
         }
+
 
         // Then
         syncMOC.performGroupedAndWait { context in
@@ -189,10 +188,14 @@ final class FeatureTests: ZMBaseManagedObjectTest {
             XCTAssertTrue(feature.needsToNotifyUser)
             XCTAssertTrue(digitalSignatureFeature.needsToNotifyUser)
         }
+
+        // then
+        XCTAssert(waitForCustomExpectations(withTimeout: 0.5))
     }
 
-    func testThatItDoesNotNeedToNotifyUser_IfThePreviousValueIsDefault() {
-        // Given
+    func testThatItDoesNotNotifyAboutFeatureChanges_IfThePreviousValueIsDefault() {
+        // given
+        let testObserver = TestObserver(for: .featureDidChangeNotification)
         syncMOC.performGroupedAndWait { context in
             let defaultConferenceCalling = Feature.fetch(name: .conferenceCalling, context: self.syncMOC)
             XCTAssertNotNil(defaultConferenceCalling)
@@ -203,7 +206,7 @@ final class FeatureTests: ZMBaseManagedObjectTest {
             XCTAssertTrue(defaultDigitalSignature!.hasInitialDefault)
         }
 
-        // When
+        // when
         syncMOC.performGroupedAndWait { context in
             Feature.updateOrCreate(havingName: .conferenceCalling, in: self.syncMOC) { (feature) in
                 feature.status = .enabled
@@ -214,21 +217,32 @@ final class FeatureTests: ZMBaseManagedObjectTest {
             }
         }
 
-        // Then
-        syncMOC.performGroupedAndWait { context in
-            guard let feature = Feature.fetch(name: .conferenceCalling, context: context) else {
-                XCTFail()
-                return
+        // then
+        XCTAssert(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
+        XCTAssertTrue(testObserver.changes.isEmpty)
+    }
+
+
+    guard let digitalSignatureFeature = Feature.fetch(name: .digitalSignature, context: context) else {
+        XCTFail()
+        return
+    }
+
+
+    XCTAssertFalse(feature.needsToNotifyUser)
+    XCTAssertFalse(digitalSignatureFeature.needsToNotifyUser)
+
+    private class TestObserver: NSObject {
+        var changes : [Feature.FeatureChange] = []
+        
+        init(for notificationName: Notification.Name) {
+            super.init()
+
+            NotificationCenter.default.addObserver(forName: notificationName, object: nil, queue: nil) { [weak self] (note) in
+                guard let object = note.object as? Feature.FeatureChange else { return }
+                self?.changes.append(object)
             }
 
-            guard let digitalSignatureFeature = Feature.fetch(name: .digitalSignature, context: context) else {
-                XCTFail()
-                return
-            }
-
-
-            XCTAssertFalse(feature.needsToNotifyUser)
-            XCTAssertFalse(digitalSignatureFeature.needsToNotifyUser)
         }
     }
 }
