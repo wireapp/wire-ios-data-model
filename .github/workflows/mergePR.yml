@@ -1,6 +1,6 @@
-name: Merge PR v0.1.5
+name: Merge PR v0.1.6
 
-on: 
+on:
   issue_comment:
     types: [created]
 
@@ -9,7 +9,7 @@ jobs:
     runs-on: ubuntu-latest
     env:
       GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      ADMINS: ('billypchan' 'marcoconti83' 'typfel' 'johnxnguyen' 'David-Henner' 'KaterinaWire')
+      ADMINS: ('billypchan' 'marcoconti83' 'typfel' 'johnxnguyen' 'David-Henner' 'KaterinaWire' 'sb88k' 'agisilaos')
     steps:
       - name: get release type
         id: releaseType
@@ -31,7 +31,7 @@ jobs:
               adminFound=1
             fi
           done
-          
+
           if [ $adminFound = 0 ]; then
             echo ${{ github.actor }} is not allowed for releasing
             exit 1
@@ -41,7 +41,44 @@ jobs:
           github_token: ${{ secrets.github_token }}
           body: |
             Hello, @${{ github.actor }}! Merging PR for command **${{ github.event.comment.body}}** for PR #**${{ github.event.issue.number }}**. Will create a **${{ steps.releaseType.outputs.TYPE }}** release after merged
-      - name: Merge Pull Request 
+      - name: Get the next version tag
+        id: tag_version
+        uses: mathieudutour/github-tag-action@v5.6
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          tag_prefix: ''
+          release_branches: 'develop'
+          default_bump: ${{ steps.releaseType.outputs.TYPE }}
+          dry_run: 'true'
+      - uses: actions-ecosystem/action-create-comment@v1
+        with:
+          github_token: ${{ secrets.github_token }}
+          body: |
+            Next version is ${{ steps.tag_version.outputs.new_tag }}
+      - name: checkout
+        uses: actions/checkout@v2
+      - name: Checkout Pull Request
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          hub pr checkout ${{ github.event.issue.number }}
+      - name: update version.xcconfig
+        run: |
+          echo "new tag: '${{steps.dry_run.outputs.new_tag}}'"
+          echo "tag: '${{steps.dry_run.outputs.tag}}'"
+          # process version.xcconfig
+          curl --silent https://raw.githubusercontent.com/wireapp/wire-ios-shared-resources/master/Scripts/updateVersionXcconfig.swift --output updateVersionXcconfig.swift
+          chmod +x updateVersionXcconfig.swift
+          swift updateVersionXcconfig.swift ./Resources/Configurations/version.xcconfig ${{ steps.tag_version.outputs.new_tag }}
+          rm updateVersionXcconfig.swift
+
+          git config --global user.email "iosx@wire.com"
+          git config --global user.name "zenkins"
+          git add .
+          git commit -m"update version.xcconfig for '${{ steps.tag_version.outputs.new_tag }}'" || true
+          git push
+
+      - name: Merge Pull Request
         id: mergePullRequest
         run: |
           if gh pr merge ${{ github.event.issue.html_url }} -s --admin; then
@@ -61,20 +98,6 @@ jobs:
         run: |
           echo exit for merger fail
           exit 1
-      - name: Get the next version tag
-        id: tag_version
-        uses: mathieudutour/github-tag-action@v5.6
-        with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-          tag_prefix: ''
-          release_branches: 'develop'
-          default_bump: ${{ steps.releaseType.outputs.TYPE }}
-          dry_run: 'true'
-      - uses: actions-ecosystem/action-create-comment@v1
-        with:
-          github_token: ${{ secrets.github_token }}
-          body: |
-            Next version is ${{ steps.tag_version.outputs.new_tag }}
       - name: get the latest develop SHA
         id: developSha
         run: |
