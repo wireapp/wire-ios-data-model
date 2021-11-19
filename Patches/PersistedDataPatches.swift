@@ -67,13 +67,7 @@ public struct PersistedDataPatch {
             return zmLog.safePublic("No previous patch version stored (expected on fresh installs), skipping patches..")
         }
 
-        zmLog.safePublic("Applying patches from previous version: \(previousPatchVersion.version)")
-        
-        (patches ?? PersistedDataPatch.allPatchesToApply).filter { $0.version > previousPatchVersion }.forEach {
-            $0.block(moc)
-        }
-
-        zmLog.safePublic("Done")
+        zmLog.safePublic("Previous version: \(previousPatchVersion.version)")
     }
 }
 
