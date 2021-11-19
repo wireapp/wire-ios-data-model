@@ -86,6 +86,14 @@ private extension NSManagedObjectContext {
 
 }
 
+extension String: SafeForLoggingStringConvertible {
+
+    public var safeForLoggingDescription: String {
+        return self
+    }
+
+}
+
 /// Persistent store key for last data model version
 let lastDataModelPatchedVersionKey = "zm_lastDataModelVersionKeyThatWasPatched"
 
