@@ -81,7 +81,7 @@ jobs:
           git config --global user.email "iosx@wire.com"
           git config --global user.name "zenkins"
           git add .
-          git commit -m"update version.xcconfig for '${{ steps.tag_version.outputs.new_tag }}'" || true
+          git commit -m"chore: Update version.xcconfig for '${{ steps.tag_version.outputs.new_tag }}'" || true
           git push
 
       - name: Merge Pull Request
