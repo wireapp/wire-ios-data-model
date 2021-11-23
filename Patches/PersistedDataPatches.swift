@@ -39,6 +39,7 @@ public struct PersistedDataPatch {
     public static func applyAll(in moc: NSManagedObjectContext, fromVersion: String? = nil, patches: [PersistedDataPatch]? = nil)
     {
 
+        /// Normally we fetch the short version from the framework bundle, but it's not working so we hardcode the version.
         let currentVersion = "278.0.0"
         defer {
             moc.setPersistentStoreMetadata(currentVersion, key: lastDataModelPatchedVersionKey)
