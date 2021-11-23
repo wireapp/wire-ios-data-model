@@ -407,7 +407,7 @@ class ConversationListObserverTests: NotificationDispatcherTestBase {
         XCTAssertEqual(pendingList.count, 0)
         XCTAssertEqual(normalList.count, 1)
         
-        XCTAssertEqual(pendingObserver.changes.count, 2)
+        XCTAssertEqual(pendingObserver.changes.count, 1)
         XCTAssertEqual(normalObserver.changes.count, 1)
         if let pendingNote = pendingObserver.changes.last {
             XCTAssertEqual(pendingNote.insertedIndexes, IndexSet())
@@ -637,6 +637,40 @@ class ConversationListObserverTests: NotificationDispatcherTestBase {
         // then
         XCTAssertEqual(normalList.count, 0)
         
+        XCTAssertEqual(testObserver.changes.count, 1)
+        if let first = testObserver.changes.first {
+            XCTAssertEqual(first.insertedIndexes, IndexSet())
+            XCTAssertEqual(first.deletedIndexes, IndexSet(integer: 0))
+            XCTAssertEqual(first.updatedIndexes, IndexSet())
+            XCTAssertEqual(movedIndexes(first), [])
+        }
+    }
+
+    func testThatItNotifiesObserversWhenTheUserInOneOnOneConversationGetsBlockedDueToMissingLegalholdConsent()
+    {
+        // given
+        let user = ZMUser.insertNewObject(in:self.uiMOC)
+
+        let conversation = ZMConversation.insertNewObject(in:self.uiMOC)
+        conversation.connection = ZMConnection.insertNewObject(in: self.uiMOC)
+        conversation.connection?.status = .accepted
+        conversation.conversationType = .oneOnOne
+        conversation.connection?.to = user
+        self.uiMOC.saveOrRollback()
+
+        let normalList = ZMConversation.conversationsIncludingArchived(in: self.uiMOC)
+
+        self.token = ConversationListChangeInfo.addListObserver(testObserver, for:normalList, managedObjectContext: self.uiMOC)
+
+        XCTAssertEqual(normalList.count, 1)
+
+        // when
+        user.connection!.status = .blockedMissingLegalholdConsent
+        self.uiMOC.saveOrRollback()
+
+        // then
+        XCTAssertEqual(normalList.count, 0)
+
         XCTAssertEqual(testObserver.changes.count, 1)
         if let first = testObserver.changes.first {
             XCTAssertEqual(first.insertedIndexes, IndexSet())
@@ -939,7 +973,7 @@ class ConversationListObserverTests: NotificationDispatcherTestBase {
 
         // when
         syncMOC.performGroupedBlockAndWait {
-            let team = Team.fetch(withRemoteIdentifier: teamId, in: self.syncMOC)
+            let team = Team.fetch(with: teamId, in: self.syncMOC)
             let conversation = ZMConversation.insertNewObject(in:self.syncMOC)
             conversation.conversationType = .group
             conversation.team = team

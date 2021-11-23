@@ -67,6 +67,14 @@ extension ZMUser: UserType {
         return isTrusted && selfUser.isTrusted && !clients.isEmpty
     }
 
+    public var isFederated: Bool {
+        guard let selfUser = managedObjectContext.map(ZMUser.selfUser) else {
+            return false
+        }
+
+        return selfUser.isFederating(with: self)
+    }
+
     // MARK: - Conversation Roles
 
     public func canManagedGroupRole(of user: UserType, conversation: ZMConversation) -> Bool {
@@ -187,8 +195,8 @@ public extension Notification.Name {
 
 extension ZMUser {
     
-    @objc static let previewProfileAssetIdentifierKey = #keyPath(ZMUser.previewProfileAssetIdentifier)
-    @objc static let completeProfileAssetIdentifierKey = #keyPath(ZMUser.completeProfileAssetIdentifier)
+    @objc static public let previewProfileAssetIdentifierKey = #keyPath(ZMUser.previewProfileAssetIdentifier)
+    @objc static public let completeProfileAssetIdentifierKey = #keyPath(ZMUser.completeProfileAssetIdentifier)
 
     @NSManaged public var previewProfileAssetIdentifier: String?
     @NSManaged public var completeProfileAssetIdentifier: String?
@@ -205,7 +213,7 @@ extension ZMUser {
     /// System messages referencing this user
     @NSManaged var systemMessages: Set<ZMSystemMessage>
     
-    @NSManaged var expiresAt: Date?
+    @NSManaged public var expiresAt: Date?
     
     /// `accountIsDeleted` is true if this account has been deleted on the backend
     @NSManaged public internal(set) var isAccountDeleted: Bool
@@ -242,20 +250,28 @@ extension ZMUser {
     
     public static var previewImageDownloadFilter: NSPredicate {
         let assetIdExists = NSPredicate(format: "(%K != nil)", ZMUser.previewProfileAssetIdentifierKey)
+        let assetIdIsValid = NSPredicate { (user, _) -> Bool in
+            guard let user = user as? ZMUser else { return false }
+            return user.previewProfileAssetIdentifier?.isValidAssetID ?? false
+        }
         let notCached = NSPredicate() { (user, _) -> Bool in
             guard let user = user as? ZMUser else { return false }
             return user.imageSmallProfileData == nil
         }
-        return NSCompoundPredicate(andPredicateWithSubpredicates: [assetIdExists, notCached])
+        return NSCompoundPredicate(andPredicateWithSubpredicates: [assetIdExists, assetIdIsValid, notCached])
     }
-    
+
     public static var completeImageDownloadFilter: NSPredicate {
         let assetIdExists = NSPredicate(format: "(%K != nil)", ZMUser.completeProfileAssetIdentifierKey)
+        let assetIdIsValid = NSPredicate { (user, _) -> Bool in
+            guard let user = user as? ZMUser else { return false }
+            return user.completeProfileAssetIdentifier?.isValidAssetID ?? false
+        }
         let notCached = NSPredicate() { (user, _) -> Bool in
             guard let user = user as? ZMUser else { return false }
             return user.imageMediumData == nil
         }
-        return NSCompoundPredicate(andPredicateWithSubpredicates: [assetIdExists, notCached])
+        return NSCompoundPredicate(andPredicateWithSubpredicates: [assetIdExists, assetIdIsValid, notCached])
     }
     
     public func updateAndSyncProfileAssetIdentifiers(previewIdentifier: String, completeIdentifier: String) {
@@ -355,5 +371,64 @@ extension ZMUser {
     @objc public var initials: String? {
         return PersonName.person(withName: self.name ?? "", schemeTagger: nil).initials
     }
+}
+
+extension ZMUser: UserConnections {
+
+    public func connect(completion: @escaping (Error?) -> Void) {
+        ZMUser.selfUser(in: managedObjectContext!).sendConnectionRequest(to: self) { result in
+            switch result {
+            case .success:
+                completion(nil)
+            case .failure(let error):
+                completion(error)
+            }
+        }
+    }
+
+    public func accept(completion: @escaping (Error?) -> Void) {
+        connection?.updateStatus(.accepted, completion: { result in
+            switch result {
+            case .success:
+                completion(nil)
+            case .failure(let error):
+                completion(error)
+            }
+        })
+    }
+
+    public func ignore(completion: @escaping (Error?) -> Void) {
+        connection?.updateStatus(.ignored, completion: { result in
+            switch result {
+            case .success:
+                completion(nil)
+            case .failure(let error):
+                completion(error)
+            }
+        })
+    }
+
+    public func block(completion: @escaping (Error?) -> Void) {
+        connection?.updateStatus(.blocked, completion: { result in
+            switch result {
+            case .success:
+                completion(nil)
+            case .failure(let error):
+                completion(error)
+            }
+        })
+    }
+
+    public func cancelConnectionRequest(completion: @escaping (Error?) -> Void) {
+        connection?.updateStatus(.cancelled, completion: { result in
+            switch result {
+            case .success:
+                completion(nil)
+            case .failure(let error):
+                completion(error)
+            }
+        })
+    }
+
 }
 

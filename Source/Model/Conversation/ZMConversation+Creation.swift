@@ -20,6 +20,54 @@ import Foundation
 
 
 extension ZMConversation {
+
+    /// Fetch an existing conversation or create a new one if it doesn't already exist.
+    ///
+    /// - Parameters:
+    ///     - remoteIdentifier: UUID assigned to the conversation.
+    ///     - domain: domain assigned to the conversation.
+    ///     - context: `NSManagedObjectContext` on which to fetch or create the conversation.
+    ///                NOTE that this **must** be the sync context.
+
+    @objc public static func fetchOrCreate(with remoteIdentifier: UUID,
+                                           domain: String?,
+                                           in context: NSManagedObjectContext) -> ZMConversation {
+        var created: Bool = false
+        return fetchOrCreate(with: remoteIdentifier, domain: domain, in: context, created: &created)
+    }
+
+
+    /// Fetch an existing conversation or create a new one if it doesn't already exist.
+    ///
+    /// - Parameters:
+    ///     - remoteIdentifier: UUID assigned to the conversation.
+    ///     - domain: domain assigned to the conversation.
+    ///     - context: `NSManagedObjectContext` on which to fetch or create the conversation.
+    ///                NOTE that this **must** be the sync context.
+    ///     - created: Will be set `true` if a new user was created.
+
+    @objc public static func fetchOrCreate(with remoteIdentifier: UUID,
+                                           domain: String?,
+                                           in context: NSManagedObjectContext,
+                                           created: UnsafeMutablePointer<Bool>) -> ZMConversation {
+        // We must only ever call this on the sync context. Otherwise, there's a race condition
+        // where the UI and sync contexts could both insert the same user (same UUID) and we'd end up
+        // having two duplicates of that user, and we'd have a really hard time recovering from that.
+        require(context.zm_isSyncContext, "Users are only allowed to be created on sync context")
+
+        let domain: String? = context.zm_isFederationEnabled ? domain : nil
+
+        if let conversation = fetch(with: remoteIdentifier, domain: domain, in: context) {
+            return conversation
+        } else {
+            created.pointee = true
+            let conversation = ZMConversation.insertNewObject(in: context)
+            conversation.remoteIdentifier = remoteIdentifier
+            conversation.domain = domain?.selfOrNilIfEmpty
+            return conversation
+        }
+    }
+
     
     @objc(insertGroupConversationIntoManagedObjectContext:withParticipants:)
     static public func insertGroupConversation(moc: NSManagedObjectContext,
@@ -31,7 +79,7 @@ extension ZMConversation {
     /// Insert a new group conversation with name into the user session
 
     @objc
-    static public func insertGroupConversation(session: ZMManagedObjectContextProvider,
+    static public func insertGroupConversation(session: ContextProvider,
                                                participants: [UserType],
                                                name: String? = nil,
                                                team: Team? = nil,
@@ -39,8 +87,8 @@ extension ZMConversation {
                                                readReceipts: Bool = false,
                                                participantsRole: Role? = nil) -> ZMConversation?
     {
-        return self.insertGroupConversation(moc: session.managedObjectContext!,
-                                            participants: participants.materialize(in: session.managedObjectContext),
+        return self.insertGroupConversation(moc: session.viewContext,
+                                            participants: participants.materialize(in: session.viewContext),
                                             name: name,
                                             team: team,
                                             allowGuests: allowGuests,

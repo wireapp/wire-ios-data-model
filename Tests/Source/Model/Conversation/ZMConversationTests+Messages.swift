@@ -38,7 +38,7 @@ class ZMConversationMessagesTests: ZMConversationTestsBase {
             // then
             XCTAssertEqual(message.textMessageData?.messageText, messageText)
             XCTAssertEqual(message.conversation, conversation)
-            XCTAssertEqual(conversation.lastMessage, message)
+            XCTAssertEqual(conversation.lastMessage as! ZMMessage, message)
             XCTAssertEqual(selfUser, message.sender)
         }
     }
@@ -141,7 +141,7 @@ class ZMConversationMessagesTests: ZMConversationTestsBase {
         XCTAssertNotNil(message.nonce)
         XCTAssertTrue(message.imageMessageData!.originalSize.equalTo(CGSize(width: 1900, height: 1500)))
         XCTAssertEqual(message.conversation, conversation)
-        XCTAssertEqual(conversation.lastMessage, message)
+        XCTAssertEqual(conversation.lastMessage as! ZMMessage, message)
         XCTAssertNotNil(message.nonce)
         
         let expectedData = try! (try! Data(contentsOf: imageFileURL)).wr_removingImageMetadata()
@@ -165,7 +165,7 @@ class ZMConversationMessagesTests: ZMConversationTestsBase {
         XCTAssertNotNil(message.nonce)
         XCTAssertTrue(message.imageMessageData!.originalSize.equalTo(CGSize(width: 1900, height: 1500)))
         XCTAssertEqual(message.conversation, conversation)
-        XCTAssertEqual(conversation.lastMessage, message)
+        XCTAssertEqual(conversation.lastMessage as! ZMMessage, message)
         XCTAssertNotNil(message.nonce)
         
         let expectedData = try! (try! Data(contentsOf: imageFileURL)).wr_removingImageMetadata()
@@ -231,7 +231,7 @@ class ZMConversationMessagesTests: ZMConversationTestsBase {
         XCTAssertNotNil(message.nonce)
         XCTAssertTrue(message.imageMessageData!.originalSize.equalTo(CGSize(width: 1900, height: 1500)))
         XCTAssertEqual(message.conversation, conversation)
-        XCTAssertEqual(conversation.lastMessage, message)
+        XCTAssertEqual(conversation.lastMessage as! ZMMessage, message)
         XCTAssertNotNil(message.nonce)
         XCTAssertEqual(message.imageMessageData?.imageData?.count, imageData.count)
     }
@@ -310,7 +310,7 @@ class ZMConversationMessagesTests: ZMConversationTestsBase {
         let fileMessage = try! conversation.appendFile(with: fileMetaData) as! ZMAssetClientMessage
     
         // then
-        XCTAssertEqual(conversation.lastMessage, fileMessage)
+        XCTAssertEqual(conversation.lastMessage as! ZMMessage, fileMessage)
     
         XCTAssertNotNil(fileMessage)
         XCTAssertNotNil(fileMessage.nonce)
@@ -326,6 +326,30 @@ class ZMConversationMessagesTests: ZMConversationTestsBase {
         XCTAssertFalse(fileMessage.fileMessageData!.isVideo)
         XCTAssertFalse(fileMessage.fileMessageData!.isAudio)
     }
+
+    func testThatWeCanNotInsertAFileMessage_WhenFileSharingIsDisabled()
+    {
+        // given
+        let documents = NSSearchPathForDirectoriesInDomains(.documentDirectory, .userDomainMask, true).first!
+        let fileURL = URL(fileURLWithPath: documents).appendingPathComponent("secret_file.txt")
+        let data = Data.randomEncryptionKey()
+        try! data.write(to: fileURL)
+        let conversation = ZMConversation.insertNewObject(in: self.uiMOC)
+        conversation.remoteIdentifier = UUID()
+
+
+        // when
+        let fileSharingFeature = Feature.fetch(name: .fileSharing, context: uiMOC)
+        fileSharingFeature?.status = .disabled
+        let fileMetaData = ZMFileMetadata(fileURL: fileURL)
+
+        do {
+            let _ = try conversation.appendFile(with: fileMetaData) as! ZMAssetClientMessage
+        } catch let error as NSError {
+            // then
+            XCTAssertEqual(error as! ZMConversation.AppendMessageError, .fileSharingIsRestricted)
+        }
+     }
     
     func testThatWeCanInsertATextMessageWithImageQuote() {
         // given
@@ -358,7 +382,7 @@ class ZMConversationMessagesTests: ZMConversationTestsBase {
         let fileMessage = try! conversation.appendFile(with: fileMetaData) as! ZMAssetClientMessage
 
         // then
-        XCTAssertEqual(conversation.lastMessage, fileMessage)
+        XCTAssertEqual(conversation.lastMessage as! ZMMessage, fileMessage)
 
         XCTAssertNotNil(fileMessage)
         XCTAssertNotNil(fileMessage.nonce)
@@ -409,7 +433,7 @@ class ZMConversationMessagesTests: ZMConversationTestsBase {
             }
 
         
-            XCTAssertEqual(conversation.lastMessage, message)
+            XCTAssertEqual(conversation.lastMessage as! ZMMessage, message)
     
             guard let locationMessageData = message.locationMessageData else {
                 XCTFail()
@@ -465,7 +489,7 @@ class ZMConversationMessagesTests: ZMConversationTestsBase {
         }
     
         // then
-        XCTAssertEqual(conversation.lastMessage, fileMessage)
+        XCTAssertEqual(conversation.lastMessage as! ZMMessage, fileMessage)
     
         XCTAssertNotNil(fileMessage)
         XCTAssertNotNil(fileMessage.nonce)
@@ -512,7 +536,7 @@ class ZMConversationMessagesTests: ZMConversationTestsBase {
         let fileMessage = try! conversation.appendFile(with: audioMetadata) as! ZMAssetClientMessage
         
         // then
-        XCTAssertEqual(conversation.lastMessage, fileMessage)
+        XCTAssertEqual(conversation.lastMessage as! ZMMessage, fileMessage)
         
         XCTAssertNotNil(fileMessage)
         XCTAssertNotNil(fileMessage.nonce)

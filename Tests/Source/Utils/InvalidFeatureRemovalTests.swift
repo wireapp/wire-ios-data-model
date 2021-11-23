@@ -22,15 +22,15 @@ import Foundation
 class InvalidFeatureRemovalTests: DiskDatabaseTest {
 
     func testAllInstancesRemoved() throws {
-        contextDirectory.syncContext.performGroupedAndWait { context in
+        coreDataStack.syncContext.performGroupedAndWait { context in
             // Given
             let team = Team.insertNewObject(in: context)
             team.remoteIdentifier = UUID()
 
-            Feature.insert(name: .appLock, status: .enabled, config: nil, team: team, context: context)
-            Feature.insert(name: .appLock, status: .disabled, config: nil, team: team, context: context)
+            Feature.insert(name: .appLock, status: .enabled, config: nil, context: context)
+            Feature.insert(name: .appLock, status: .disabled, config: nil, context: context)
 
-            XCTAssertEqual(self.fetchInstances(in: context).count, 2)
+            XCTAssertTrue(self.fetchInstances(in: context).count > 1)
 
             // When
             InvalidFeatureRemoval.removeInvalid(in: context)

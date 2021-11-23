@@ -20,7 +20,7 @@ public extension NSNotification.Name {
     static let teamDidRequestAsset = Notification.Name("TeamDidRequestAsset")
 }
 
-public protocol TeamType: class {
+public protocol TeamType: AnyObject {
 
     var conversations: Set<ZMConversation> { get }
     var name: String? { get }
@@ -75,7 +75,7 @@ public class Team: ZMManagedObject, TeamType {
     @objc(fetchOrCreateTeamWithRemoteIdentifier:createIfNeeded:inContext:created:)
     public static func fetchOrCreate(with identifier: UUID, create: Bool, in context: NSManagedObjectContext, created: UnsafeMutablePointer<Bool>?) -> Team? {
         precondition(!create || context.zm_isSyncContext, "Needs to be called on the sync context")
-        if let existing = Team.fetch(withRemoteIdentifier: identifier, in: context) {
+        if let existing = Team.fetch(with: identifier, in: context) {
             created?.pointee = false
             return existing
         } else if create {

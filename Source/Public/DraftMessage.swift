@@ -83,7 +83,7 @@ fileprivate struct StorableMention: Codable {
     /// Converts the storable mention into a regular `Mention` object.
     /// The passed in `context` is needed to fetch the user object.
     func mention(in context: NSManagedObjectContext) -> Mention? {
-        return ZMUser(remoteID: userIdentifier, createIfNeeded: false, in: context).map(papply(Mention.init, range))
+        return ZMUser.fetch(with: userIdentifier, domain: nil, in: context).map(papply(Mention.init, range))
     }
 
 }
@@ -120,10 +120,13 @@ fileprivate struct StorableQuote: Codable {
     public var draftMessage: DraftMessage? {
         set {
             if let value = newValue {
-                guard let encodedData = try? JSONEncoder().encode(value.storable) else { return }
+                guard
+                    let encodedData = try? JSONEncoder().encode(value.storable),
+                    let context = managedObjectContext
+                else { return }
                 
                 do {
-                    let (data, nonce) = try encryptDataIfNeeded(data: encodedData, in: managedObjectContext!)
+                    let (data, nonce) = try encryptDataIfNeeded(data: encodedData, in: context)
                     
                     draftMessageData = data
                     draftMessageNonce = nonce

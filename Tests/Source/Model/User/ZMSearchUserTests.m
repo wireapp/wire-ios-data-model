@@ -22,21 +22,11 @@
 
 #import "ZMBaseManagedObjectTest.h"
 
-@interface ZMSearchUserTests : ZMBaseManagedObjectTest <ZMUserObserver, ZMManagedObjectContextProvider>
+@interface ZMSearchUserTests : ZMBaseManagedObjectTest <ZMUserObserver>
 @property (nonatomic) NSMutableArray *userNotifications;
 @end
 
 @implementation ZMSearchUserTests
-
-- (NSManagedObjectContext *)syncManagedObjectContext
-{
-    return self.syncMOC;
-}
-
-- (NSManagedObjectContext *)managedObjectContext
-{
-    return self.uiMOC;
-}
 
 - (void)setUp {
     [super setUp];
@@ -62,22 +52,24 @@
     
     
     
-    ZMSearchUser *user1 = [[ZMSearchUser alloc] initWithContextProvider:self
+    ZMSearchUser *user1 = [[ZMSearchUser alloc] initWithContextProvider:self.coreDataStack
                                                                    name:@"A"
                                                                  handle:@"a"
                                                             accentColor:ZMAccentColorStrongLimeGreen
                                                        remoteIdentifier:remoteIDA
+                                                                 domain:nil
                                                          teamIdentifier:nil
                                                                    user:nil
                                                                 contact:nil];
     
     
     // (1)
-    ZMSearchUser *user2 = [[ZMSearchUser alloc] initWithContextProvider:self
+    ZMSearchUser *user2 = [[ZMSearchUser alloc] initWithContextProvider:self.coreDataStack
                                                                    name:@"B"
                                                                  handle:@"b"
                                                             accentColor:ZMAccentColorSoftPink
                                                        remoteIdentifier:remoteIDA
+                                                                 domain:nil
                                                          teamIdentifier:nil
                                                                    user:nil
                                                                 contact:nil];
@@ -86,11 +78,12 @@
     XCTAssertEqual(user1.hash, user2.hash);
     
     // (2)
-    ZMSearchUser *user3 = [[ZMSearchUser alloc] initWithContextProvider:self
+    ZMSearchUser *user3 = [[ZMSearchUser alloc] initWithContextProvider:self.coreDataStack
                                                                    name:@"A"
                                                                  handle:@"b"
                                                             accentColor:ZMAccentColorStrongLimeGreen
                                                        remoteIdentifier:remoteIDB
+                                                                 domain:nil
                                                          teamIdentifier:nil
                                                                    user:nil
                                                                 contact:nil];
@@ -107,14 +100,9 @@
     ZMAddressBookContact *contact2  =[[ZMAddressBookContact alloc] init];
     contact2.firstName = @"B";
     
-    OCMockObject *userSession = [OCMockObject niceMockForProtocol:@protocol(ZMManagedObjectContextProvider)];
-    [[[userSession stub] andReturn:self.syncMOC] syncManagedObjectContext];
-    
-    
-    
-    ZMSearchUser *user1 = [[ZMSearchUser alloc] initWithContextProvider:self contact:contact1 user:nil];
-    ZMSearchUser *user2 = [[ZMSearchUser alloc] initWithContextProvider:self contact:contact1 user:nil];
-    ZMSearchUser *user3 = [[ZMSearchUser alloc] initWithContextProvider:self contact:contact2 user:nil];
+    ZMSearchUser *user1 = [[ZMSearchUser alloc] initWithContextProvider:self.coreDataStack contact:contact1 user:nil];
+    ZMSearchUser *user2 = [[ZMSearchUser alloc] initWithContextProvider:self.coreDataStack contact:contact1 user:nil];
+    ZMSearchUser *user3 = [[ZMSearchUser alloc] initWithContextProvider:self.coreDataStack contact:contact2 user:nil];
     
     // Then
     XCTAssertEqualObjects(user1, user2);
@@ -129,11 +117,12 @@
     NSUUID *remoteID = [NSUUID createUUID];
     
     // when
-    ZMSearchUser *searchUser = [[ZMSearchUser alloc] initWithContextProvider:self
+    ZMSearchUser *searchUser = [[ZMSearchUser alloc] initWithContextProvider:self.coreDataStack
                                                                         name:name
                                                                       handle:handle
                                                                  accentColor:ZMAccentColorStrongLimeGreen
                                                             remoteIdentifier:remoteID
+                                                                      domain:nil
                                                               teamIdentifier:nil
                                                                         user:nil
                                                                      contact:nil];
@@ -167,11 +156,12 @@
    
     
     // when
-    ZMSearchUser *searchUser = [[ZMSearchUser alloc] initWithContextProvider:self
+    ZMSearchUser *searchUser = [[ZMSearchUser alloc] initWithContextProvider:self.coreDataStack
                                                                         name:@"Wrong name"
                                                                       handle:@"not_my_handle"
                                                                  accentColor:ZMAccentColorStrongLimeGreen
                                                             remoteIdentifier:[NSUUID createUUID]
+                                                                      domain:nil
                                                               teamIdentifier:nil
                                                                         user:user
                                                                      contact:nil];
@@ -192,91 +182,15 @@
 
 @implementation ZMSearchUserTests (Connections)
 
-- (void)testThatItCreatesAConnectionForASeachUserThatHasNoLocalUser;
-{
-    // given
-    ZMSearchUser *searchUser = [[ZMSearchUser alloc] initWithContextProvider:self
-                                                                        name:@"Hans"
-                                                                      handle:@"hans"
-                                                                 accentColor:ZMAccentColorStrongLimeGreen
-                                                            remoteIdentifier:NSUUID.createUUID
-                                                              teamIdentifier:nil
-                                                                        user:nil
-                                                                     contact:nil];
-    
-    // when
-    [searchUser connectWithMessage:@"Hey!"];
-    WaitForAllGroupsToBeEmpty(0.5);
-    
-    // then
-    NSArray *connections = [self.uiMOC executeFetchRequestOrAssert:[ZMConnection sortedFetchRequest]];
-    XCTAssertEqual(connections.count, 1u);
-    ZMConnection *connection = connections[0];
-    ZMUser *user = connection.to;
-    XCTAssertNotNil(user);
-    XCTAssertEqualObjects(user.name, @"Hans");
-    XCTAssertEqual(user.accentColorValue, ZMAccentColorStrongLimeGreen);
-    XCTAssertNotNil(connection.conversation);
-    XCTAssertEqual(connection.status, ZMConnectionStatusSent);
-    XCTAssertEqualObjects(connection.message, @"Hey!");
-}
-
-- (void)testThatItDoesNotConnectIfTheSearchUserHasNoRemoteIdentifier;
-{
-    // given
-    ZMSearchUser *searchUser = [[ZMSearchUser alloc] initWithContextProvider:self
-                                                                        name:@"Hans"
-                                                                      handle:@"hans"
-                                                                 accentColor:ZMAccentColorStrongLimeGreen
-                                                            remoteIdentifier:nil
-                                                              teamIdentifier:nil
-                                                                        user:nil
-                                                                     contact:nil];
-    
-    // when
-    [searchUser connectWithMessage:@"Hey!"];
-    WaitForAllGroupsToBeEmpty(0.5);
-    
-    // then
-    XCTAssertFalse(self.uiMOC.hasChanges);
-    XCTAssertEqual([self.uiMOC executeFetchRequestOrAssert:[ZMConnection sortedFetchRequest]].count, 0u);
-    [self.syncMOC performGroupedBlockAndWait:^{
-        XCTAssertFalse(self.syncMOC.hasChanges);
-        XCTAssertEqual([self.syncMOC executeFetchRequestOrAssert:[ZMConnection sortedFetchRequest]].count, 0u);
-    }];
-}
-
-
-- (void)testThatItStoresTheConnectionRequestMessage;
-{
-    // given
-    ZMSearchUser *searchUser = [[ZMSearchUser alloc] initWithContextProvider:self
-                                                                        name:@"Hans"
-                                                                      handle:@"hans"
-                                                                 accentColor:ZMAccentColorStrongLimeGreen
-                                                            remoteIdentifier:NSUUID.createUUID
-                                                              teamIdentifier:nil
-                                                                        user:nil
-                                                                     contact:nil];
-    NSString *connectionMessage = @"very unique connection message";
-    
-    // when
-    [searchUser connectWithMessage:connectionMessage];
-    WaitForAllGroupsToBeEmpty(0.5);
-    
-    // then
-    XCTAssertEqualObjects(searchUser.connectionRequestMessage, connectionMessage);
-}
-
-
 - (void)testThatItCanBeConnectedIfItIsNotAlreadyConnected
 {
     // given
-    ZMSearchUser *searchUser = [[ZMSearchUser alloc] initWithContextProvider:self
+    ZMSearchUser *searchUser = [[ZMSearchUser alloc] initWithContextProvider:self.coreDataStack
                                                                         name:@"Hans"
                                                                       handle:@"hans"
                                                                  accentColor:ZMAccentColorStrongLimeGreen
                                                             remoteIdentifier:NSUUID.createUUID
+                                                                      domain:nil
                                                               teamIdentifier:nil
                                                                         user:nil
                                                                      contact:nil];
@@ -290,86 +204,18 @@
 - (void)testThatItCanNotBeConnectedIfItHasNoRemoteIdentifier
 {
     // given
-    ZMSearchUser *searchUser = [[ZMSearchUser alloc] initWithContextProvider:self
+    ZMSearchUser *searchUser = [[ZMSearchUser alloc] initWithContextProvider:self.coreDataStack
                                                                         name:@"Hans"
                                                                       handle:@"hans"
                                                                  accentColor:ZMAccentColorStrongLimeGreen
                                                             remoteIdentifier:nil
+                                                                      domain:nil
                                                               teamIdentifier:nil
                                                                         user:nil
                                                                      contact:nil];
     
     // then
     XCTAssertFalse(searchUser.canBeConnected);
-}
-
-- (void)testThatItConnectsIfTheSearchUserHasANonConnectedUser;
-{
-    // We expect the search user to only have a user, if that user has a (matching)
-    // remote identifier. Hence this should have no effect even if the user does
-    // in fact not have a remote identifier.
-    
-    // given
-    ZMUser *user = [ZMUser insertNewObjectInManagedObjectContext:self.uiMOC];
-    XCTAssert([self.uiMOC saveOrRollback]);
-
-    ZMSearchUser *searchUser = [[ZMSearchUser alloc] initWithContextProvider:self
-                                                                        name:@""
-                                                                      handle:@""
-                                                                 accentColor:ZMAccentColorUndefined
-                                                            remoteIdentifier:nil
-                                                              teamIdentifier:nil
-                                                                        user:user
-                                                                     contact:nil];
-    
-    [searchUser connectWithMessage:@"Hey!"];
-    WaitForAllGroupsToBeEmpty(0.5);
-    XCTAssert([self.uiMOC saveOrRollback]);
-    
-    // then
-    XCTAssertFalse(self.uiMOC.hasChanges);
-    XCTAssertEqual([self.uiMOC executeFetchRequestOrAssert:[ZMConnection sortedFetchRequest]].count, 1u);
-    [self.syncMOC performGroupedBlockAndWait:^{
-        XCTAssertFalse(self.syncMOC.hasChanges);
-        XCTAssertEqual([self.syncMOC executeFetchRequestOrAssert:[ZMConnection sortedFetchRequest]].count, 1u);
-    }];
-    XCTAssertEqual(user.connection.status, ZMConnectionStatusSent);
-}
-
-- (void)testThatItDoesNotConnectIfTheSearchUserHasAConnectedUser;
-{
-    // We expect the search user to only have a user, if that user has a (matching)
-    // remote identifier. Hence this should have no effect even if the user does
-    // in fact not have a remote identifier.
-    
-    // given
-    ZMUser *user = [ZMUser insertNewObjectInManagedObjectContext:self.uiMOC];
-    user.connection = [ZMConnection insertNewObjectInManagedObjectContext:self.uiMOC];
-    user.name = @"Hans";
-    user.handle = @"hans";
-    user.connection.status = ZMConnectionStatusAccepted;
-    XCTAssert([self.uiMOC saveOrRollback]);
-
-    
-    ZMSearchUser *searchUser = [[ZMSearchUser alloc] initWithContextProvider:self
-                                                                        name:@"Hans"
-                                                                      handle:@"hans"
-                                                                 accentColor:ZMAccentColorUndefined
-                                                            remoteIdentifier:[NSUUID createUUID]
-                                                              teamIdentifier:nil
-                                                                        user:user
-                                                                     contact:nil];
-    
-    [searchUser connectWithMessage:@"Hey!"];
-    WaitForAllGroupsToBeEmpty(0.5);
-    
-    // then
-    XCTAssertFalse(self.uiMOC.hasChanges);
-    XCTAssertEqual([self.uiMOC executeFetchRequestOrAssert:[ZMConnection sortedFetchRequest]].count, 1u);
-    [self.syncMOC performGroupedBlockAndWait:^{
-        XCTAssertFalse(self.syncMOC.hasChanges);
-        XCTAssertEqual([self.syncMOC executeFetchRequestOrAssert:[ZMConnection sortedFetchRequest]].count, 1u);
-    }];
 }
 
 @end

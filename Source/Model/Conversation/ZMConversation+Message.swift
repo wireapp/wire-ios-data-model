@@ -24,7 +24,7 @@ extension ZMConversation {
 
     /// An error describing why a message couldn't be appended to the conversation.
 
-    public enum AppendMessageError: LocalizedError {
+    public enum AppendMessageError: LocalizedError, Equatable {
 
         case missingManagedObjectContext
         case malformedNonce
@@ -33,6 +33,7 @@ extension ZMConversation {
         case failedToRemoveImageMetadata
         case invalidImageUrl
         case invalidFileUrl
+        case fileSharingIsRestricted
 
         public var errorDescription: String? {
             switch self {
@@ -50,6 +51,8 @@ extension ZMConversation {
                 return "Invalid image url."
             case .invalidFileUrl:
                 return "Invalid file url."
+            case .fileSharingIsRestricted:
+                return "File sharing is restricted."
             }
         }
 
@@ -213,12 +216,14 @@ extension ZMConversation {
         }
 
         // mimeType is assigned first, to make sure UI can handle animated GIF file correctly.
-        let mimeType = ZMAssetMetaDataEncoder.contentType(forImageData: imageData) ?? ""
+        let mimeType = imageData.mimeType ?? ""
 
         // We update the size again when the the preprocessing is done.
         let imageSize = ZMImagePreprocessor.sizeOfPrerotatedImage(with: imageData)
 
-        let asset = WireProtos.Asset(imageSize: imageSize, mimeType: mimeType, size: UInt64(imageData.count))
+        let asset = WireProtos.Asset(imageSize: imageSize,
+                                     mimeType: mimeType,
+                                     size: UInt64(imageData.count))
 
         return try append(asset: asset, nonce: nonce, expires: true, prepareMessage: { message in
             moc.zm_fileAssetCache.storeAssetData(message, format: .original, encrypted: false, data: imageData)
@@ -275,6 +280,10 @@ extension ZMConversation {
                                                expiresAfter: messageDestructionTimeoutValue)
         } catch {
             throw AppendMessageError.failedToProcessMessageData(reason: error.localizedDescription)
+        }
+
+        guard !message.isRestricted else {
+            throw AppendMessageError.fileSharingIsRestricted
         }
 
         message.sender = ZMUser.selfUser(in: moc)

@@ -26,7 +26,7 @@ class ZMConversationTests_SecurityLevel: ZMConversationTestsBase {
         return (0..<count).map { i in
             let user = ZMUser.insertNewObject(in: self.syncMOC)
             let userClient = UserClient.insertNewObject(in: self.syncMOC)
-            let userConnection = ZMConnection.insertNewSentConnection(to: user)!
+            let userConnection = ZMConnection.insertNewSentConnection(to: user)
             userConnection.status = .accepted
             userClient.user = user
             user.name = "createdUser \(i+1)"
@@ -905,7 +905,7 @@ class ZMConversationTests_SecurityLevel: ZMConversationTestsBase {
         
         let verifiedUser = ZMUser.insertNewObject(in: self.uiMOC)
         verifiedUser.remoteIdentifier = UUID()
-        let verifiedUserConnection = ZMConnection.insertNewSentConnection(to: verifiedUser)!
+        let verifiedUserConnection = ZMConnection.insertNewSentConnection(to: verifiedUser)
         verifiedUserConnection.status = .accepted
         
         let verifiedUserClient = UserClient.insertNewObject(in: self.uiMOC)
@@ -922,7 +922,7 @@ class ZMConversationTests_SecurityLevel: ZMConversationTestsBase {
         
         return Set((0..<count).map { _ in
             let unverifiedUser = ZMUser.insertNewObject(in: self.uiMOC)
-            let unverifiedUserConnection = ZMConnection.insertNewSentConnection(to: unverifiedUser)!
+            let unverifiedUserConnection = ZMConnection.insertNewSentConnection(to: unverifiedUser)
             unverifiedUserConnection.status = .accepted
             unverifiedUser.remoteIdentifier = UUID()
             return unverifiedUser
@@ -938,7 +938,7 @@ class ZMConversationTests_SecurityLevel: ZMConversationTestsBase {
         // WHEN
         let verifiedUser = ZMUser.insertNewObject(in: self.uiMOC)
         verifiedUser.remoteIdentifier = UUID()
-        let verifiedUserConnection = ZMConnection.insertNewSentConnection(to: verifiedUser)!
+        let verifiedUserConnection = ZMConnection.insertNewSentConnection(to: verifiedUser)
         verifiedUserConnection.status = .accepted
         
         let verifiedUserClient = UserClient.insertNewObject(in: self.uiMOC)
@@ -977,7 +977,7 @@ class ZMConversationTests_SecurityLevel: ZMConversationTestsBase {
         let otherUnverifiedUsers = self.setupUnverifiedUsers(count: 1)
         
         // THEN
-        XCTAssertEqual(conversation.allMessages.count, 2)
+        XCTAssertEqual(conversation.allMessages.count, 4)
         guard let lastMessage1 = conversation.lastMessage as? ZMSystemMessage else {
             return XCTFail()
         }
@@ -988,7 +988,7 @@ class ZMConversationTests_SecurityLevel: ZMConversationTestsBase {
         _ = self.simulateAdding(users: otherUnverifiedUsers, conversation: conversation, by: selfUser)
         
         // THEN
-        XCTAssertEqual(conversation.allMessages.count, 3)
+        XCTAssertEqual(conversation.allMessages.count, 5)
         guard let lastMessage2 = conversation.lastMessage as? ZMSystemMessage else {
             return XCTFail()
         }
@@ -1001,13 +1001,29 @@ class ZMConversationTests_SecurityLevel: ZMConversationTestsBase {
         
         // given
         let conversation = self.setupVerifiedConversation()
-        let participant = conversation.participantRoles.first!.user
+        let participant = conversation.participantRoles.first!.user!
         XCTAssertEqual(conversation.securityLevel, .secure)
-        participant.block()
+        participant.connection?.status = .blocked
         
         // when
         conversation.addParticipantAndUpdateConversationState(user: participant, role: nil)
         
+        // then
+        XCTAssertEqual(conversation.securityLevel, .secure)
+    }
+
+    func testThatSecurityLevelIsIncreased_WhenAddingSelfUserToAnExistingConversation() {
+        // given
+        let selfUser = ZMUser.selfUser(in: self.uiMOC)
+        self.createSelfClient(onMOC: self.uiMOC)
+        let conversation = ZMConversation.insertNewObject(in: self.uiMOC)
+        conversation.conversationType = .group
+        conversation.remoteIdentifier = UUID()
+
+
+        // when
+        conversation.addParticipantAndUpdateConversationState(user: selfUser, role: nil)
+
         // then
         XCTAssertEqual(conversation.securityLevel, .secure)
     }

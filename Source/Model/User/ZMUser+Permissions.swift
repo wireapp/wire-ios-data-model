@@ -177,11 +177,16 @@ public extension ZMUser {
     }
     
     @objc func _isGuest(in conversation: ConversationLike) -> Bool {
+        guard let conversation = conversation as? ZMConversation else { return false }
         if isSelfUser {
             // In case the self user is a guest in a team conversation, the backend will
             // return a 404 when fetching said team and we will delete the team.
             // We store the teamRemoteIdentifier of the team to check if we don't have a local team,
             // but received a teamId in the conversation payload, which means we are a guest in the conversation.
+
+            if conversation.creator == self {
+                return false
+            }
             
             if let team = team {
                 // If the self user belongs to a team he/she's a guest in every non team conversation
@@ -191,8 +196,13 @@ public extension ZMUser {
                 return conversation.teamRemoteIdentifier != nil
             }
         } else {
+            guard let context = managedObjectContext else {
+                return false
+            }
+
             return !isServiceUser // Bots are never guests
-                && ZMUser.selfUser(in: managedObjectContext!).hasTeam // There can't be guests in a team that doesn't exist
+                && !isFederated // Federated uesrs are never guests
+                && ZMUser.selfUser(in: context).hasTeam // There can't be guests in a team that doesn't exist
                 && conversation.localParticipantsContain(user: self)
                 && membership == nil
         }

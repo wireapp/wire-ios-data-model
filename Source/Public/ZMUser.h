@@ -30,6 +30,12 @@
 
 extern NSString * _Nonnull const ZMPersistedClientIdKey;
 
+typedef NS_ENUM(int16_t, ZMBlockState) {
+    ZMBlockStateNone = 0,
+    ZMBlockStateBlocked, ///< We have blocked this user
+    ZMBlockStateBlockedMissingLegalholdConsent, ///< The user is blocked due to legal hold missing consent
+};
+
 @interface ZMUser : ZMManagedObject
 
 @property (nonatomic, readonly, nullable) NSString *emailAddress;
@@ -77,10 +83,6 @@ extern NSString * _Nonnull const ZMPersistedClientIdKey;
 /// This is useful for non-connected user, that we will otherwise never refetch
 - (void)refreshData;
 
-/// Sends a connection request to the given user. May be a no-op, eg. if we're already connected.
-/// A ZMUserChangeNotification with the searchUser as object will be sent notifiying about the connection status change
-/// You should stop from observing the searchUser and start observing the user from there on
-- (void)connectWithMessage:(NSString * _Nonnull)text NS_SWIFT_NAME(connect(message:));
 
 @end
 
@@ -89,7 +91,7 @@ extern NSString * _Nonnull const ZMPersistedClientIdKey;
 
 @interface ZMUser (Utilities)
 
-+ (ZMUser<ZMEditableUser> *_Nonnull)selfUserInUserSession:(id<ZMManagedObjectContextProvider> _Nonnull)session;
++ (ZMUser<ZMEditableUser> *_Nonnull)selfUserInUserSession:(id<ContextProvider> _Nonnull)session;
 
 @end
 
@@ -98,14 +100,10 @@ extern NSString * _Nonnull const ZMPersistedClientIdKey;
 @interface ZMUser (Connections)
 
 @property (nonatomic, readonly) BOOL isBlocked;
+@property (nonatomic, readonly) ZMBlockState blockState;
 @property (nonatomic, readonly) BOOL isIgnored;
 @property (nonatomic, readonly) BOOL isPendingApprovalBySelfUser;
 @property (nonatomic, readonly) BOOL isPendingApprovalByOtherUser;
-
-- (void)accept;
-- (void)block;
-- (void)ignore;
-- (void)cancelConnectionRequest;
 
 @end
 

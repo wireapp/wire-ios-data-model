@@ -20,26 +20,33 @@ import XCTest
 @testable import WireDataModel
 
 class ZMSearchUserPayloadParsingTests: ZMBaseManagedObjectTest {
+
     func testThatItParsesTheBasicPayload() {
         // given
         let uuid = UUID()
+        let domain = "foo.bar"
         let payload: [String: Any] = ["name": "A user that was found",
                                       "handle": "@user",
                                       "accent_id": 5,
-                                      "id": uuid.transportString()]
+                                      "id": uuid.transportString(),
+                                      "qualified_id": [
+                                        "id": uuid.transportString(),
+                                        "domain": domain
+                                      ]]
         
         // when
-        let user = ZMSearchUser.searchUser(from: payload, contextProvider: self)!
+        let user = ZMSearchUser.searchUser(from: payload, contextProvider: self.coreDataStack)!
         
         // then
         XCTAssertEqual(user.name, "A user that was found")
         XCTAssertEqual(user.handle, "@user")
+        XCTAssertEqual(user.domain, domain)
         XCTAssertEqual(user.remoteIdentifier, uuid)
         XCTAssertEqual(user.accentColorValue, ZMAccentColor.init(rawValue: 5))
         XCTAssertFalse(user.isServiceUser)
         XCTAssertTrue(user.canBeConnected)
     }
-    
+
     func testThatItParsesService_ProviderIdentifier() throws {
         // given
         let uuid = UUID()
@@ -52,7 +59,7 @@ class ZMSearchUserPayloadParsingTests: ZMBaseManagedObjectTest {
                                       "provider": provider.transportString()]
         
         // when
-        let user = ZMSearchUser.searchUser(from: payload, contextProvider: self)!
+        let user = ZMSearchUser.searchUser(from: payload, contextProvider: self.coreDataStack)!
         
         // then
         XCTAssertTrue(user.isServiceUser)
@@ -77,7 +84,7 @@ class ZMSearchUserPayloadParsingTests: ZMBaseManagedObjectTest {
                                                   "key": assetKey]]]
         
         // when
-        let searchUser = ZMSearchUser.searchUser(from: payload, contextProvider: self)!
+        let searchUser = ZMSearchUser.searchUser(from: payload, contextProvider: self.coreDataStack)!
         
         // then
         XCTAssertEqual(searchUser.assetKeys?.preview, assetKey)
@@ -98,7 +105,7 @@ class ZMSearchUserPayloadParsingTests: ZMBaseManagedObjectTest {
                                                   "key": assetKey]]]
         
         // when
-        let searchUser = ZMSearchUser.searchUser(from: payload, contextProvider: self)!
+        let searchUser = ZMSearchUser.searchUser(from: payload, contextProvider: self.coreDataStack)!
         
         // then
         XCTAssertNil(searchUser.assetKeys)
@@ -119,10 +126,10 @@ class ZMSearchUserPayloadParsingTests: ZMBaseManagedObjectTest {
                                                   "size": "preview",
                                                   "key": assetKey]]]
         
-        let searchUser1 = ZMSearchUser.searchUser(from: payload, contextProvider: self)!
+        let searchUser1 = ZMSearchUser.searchUser(from: payload, contextProvider: self.coreDataStack)!
         
         // when
-        let searchUser2 = ZMSearchUser.searchUser(from: payload, contextProvider: self)!
+        let searchUser2 = ZMSearchUser.searchUser(from: payload, contextProvider: self.coreDataStack)!
         
         // then
         XCTAssertNotNil(searchUser2)
@@ -143,29 +150,18 @@ class ZMSearchUserPayloadParsingTests: ZMBaseManagedObjectTest {
                                                   "size": "preview",
                                                   "key": assetKey]]]
         
-        let searchUser1 = ZMSearchUser.searchUser(from: payload, contextProvider: self)!
+        let searchUser1 = ZMSearchUser.searchUser(from: payload, contextProvider: self.coreDataStack)!
         XCTAssertNil(searchUser1.user)
         
         let localUser = ZMUser.insertNewObject(in: uiMOC)
         localUser.remoteIdentifier = uuid
         
         // when
-        let searchUser2 = ZMSearchUser.searchUser(from: payload, contextProvider: self)
+        let searchUser2 = ZMSearchUser.searchUser(from: payload, contextProvider: self.coreDataStack)
         
         // then
         XCTAssertNotNil(searchUser2)
         XCTAssertEqual(searchUser1, searchUser2)
         XCTAssertEqual(searchUser2?.user, localUser)
-    }
-}
-
-
-extension ZMSearchUserPayloadParsingTests: ZMManagedObjectContextProvider {
-    var managedObjectContext: NSManagedObjectContext! {
-        return self.uiMOC
-    }
-    
-    var syncManagedObjectContext: NSManagedObjectContext! {
-        return self.syncMOC
     }
 }

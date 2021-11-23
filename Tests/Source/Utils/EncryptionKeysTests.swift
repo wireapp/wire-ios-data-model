@@ -32,10 +32,12 @@ class EncryptionKeysTests: XCTestCase {
         account = nil
     }
     
+    // @SF.Storage @TSFI.UserInterface
     func testThatEncryptionKeysThrowsIfKeysDontExist() {
         XCTAssertThrowsError(try EncryptionKeys(account: account))
     }
     
+    // @SF.Storage @TSFI.UserInterface
     func testThatPublicAccountKeyThrowsIfItDoesNotExist() throws {
         XCTAssertThrowsError(try EncryptionKeys.publicKey(for: account))
     }
@@ -51,6 +53,7 @@ class EncryptionKeysTests: XCTestCase {
         XCTAssertNotNil(publicKey)
     }
 
+    // @SF.Storage @TSFI.UserInterface
     func testThatEncryptionKeysAreSuccessfullyCreated() throws {
         // when
         let encryptionkeys = try EncryptionKeys.createKeys(for: account)
@@ -70,6 +73,7 @@ class EncryptionKeysTests: XCTestCase {
         XCTAssertEqual(encryptionKeys.databaseKey._storage.count, 32)
     }
     
+    // @SF.Storage @TSFI.UserInterface
     func testThatEncryptionKeysAreSuccessfullyDeleted() throws {
         // given
         _ = try EncryptionKeys.createKeys(for: account)
@@ -81,6 +85,7 @@ class EncryptionKeysTests: XCTestCase {
         XCTAssertThrowsError(try EncryptionKeys(account: account))
     }
     
+    // @SF.Storage @TSFI.UserInterface
     func testThatAsymmetricKeysWorksWithExpectedAlgorithm() throws {
         // given
         let data = "Hello world".data(using: .utf8)!

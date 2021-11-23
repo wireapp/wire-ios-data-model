@@ -104,6 +104,10 @@ extension ZMConversation {
         managedObjectContext?.saveOrRollback()
     }
 
+    public func notifyMissingLegalHoldConsent() {
+        notifyOnUI(name: ZMConversation.missingLegalHoldConsentNotificationName)
+    }
+
     // MARK: - Events
 
     /// Should be called when a message is received.
@@ -206,11 +210,13 @@ extension ZMConversation {
     }
 
     private func increaseSecurityLevelIfNeeded(for cause: SecurityChangeCause) {
-        guard securityLevel != .secure &&
+        guard
+            securityLevel != .secure &&
             allUsersTrusted &&
             allParticipantsHaveClients &&
-            conversationType != .connection else {
-                return
+            conversationType.isOne(of: .group, .oneOnOne, .invalid)
+        else {
+            return
         }
 
         securityLevel = .secure
@@ -622,7 +628,7 @@ extension ZMConversation {
     
     /// Returns a timestamp that is shortly (as short as possible) after the given message,
     /// or the last modified date if the message is nil
-    fileprivate func timestamp(after: ZMMessage?) -> Date? {
+    fileprivate func timestamp(after: ZMConversationMessage?) -> Date? {
         guard let timestamp = after?.serverTimestamp ?? self.lastModifiedDate else { return nil }
         return timestamp.nextNearestTimestamp
     }

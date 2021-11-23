@@ -28,6 +28,7 @@
 #import "ZMConversation+Internal.h"
 #import "ZMConversationList+Internal.h"
 #import "ZMConversation+UnreadCount.h"
+#import "WireDataModelTests-Swift.h"
 
 
 @interface ZMConversationTestsBase ()
@@ -54,13 +55,6 @@
 - (void)didReceiveWindowNotification:(NSNotification *)notification
 {
     self.lastReceivedNotification = notification;
-}
-
-- (id)mockUserSessionWithUIMOC;
-{
-    id userSession = [OCMockObject mockForProtocol:@protocol(ZMManagedObjectContextProvider)];
-    [[[userSession stub] andReturn:self.uiMOC] managedObjectContext];
-    return userSession;
 }
 
 - (ZMUser *)createUser
@@ -148,22 +142,6 @@
     [conversation.mutableMessages addObject:systemMessage];
     
     return systemMessage;
-}
-
-- (ZMConversation *)insertConversationWithUnread:(BOOL)hasUnread
-{
-    NSDate *messageDate = [NSDate dateWithTimeIntervalSince1970:230000000];
-    ZMConversation *conversation = [ZMConversation insertNewObjectInManagedObjectContext:self.syncMOC];
-    conversation.conversationType = ZMConversationTypeOneOnOne;
-    conversation.lastServerTimeStamp = messageDate;
-    if(hasUnread) {
-        ZMClientMessage *message = [[ZMClientMessage alloc] initWithNonce:NSUUID.createUUID managedObjectContext:self.syncMOC];
-        message.serverTimestamp = messageDate;
-        conversation.lastReadServerTimeStamp = [messageDate dateByAddingTimeInterval:-1000];
-        [conversation appendMessage:message];
-    }
-    [self.syncMOC saveOrRollback];
-    return conversation;
 }
 
 @end
@@ -314,7 +292,7 @@
         conversation.remoteIdentifier = uuid;
         
         // when
-        ZMConversation *found = [ZMConversation conversationWithRemoteID:uuid createIfNeeded:NO inContext:self.syncMOC];
+        ZMConversation *found = [ZMConversation fetchWith:uuid in:self.syncMOC];
         
         // then
         XCTAssertEqualObjects(found.remoteIdentifier, uuid);
@@ -331,7 +309,8 @@
         [self.syncMOC saveOrRollback];
         
         // when
-        ZMConversation *conversation = [ZMConversation conversationWithRemoteID:uuid createIfNeeded:YES inContext:self.syncMOC];
+
+        ZMConversation *conversation = [ZMConversation fetchOrCreateWith:uuid domain:nil in:self.syncMOC];
         
         // then
         XCTAssertNotNil(conversation);
@@ -354,7 +333,7 @@
     }];
     
     // when
-    ZMConversation *found = [ZMConversation conversationWithRemoteID:uuid createIfNeeded:NO inContext:self.uiMOC];
+    ZMConversation *found = [ZMConversation fetchWith:uuid in:self.uiMOC];
     
     // then
     XCTAssertEqualObjects(found.remoteIdentifier, uuid);
@@ -372,28 +351,76 @@
         conversation.remoteIdentifier = uuid;
         
         // when
-        ZMConversation *found = [ZMConversation conversationWithRemoteID:secondUUID createIfNeeded:NO inContext:self.syncMOC];
+        ZMConversation *found = [ZMConversation fetchWith:secondUUID in:self.syncMOC];
         
         // then
         XCTAssertNil(found);
     }];
 }
 
-- (void)testThatItCreatesAUserForNonExistingUUID
+- (void)testThatItCreatesAConversationForNonExistingUUID
 {
     [self.syncMOC performGroupedBlockAndWait:^{
         // given
         NSUUID *uuid = NSUUID.createUUID;
         
         // when
-        ZMConversation *found = [ZMConversation conversationWithRemoteID:uuid createIfNeeded:YES inContext:self.syncMOC];
+        ZMConversation *created = [ZMConversation fetchOrCreateWith:uuid domain:nil in:self.syncMOC];
         
         // then
-        XCTAssertNotNil(found);
-        XCTAssertEqualObjects(uuid, found.remoteIdentifier);
+        XCTAssertEqualObjects(uuid, created.remoteIdentifier);
     }];
 }
 
+- (void)testThatItTreatsEmptyDomainAsNil
+{
+    [self.syncMOC performGroupedBlockAndWait:^{
+        // given
+        NSUUID *uuid = NSUUID.createUUID;
+
+        // when
+        ZMConversation *created = [ZMConversation fetchOrCreateWith:uuid domain:@"" in:self.syncMOC];
+
+        // then
+        XCTAssertEqualObjects(uuid, created.remoteIdentifier);
+        XCTAssertEqualObjects(nil, created.domain);
+    }];
+}
+
+- (void)testThatItIgnoresDomainWhenFederationIsDisabled
+{
+    // given
+    NSUUID *uuid = [NSUUID createUUID];
+
+    [self.syncMOC performBlockAndWait:^{
+        // when
+        self.syncMOC.zm_isFederationEnabled = NO;
+        ZMConversation *created = [ZMConversation fetchOrCreateWith:uuid domain:@"a.com" in:self.syncMOC];
+
+        // then
+        XCTAssertNotNil(created);
+        XCTAssertEqualObjects(uuid, created.remoteIdentifier);
+        XCTAssertEqualObjects(nil, created.domain);
+    }];
+}
+
+- (void)testThatItAssignsDomainWhenFederationIsEnabled
+{
+    // given
+    NSUUID *uuid = [NSUUID createUUID];
+    NSString *domain = @"a.com";
+
+    [self.syncMOC performBlockAndWait:^{
+        // when
+        self.syncMOC.zm_isFederationEnabled = YES;
+        ZMConversation *created = [ZMConversation fetchOrCreateWith:uuid domain:domain in:self.syncMOC];
+
+        // then
+        XCTAssertNotNil(created);
+        XCTAssertEqualObjects(uuid, created.remoteIdentifier);
+        XCTAssertEqualObjects(domain, created.domain);
+    }];
+}
 
 - (void)testThatConversationsDoNotGetInsertedUpstreamUnlessTheyAreGroupConversations;
 {
@@ -444,7 +471,7 @@
     invalidConversation.remoteIdentifier = [NSUUID createUUID];
     
     // when
-    ZMConversation *fetchedConversation = [ZMConversation conversationWithRemoteID:invalidConversation.remoteIdentifier createIfNeeded:NO inContext:self.uiMOC];
+    ZMConversation *fetchedConversation = [ZMConversation fetchWith:invalidConversation.remoteIdentifier in:self.uiMOC];
     
     // then
     XCTAssertEqual(fetchedConversation, invalidConversation);
@@ -782,18 +809,18 @@
     ZMConversation *conversation = [ZMConversation insertNewObjectInManagedObjectContext:self.uiMOC];
     conversation.lastModifiedDate = [NSDate.date dateByAddingTimeInterval:-100];
     ZMClientMessage *clientMessage = (id)[conversation appendText:@"TestMessage" mentions:@[] replyingToMessage:nil fetchLinkPreview:YES nonce:NSUUID.createUUID];
-    
+
     // then
     XCTAssertEqualObjects(conversation.lastModifiedDate, clientMessage.serverTimestamp);
-    
+
     NSDate *serverDate = [clientMessage.serverTimestamp dateByAddingTimeInterval:0.2];
     // when
     [clientMessage updateWithPostPayload:@{@"time": serverDate} updatedKeys:[NSSet set]];
-    
+
     // then
     XCTAssertEqualObjects(conversation.lastModifiedDate, serverDate);
     XCTAssertEqualObjects(clientMessage.serverTimestamp, serverDate);
-    
+
     // cleanup
 }
 
@@ -806,11 +833,11 @@
     NSDate *postingDate = clientMessage.serverTimestamp;
     // then
     XCTAssertEqualObjects(conversation.lastModifiedDate, clientMessage.serverTimestamp);
-    
+
     NSDate *serverDate = [clientMessage.serverTimestamp dateByAddingTimeInterval:-0.2];
     // when
     [clientMessage updateWithPostPayload:@{@"time": serverDate} updatedKeys:[NSSet set]];
-    
+
     // then
     XCTAssertEqualObjects(conversation.lastModifiedDate, postingDate);
     XCTAssertEqualObjects(clientMessage.serverTimestamp, serverDate);
@@ -1209,7 +1236,7 @@
     NOT_USED(SomeOtherConversation);
     
     // when
-    ZMConversation *fetchedConversation = [ZMConversation existingOneOnOneConversationWithUser:user inUserSession:self.mockUserSessionWithUIMOC];
+    ZMConversation *fetchedConversation = [ZMConversation existingOneOnOneConversationWithUser:user inUserSession:self.coreDataStack];
     
     // then
     XCTAssertNil(fetchedConversation);
@@ -1227,7 +1254,7 @@
     connection.conversation = connectionConversation;
     
     // when
-    ZMConversation *fetchedConversation = [ZMConversation existingOneOnOneConversationWithUser:user inUserSession:self.mockUserSessionWithUIMOC];
+    ZMConversation *fetchedConversation = [ZMConversation existingOneOnOneConversationWithUser:user inUserSession:self.coreDataStack];
 
     // then
     XCTAssertEqual(fetchedConversation, connectionConversation);
@@ -1500,7 +1527,7 @@
     __block NSManagedObjectID *moid;
     [self.syncMOC performGroupedBlockAndWait:^{
         // when
-        ZMUser *user = [ZMUser userWithRemoteID:NSUUID.createUUID createIfNeeded:YES inContext:self.syncMOC];
+        ZMUser *user = [ZMUser fetchOrCreateWith:NSUUID.createUUID domain:nil in:self.syncMOC];
         user.name = @"Skyler Saša";
         user.needsToBeUpdatedFromBackend = YES;
         ZMConnection *connection = [ZMConnection insertNewSentConnectionToUser:user];
@@ -1521,7 +1548,7 @@
     __block NSManagedObjectID *moid;
     [self.syncMOC performGroupedBlockAndWait:^{
         // when
-        ZMUser *user = [ZMUser userWithRemoteID:NSUUID.createUUID createIfNeeded:YES inContext:self.syncMOC];
+        ZMUser *user = [ZMUser fetchOrCreateWith:NSUUID.createUUID domain:nil in:self.syncMOC];
         user.name = @"";
         user.needsToBeUpdatedFromBackend = YES;
         ZMConnection *connection = [ZMConnection insertNewSentConnectionToUser:user];
@@ -2071,9 +2098,9 @@
     ZMConversation *conversation = [self insertConversationWithParticipants:users];
     [conversation appendMessageWithText:@"0"];
     
-    ZMConversationList *activeList = [ZMConversationList conversationsInUserSession:self.mockUserSessionWithUIMOC];
-    ZMConversationList *archivedList = [ZMConversationList archivedConversationsInUserSession:self.mockUserSessionWithUIMOC];
-    ZMConversationList *clearedList = [ZMConversationList clearedConversationsInUserSession:self.mockUserSessionWithUIMOC];
+    ZMConversationList *activeList = [ZMConversationList conversationsInUserSession:self.coreDataStack];
+    ZMConversationList *archivedList = [ZMConversationList archivedConversationsInUserSession:self.coreDataStack];
+    ZMConversationList *clearedList = [ZMConversationList clearedConversationsInUserSession:self.coreDataStack];
     
     // when
     [conversation removeParticipantAndUpdateConversationStateWithUser:selfUser initiatingUser:nil];
@@ -2084,31 +2111,6 @@
     XCTAssertFalse([clearedList predicateMatchesConversation:conversation]);
 }
 
-
-- (void)testThatClearingMessageHistorySetsLastReadServerTimeStampToLastServerTimeStamp
-{
-    // given
-    NSDate *clearedTimeStamp = [NSDate date];
-    
-    ZMUser *otherUser = [self createUser];
-    ZMConversation *conversation = [ZMConversation insertNewObjectInManagedObjectContext:self.uiMOC];
-    conversation.lastServerTimeStamp = clearedTimeStamp;
-
-    ZMClientMessage *message1 = [[ZMClientMessage alloc] initWithNonce:NSUUID.createUUID managedObjectContext:self.uiMOC];
-    message1.serverTimestamp = clearedTimeStamp;
-    message1.sender = otherUser;
-    message1.visibleInConversation = conversation;
-    
-    XCTAssertNil(conversation.lastReadServerTimeStamp);
-    
-    // when
-    [conversation clearMessageHistory];
-    [self.uiMOC saveOrRollback];
-    WaitForAllGroupsToBeEmpty(0.5);
-    
-    // then
-    XCTAssertEqualObjects(conversation.lastReadServerTimeStamp, clearedTimeStamp);
-}
 
 - (void)testThatSettingClearedTimeStampDueToRemoteChangeDoesNotDeleteUnsentMessages
 {
@@ -3098,58 +3100,6 @@
     XCTAssertTrue([sut evaluateWithObject:conversation]);
 }
 
-
-#pragma mark - SendOnlyEncryptedMessages
-
-- (void)testThatItInsertsEncryptedTextMessages
-{
-    // given
-    ZMConversation *conversation = [ZMConversation insertNewObjectInManagedObjectContext:self.uiMOC];
-    
-    // when
-    [conversation appendMessageWithText:@"hello"];
-    
-    // then
-    NSFetchRequest *request = [NSFetchRequest fetchRequestWithEntityName:[ZMMessage entityName]];
-    NSArray *result = [self.uiMOC executeFetchRequestOrAssert:request];
-    
-    XCTAssertEqual(result.count, 1u);
-    XCTAssertTrue([result.firstObject isKindOfClass:[ZMClientMessage class]]);
-}
-
-
-
-- (void)testThatItInsertsEncryptedImageMessages
-{
-    // given
-    ZMConversation *conversation = [ZMConversation insertNewObjectInManagedObjectContext:self.uiMOC];
-    
-    // when
-    [conversation appendMessageWithImageData:self.verySmallJPEGData];
-    
-    // then
-    NSFetchRequest *request = [NSFetchRequest fetchRequestWithEntityName:[ZMMessage entityName]];
-    NSArray *result = [self.uiMOC executeFetchRequestOrAssert:request];
-    
-    XCTAssertEqual(result.count, 1u);
-    XCTAssertTrue([result.firstObject isKindOfClass:[ZMAssetClientMessage class]]);
-}
-
-- (void)testThatItInsertsEncryptedKnockMessages
-{
-    // given
-    ZMConversation *conversation = [ZMConversation insertNewObjectInManagedObjectContext:self.uiMOC];
-    
-    // when
-    [conversation appendKnock];
-    
-    // then
-    NSFetchRequest *request = [NSFetchRequest fetchRequestWithEntityName:[ZMMessage entityName]];
-    NSArray *result = [self.uiMOC executeFetchRequestOrAssert:request];
-    
-    XCTAssertEqual(result.count, 1u);
-    XCTAssertTrue([result.firstObject isKindOfClass:[ZMClientMessage class]]);
-}
 
 #pragma mark - SystemMessags
 
