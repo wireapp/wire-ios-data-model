@@ -38,10 +38,8 @@ public struct PersistedDataPatch {
     /// Apply all patches to the MOC
     public static func applyAll(in moc: NSManagedObjectContext, fromVersion: String? = nil, patches: [PersistedDataPatch]? = nil)
     {
-        guard let currentVersion = Bundle(for: ZMUser.self).infoDictionary!["CFBundleShortVersionString"] as? String else {
-            return zmLog.error("Can't retrieve CFBundleShortVersionString for data model, skipping patches..")
-        }
-        
+
+        let currentVersion = "278.0.0"
         defer {
             moc.setPersistentStoreMetadata(currentVersion, key: lastDataModelPatchedVersionKey)
             moc.saveOrRollback()
