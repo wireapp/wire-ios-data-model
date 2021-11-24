@@ -107,12 +107,12 @@ final class ZMUserTests_Permissions: ModelObjectsTests {
         XCTAssertFalse(ZMUser.selfUser(in: uiMOC).isGuest(in: conversation))
     }
 
-    func testThatItDoesNotReportIsGuest_ForAFederatedConversation() {
+    func testThatItReportsIsGuest_ForAFederatedConversation() {
         let user = ZMUser.selfUser(in: uiMOC)
         user.domain = UUID().transportString()
         conversation.domain = UUID().transportString()
 
-        XCTAssertFalse(user.isGuest(in: conversation))
+        XCTAssertTrue(user.isGuest(in: conversation))
     }
     
     func testThatItReportsIsGuest_ForANonTeamUserInATeamConversation() {
