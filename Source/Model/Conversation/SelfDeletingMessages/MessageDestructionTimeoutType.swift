@@ -1,6 +1,6 @@
 //
 // Wire
-// Copyright (C) 2018 Wire Swiss GmbH
+// Copyright (C) 2021 Wire Swiss GmbH
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -18,16 +18,23 @@
 
 import Foundation
 
-@objc public protocol ServiceUser: AnyObject, UserType {
-    var providerIdentifier: String? { get }
-    var serviceIdentifier: String? { get }
-}
+/// A type representing all the kinds of message destruction timeouts.
 
-@objc public protocol SearchServiceUser: ServiceUser {
-    var summary: String? { get }
-}
+public enum MessageDestructionTimeoutType {
 
-extension ZMUser {
-    static let servicesMustBeMentioned = false
-    static let serviceMentionKeyword = "@bots"
+    /// For timeouts set (and enforced) by the team admin and apply to all members
+    /// of the team. This has highest precedence.
+
+    case team
+
+    /// For timeouts set by the group admin and apply to all participants of the
+    /// group.
+
+    case groupConversation
+
+    /// For timeouts set by the self user and only apply to the self user.
+    /// This has lowest precedence.
+
+    case selfUser
+
 }
