@@ -149,7 +149,7 @@ static NSString *const DomainKey = @"domain";
 @property (nonatomic, copy) NSString *emailAddress;
 @property (nonatomic, copy) NSString *phoneNumber;
 @property (nonatomic, copy) NSString *normalizedEmailAddress;
-@property (nullable, nonatomic) NSString *managedBy;
+@property (nonatomic, copy) NSString *managedBy;
 @property (nonatomic, readonly) UserClient *selfClient;
 
 @end
@@ -280,48 +280,6 @@ static NSString *const DomainKey = @"domain";
     return [NSSet setWithObjects:ConnectionKey, @"connection.status", nil];
 }
 
-- (void)connectWithMessage:(NSString *)message;
-{
-    if(self.connection == nil || self.connection.status == ZMConnectionStatusCancelled) {
-        ZMConversation *existingConversation;
-        if (self.connection.status == ZMConnectionStatusCancelled) {
-            existingConversation = self.connection.conversation;
-            self.connection = nil;
-        }
-        self.connection = [ZMConnection insertNewSentConnectionToUser:self existingConversation:existingConversation];
-        self.connection.message = message;
-    }
-    else {
-        NOT_USED(message);
-        switch (self.connection.status) {
-            case ZMConnectionStatusInvalid:
-                self.connection.lastUpdateDate = [NSDate date];
-                self.connection.status = ZMConnectionStatusSent;
-                break;
-            case ZMConnectionStatusAccepted:
-            case ZMConnectionStatusSent:
-            case ZMConnectionStatusCancelled:
-                // Do nothing
-                break;
-            case ZMConnectionStatusPending:
-                // We should get the real modified date after syncing with the server, using current date until then.
-                self.connection.conversation.lastModifiedDate = [NSDate date];
-            case ZMConnectionStatusIgnored:
-            case ZMConnectionStatusBlocked:
-                self.connection.status = ZMConnectionStatusAccepted;
-                if(self.connection.conversation.conversationType == ZMConversationTypeConnection) {
-                    self.connection.conversation.conversationType = ZMConversationTypeOneOnOne;
-                }
-                break;
-        }
-    }
-}
-
-- (NSString *)connectionRequestMessage;
-{
-    return self.connection.message;
-}
-
 + (NSSet *)keyPathsForValuesAffectingConnectionRequestMessage {
     return [NSSet setWithObject:@"connection.message"];
 }
@@ -414,28 +372,6 @@ static NSString *const DomainKey = @"domain";
         keys = [ignoredKeys copy];
     });
     return keys;
-}
-
-+ (instancetype)userWithRemoteID:(NSUUID *)UUID createIfNeeded:(BOOL)create inContext:(nonnull NSManagedObjectContext *)moc;
-{
-    // We must only ever call this on the sync context. Otherwise, there's a race condition
-    // where the UI and sync contexts could both insert the same user (same UUID) and we'd end up
-    // having two duplicates of that user, and we'd have a really hard time recovering from that.
-    //
-    RequireString(! create || moc.zm_isSyncContext, "Race condition!");
-    
-    ZMUser *result = [self fetchObjectWithRemoteIdentifier:UUID inManagedObjectContext:moc];
-    
-    if (result != nil) {
-        return result;
-    } else if(create) {
-        ZMUser *user = [ZMUser insertNewObjectInManagedObjectContext:moc];
-        user.remoteIdentifier = UUID;
-        return user;
-    }
-    else {
-        return nil;
-    }
 }
 
 + (nullable instancetype)userWithEmailAddress:(NSString *)emailAddress inContext:(NSManagedObjectContext *)context
@@ -911,8 +847,7 @@ static NSString *const DomainKey = @"domain";
 
 - (BOOL)isPendingApprovalBySelfUser
 {
-    return self.connection != nil && (self.connection.status == ZMConnectionStatusPending ||
-                                      self.connection.status == ZMConnectionStatusIgnored);
+    return self.connection != nil && self.connection.status == ZMConnectionStatusPending;
 }
 
 + (NSSet *)keyPathsForValuesAffectingIsPendingApprovalBySelfUser
@@ -928,55 +863,6 @@ static NSString *const DomainKey = @"domain";
 + (NSSet *)keyPathsForValuesAffectingIsPendingApprovalByOtherUser
 {
     return [NSSet setWithObjects:ConnectionKey, @"connection.status", nil];
-}
-
-
-- (void)accept;
-{
-    [self connectWithMessage:@""];
-}
-
-- (void)block;
-{
-    switch (self.connection.status) {
-        case ZMConnectionStatusBlocked:
-        case ZMConnectionStatusInvalid:
-        case ZMConnectionStatusCancelled:
-            // do nothing
-            break;
-            
-        case ZMConnectionStatusIgnored:
-        case ZMConnectionStatusAccepted:
-        case ZMConnectionStatusPending:
-        case ZMConnectionStatusSent:
-            self.connection.status = ZMConnectionStatusBlocked;
-            break;
-    };
-}
-
-- (void)ignore;
-{
-    switch (self.connection.status) {
-        case ZMConnectionStatusInvalid:
-        case ZMConnectionStatusSent:
-        case ZMConnectionStatusIgnored:
-        case ZMConnectionStatusCancelled:
-            // do nothing
-            break;
-        case ZMConnectionStatusBlocked:
-        case ZMConnectionStatusAccepted:
-        case ZMConnectionStatusPending:
-            self.connection.status = ZMConnectionStatusIgnored;
-            break;
-            
-    };
-}
-
-- (void)cancelConnectionRequest
-{
-    if (self.connection.status == ZMConnectionStatusSent) {
-        self.connection.status = ZMConnectionStatusCancelled;
-    }
 }
 
 @end

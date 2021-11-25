@@ -1,6 +1,6 @@
-////
+//
 // Wire
-// Copyright (C) 2019 Wire Swiss GmbH
+// Copyright (C) 2021 Wire Swiss GmbH
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -16,12 +16,25 @@
 // along with this program. If not, see http://www.gnu.org/licenses/.
 //
 
-@interface ZMConversationTransportTests : ZMConversationTestsBase
-- (NSDictionary *)payloadForMetaDataOfConversation:(ZMConversation *)conversation
-                                  conversationType:(ZMBackendConversationType)conversationType
-                                        isArchived:(BOOL)isArchived
-                                       archivedRef:(NSDate *)archivedRef
-                                        isSilenced:(BOOL)isSilenced
-                                       silencedRef:(NSDate *)silencedRef
-                                    silencedStatus:(NSNumber *)silencedStatus;
-@end
+import Foundation
+
+/// A type representing all the kinds of message destruction timeouts.
+
+public enum MessageDestructionTimeoutType {
+
+    /// For timeouts set (and enforced) by the team admin and apply to all members
+    /// of the team. This has highest precedence.
+
+    case team
+
+    /// For timeouts set by the group admin and apply to all participants of the
+    /// group.
+
+    case groupConversation
+
+    /// For timeouts set by the self user and only apply to the self user.
+    /// This has lowest precedence.
+
+    case selfUser
+
+}

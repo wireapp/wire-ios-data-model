@@ -595,7 +595,7 @@ final class ConversationObserverTests : NotificationDispatcherTestBase {
         
         // when
         self.checkThatItNotifiesTheObserverOfAChange(conversation,
-                                                     modifier: { conversation, _ in conversation.syncedMessageDestructionTimeout = 1000 },
+                                                     modifier: { conversation, _ in conversation.setMessageDestructionTimeoutValue(.custom(1000), for: .groupConversation) },
                                                      expectedChangedField: "destructionTimeoutChanged",
                                                      expectedChangedKeys: [#keyPath(ZMConversation.syncedMessageDestructionTimeout)])
     }
@@ -616,7 +616,7 @@ final class ConversationObserverTests : NotificationDispatcherTestBase {
 
         // when
         self.checkThatItNotifiesTheObserverOfAChange(conversation,
-                                                     modifier: { conversation, _ in conversation.localMessageDestructionTimeout = 1000 },
+                                                     modifier: { conversation, _ in conversation.setMessageDestructionTimeoutValue(.custom(1000), for: .selfUser) },
                                                      expectedChangedField: "destructionTimeoutChanged",
                                                      expectedChangedKeys: [#keyPath(ZMConversation.localMessageDestructionTimeout)])
     }
@@ -661,7 +661,8 @@ final class ConversationObserverTests : NotificationDispatcherTestBase {
                                                         conversation.connection = ZMConnection.insertNewObject(in: self.uiMOC)
                                                         conversation.connection!.status = ZMConnectionStatus.pending
             },
-                                                     expectedChangedField: "connectionStateChanged" ,
+                                                     expectedChangedFields: ["connectionStateChanged",
+                                                                             "nameChanged"],
                                                      expectedChangedKeys: ["relatedConnectionState"])
     }
     
@@ -679,7 +680,8 @@ final class ConversationObserverTests : NotificationDispatcherTestBase {
         // when
         self.checkThatItNotifiesTheObserverOfAChange(conversation,
                                                      modifier: { conversation, _ in conversation.connection!.status = ZMConnectionStatus.accepted },
-                                                     expectedChangedField: "connectionStateChanged" ,
+                                                     expectedChangedFields: ["connectionStateChanged",
+                                                                             "nameChanged"],
                                                      expectedChangedKeys: ["relatedConnectionState"])
         
     }

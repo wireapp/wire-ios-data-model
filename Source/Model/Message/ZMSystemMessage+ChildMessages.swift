@@ -22,7 +22,15 @@ extension ZMSystemMessage {
     
     @objc
     static func updateEventParticipantsRemovedReason(_ updateEvent: ZMUpdateEvent) -> ZMParticipantsRemovedReason {
-            return updateEvent.participantsRemovedReason
+        
+        // FUTUREWORK: OCMock no longer work after XCFramework is used. We should remove the OCMock dependency in the tests SQPIT-601
+        #if targetEnvironment(simulator)
+        guard updateEvent.description != "OCMockObject(WireTransport.ZMUpdateEvent)" else {
+            return .none
+        }
+        #endif
+        
+        return updateEvent.participantsRemovedReason
     }
 
     /// Equals the serverTimestamp, if no childMessages are present

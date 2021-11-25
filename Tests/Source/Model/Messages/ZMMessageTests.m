@@ -29,9 +29,9 @@
 #import "NSManagedObjectContext+zmessaging.h"
 #import "ZMMessageTests.h"
 #import "MessagingTest+EventFactory.h"
-#import <OCMock/OCMock.h>
 #import "ZMUpdateEvent+WireDataModel.h"
 #import "NSString+RandomString.h"
+#import "WireDataModelTests-Swift.h"
 
 NSString * const IsExpiredKey = @"isExpired";
 NSString * const ReactionsKey = @"reactions";
@@ -337,16 +337,6 @@ NSUInteger const ZMClientMessageByteSizeExternalThreshold = 128000;
     XCTAssertEqualObjects(message.keysTrackedForLocalModifications, expected);
 }
 
-- (void)testThatSpecialKeysAreNotPartOfTheLocallyModifiedKeysForClientMessages
-{
-    // when
-    ZMClientMessage *message = [[ZMClientMessage alloc] initWithNonce:NSUUID.createUUID managedObjectContext:self.uiMOC];
-    
-    // then
-    NSSet *keysThatShouldBeTracked = [NSSet setWithArray:@[@"dataSet", @"linkPreviewState"]];
-    XCTAssertEqualObjects(message.keysTrackedForLocalModifications, keysThatShouldBeTracked);
-}
-
 - (void)testThat_doesEventGenerateMessage_returnsTrueForAllKnownTypes
 {
     NSArray *validTypes = @[
@@ -455,12 +445,7 @@ NSUInteger const ZMClientMessageByteSizeExternalThreshold = 128000;
     XCTAssertFalse(systemMessage.needsUpdatingUsers);
 }
 
-@end
-
-
-
-@implementation ZMMessageTests (TextMessage)
-
+#pragma mark - TextMessage
 
 - (void)testThatATextMessageHasTextMessageData
 {
@@ -474,11 +459,8 @@ NSUInteger const ZMClientMessageByteSizeExternalThreshold = 128000;
     XCTAssertNil(message.knockMessageData);
 }
 
-@end
 
-
-
-@implementation ZMMessageTests (ImageMessages)
+#pragma mark - ImageMessages
 
 - (void)testThatSettingTheOriginalDataRecognizesAGif
 {
@@ -650,11 +632,7 @@ NSUInteger const ZMClientMessageByteSizeExternalThreshold = 128000;
     XCTAssertTrue([self waitForCustomExpectationsWithTimeout:0.5]);
 }
 
-@end
-
-
-
-@implementation ZMMessageTests (ImageIdentifiersForCaching)
+#pragma mark - ImageIdentifiersForCaching
 
 - (void)testThatItDoesNotReturnAnIdentifierWhenTheImageDataIsNil
 {
@@ -740,11 +718,7 @@ NSUInteger const ZMClientMessageByteSizeExternalThreshold = 128000;
     XCTAssertNil(identifier);
 }
 
-@end
-
-
-
-@implementation ZMMessageTests (ImageMessageUploadAttributes)
+#pragma mark - ImageMessageUploadAttributes
 
 - (void)testThatItRequiresPreviewAndMediumData
 {
@@ -756,12 +730,8 @@ NSUInteger const ZMClientMessageByteSizeExternalThreshold = 128000;
     XCTAssertEqualObjects(message.requiredImageFormats,  expectedFormats);
 }
 
-@end
+#pragma mark - CreateSystemMessageFromUpdateEvent
 
-
-
-
-@implementation ZMMessageTests (CreateSystemMessageFromUpdateEvent)
 
 - (void)testThat_isEventTypeGeneratingSystemMessage_returnsNo
 {
@@ -775,28 +745,6 @@ NSUInteger const ZMClientMessageByteSizeExternalThreshold = 128000;
     for(NSUInteger evt = 0; evt <= ZMUpdateEventTypeUserPropertiesDelete; ++evt) {
         XCTAssertEqual([ZMSystemMessage doesEventTypeGenerateSystemMessage:evt], [validTypes containsObject:@(evt)]);
     }
-}
-
-- (id)mockEventOfType:(ZMUpdateEventType)type forConversation:(ZMConversation *)conversation sender:(NSUUID *)senderID data:(NSDictionary *)data
-{
-    ZMUpdateEvent *updateEvent = [OCMockObject niceMockForClass:ZMUpdateEvent.class];
-    (void)[(ZMUpdateEvent *)[[(id)updateEvent stub] andReturnValue:OCMOCK_VALUE(type)] type];
-    NSDate *serverTimeStamp = conversation.lastServerTimeStamp ? [conversation.lastServerTimeStamp dateByAddingTimeInterval:5] : [NSDate date];
-    NSUUID *from = senderID ?: NSUUID.createUUID;
-    NSDictionary *payload = @{
-                              @"conversation" : conversation.remoteIdentifier.transportString,
-                              @"time" : serverTimeStamp.transportString,
-                              @"from" : from.transportString,
-                              @"data" : data
-                              };
-    (void)[(ZMUpdateEvent *)[[(id)updateEvent stub] andReturn:payload] payload];
-    
-    NSUUID *nonce = [NSUUID UUID];
-    (void)[(ZMUpdateEvent *)[[(id)updateEvent stub] andReturn:nonce] messageNonce];
-    (void)[(ZMUpdateEvent *)[[(id)updateEvent stub] andReturn:serverTimeStamp] timestamp];
-    (void)[(ZMUpdateEvent *)[[(id)updateEvent stub] andReturn:conversation.remoteIdentifier] conversationUUID];
-    (void)[(ZMUpdateEvent *)[[(id)updateEvent stub] andReturn:from] senderUUID];
-    return updateEvent;
 }
 
 - (ZMSystemMessage *)createSystemMessageFromType:(ZMUpdateEventType)updateEventType inConversation:(ZMConversation *)conversation withUsersIDs:(NSArray *)userIDs senderID:(NSUUID *)senderID
@@ -1129,33 +1077,6 @@ NSUInteger const ZMClientMessageByteSizeExternalThreshold = 128000;
 
     // then
     XCTAssertTrue(message.userIsTheSender);
-}
-
-- (void)testThatFlagIsNotSetWhenSenderIsNotTheOnlyUser
-{
-    // given
-    ZMConversation *conversation = [ZMConversation insertNewObjectInManagedObjectContext:self.uiMOC];
-    conversation.remoteIdentifier = [NSUUID createUUID];
-    conversation.conversationType = ZMConversationTypeGroup;
-    XCTAssertNotNil(conversation);
-
-    ZMUser *user = [ZMUser insertNewObjectInManagedObjectContext:self.uiMOC];
-    user.remoteIdentifier = [NSUUID createUUID];
-
-    ZMUser *sender = [ZMUser insertNewObjectInManagedObjectContext:self.uiMOC];
-    sender.remoteIdentifier = [NSUUID createUUID];
-
-    // add selfUser to the conversation
-    __block ZMSystemMessage *message;
-    [self performPretendingUiMocIsSyncMoc:^{
-        message = [self createSystemMessageFromType:ZMUpdateEventTypeConversationMemberJoin inConversation:conversation withUsersIDs:@[sender.remoteIdentifier, user.remoteIdentifier] senderID:sender.remoteIdentifier];
-    }];
-    [self.uiMOC saveOrRollback];
-    WaitForAllGroupsToBeEmpty(0.5);
-
-
-    // then
-    XCTAssertFalse(message.userIsTheSender);
 }
 
 @end

@@ -232,12 +232,6 @@ public class CoreDataStack: NSObject, ContextProvider {
             self.configureSyncContext(self.syncContext)
             self.configureSearchContext(self.searchContext)
 
-            #if DEBUG
-            MemoryReferenceDebugger.register(self.viewContext)
-            MemoryReferenceDebugger.register(self.syncContext)
-            MemoryReferenceDebugger.register(self.searchContext)
-            #endif
-
             completionHandler(nil)
         }
     }
@@ -313,6 +307,7 @@ public class CoreDataStack: NSObject, ContextProvider {
             context.undoManager = nil
             context.mergePolicy = NSMergePolicy(merge: .mergeByPropertyObjectTrumpMergePolicyType)
 
+            FeatureService(context: context).createDefaultConfigsIfNeeded()
         }
 
         // this will be done async, not to block the UI thread, but

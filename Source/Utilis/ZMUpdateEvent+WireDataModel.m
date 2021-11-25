@@ -22,6 +22,7 @@
 #import "ZMConversation+Internal.h"
 #import "ZMMessage+Internal.h"
 #import "ZMUser+Internal.h"
+#import <WireDataModel/WireDataModel-Swift.h>
 
 @implementation ZMUpdateEvent (WireDataModel)
 
@@ -66,27 +67,22 @@
     return nil;
 }
 
+- (NSString *)senderDomain
+{
+    return [[self.payload optionalDictionaryForKey:@"qualified_from"] optionalStringForKey:@"domain"];
+}
+
+- (NSString *)conversationDomain
+{
+    return [[self.payload optionalDictionaryForKey:@"qualified_conversation"] optionalStringForKey:@"domain"];
+}
+
 - (NSString *)recipientClientID
 {
     if (self.type == ZMUpdateEventTypeConversationOtrMessageAdd || self.type == ZMUpdateEventTypeConversationOtrAssetAdd) {
         return [[self.payload optionalDictionaryForKey:@"data"] optionalStringForKey:@"recipient"];
     }
     return nil;
-}
-
-- (NSMutableSet *)usersFromUserIDsInManagedObjectContext:(NSManagedObjectContext *)context createIfNeeded:(BOOL)createIfNeeded;
-{
-    NSMutableSet *users = [NSMutableSet set];
-    for (NSString *uuidString in [[self.payload optionalDictionaryForKey:@"data"] optionalArrayForKey:@"user_ids"] ) {
-        VerifyAction([uuidString isKindOfClass:[NSString class]], return [NSMutableSet set]);
-        NSUUID *uuid = uuidString.UUID;
-        VerifyAction(uuid != nil, return [NSMutableSet set]);
-        ZMUser *user = [ZMUser userWithRemoteID:uuid createIfNeeded:createIfNeeded inContext:context];
-        if (user != nil) {
-            [users addObject:user];
-        }
-    }
-    return users;
 }
 
 @end

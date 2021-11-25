@@ -326,6 +326,30 @@ class ZMConversationMessagesTests: ZMConversationTestsBase {
         XCTAssertFalse(fileMessage.fileMessageData!.isVideo)
         XCTAssertFalse(fileMessage.fileMessageData!.isAudio)
     }
+
+    func testThatWeCanNotInsertAFileMessage_WhenFileSharingIsDisabled()
+    {
+        // given
+        let documents = NSSearchPathForDirectoriesInDomains(.documentDirectory, .userDomainMask, true).first!
+        let fileURL = URL(fileURLWithPath: documents).appendingPathComponent("secret_file.txt")
+        let data = Data.randomEncryptionKey()
+        try! data.write(to: fileURL)
+        let conversation = ZMConversation.insertNewObject(in: self.uiMOC)
+        conversation.remoteIdentifier = UUID()
+
+
+        // when
+        let fileSharingFeature = Feature.fetch(name: .fileSharing, context: uiMOC)
+        fileSharingFeature?.status = .disabled
+        let fileMetaData = ZMFileMetadata(fileURL: fileURL)
+
+        do {
+            let _ = try conversation.appendFile(with: fileMetaData) as! ZMAssetClientMessage
+        } catch let error as NSError {
+            // then
+            XCTAssertEqual(error as! ZMConversation.AppendMessageError, .fileSharingIsRestricted)
+        }
+     }
     
     func testThatWeCanInsertATextMessageWithImageQuote() {
         // given
@@ -427,7 +451,7 @@ class ZMConversationMessagesTests: ZMConversationTestsBase {
         let locationData = self.locationData()
 
         let conversation = ZMConversation.insertNewObject(in: uiMOC)
-        conversation.messageDestructionTimeout = .local(.fiveMinutes)
+        conversation.setMessageDestructionTimeoutValue(.fiveMinutes, for: .selfUser)
         conversation.remoteIdentifier = UUID()
         // when
         let message = try conversation.appendLocation(with: locationData) as! ZMClientMessage

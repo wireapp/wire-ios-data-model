@@ -32,6 +32,9 @@ public class Feature: ZMManagedObject {
 
     public enum Name: String, Codable, CaseIterable {
         case appLock
+        case conferenceCalling
+        case fileSharing
+        case selfDeletingMessages
     }
 
     public enum Status: String, Codable {
@@ -45,15 +48,17 @@ public class Feature: ZMManagedObject {
     @NSManaged private var statusValue: String
     @NSManaged private var configData: Data?
     @NSManaged public var needsToNotifyUser: Bool
-
-    @NSManaged public var team: Team?
+    @NSManaged var hasInitialDefault: Bool
     
     public var config: Data? {
         get {
             return configData
         }
+
         set {
-            updateNeedsToNotifyUser(oldData: configData, newData: newValue)
+            if hasBeenUpdatedFromBackend {
+                updateNeedsToNotifyUser(oldData: configData, newData: newValue)
+            }
             configData = newValue
         }
     }
@@ -80,9 +85,18 @@ public class Feature: ZMManagedObject {
 
             return status
         }
+
         set {
+            if hasBeenUpdatedFromBackend {
+                updateNeedsToNotifyUser(oldStatus: status, newStatus: newValue)
+            }
             statusValue = newValue.rawValue
         }
+    }
+
+    /// Whether the feature has been updated from backend
+    private var hasBeenUpdatedFromBackend: Bool {
+        return !statusValue.isEmpty && !hasInitialDefault
     }
 
     // MARK: - Methods
@@ -125,76 +139,78 @@ public class Feature: ZMManagedObject {
     ///     - context: The context in which to fetch the instance.
     ///     - changes: A closure to mutate the fetched instance.
 
-    public static func update(havingName name: Name,
-                              in context: NSManagedObjectContext,
-                              changes: (Feature) -> Void) {
+    public static func updateOrCreate(havingName name: Name,
+                                      in context: NSManagedObjectContext,
+                                      changes: @escaping (Feature) -> Void) {
 
-        guard let existing = fetch(name: name, context: context) else { return }
-        changes(existing)
-    }
-    
-    /// Creates the default instance for the given feature name, if none already exists.
-    ///
-    /// The **context is expected to be the sync context**, otherwise the method will
-    /// crash.
-    ///
-    /// - Parameters:
-    ///     - name: The name of the feature to create.
-    ///     - team: The team which the feature is associated to.
-    ///     - context: The context in which to create the instance.
+        // There should be at most one instance per feature, so only allow modifications
+        // on a single context to avoid race conditions.
+        assert(context.zm_isSyncContext, "Modifications of `Feature` can only occur on the sync context")
 
-    public static func createDefaultInstanceIfNeeded(name: Name,
-                                                     team: Team,
-                                                     context: NSManagedObjectContext) {
-
-        guard fetch(name: name, context: context) == nil else { return }
-
-        switch name {
-        case .appLock:
-            let defaultInstance = Feature.AppLock()
-
-            guard let defaultConfigData = try? JSONEncoder().encode(defaultInstance.config) else {
-                fatalError("Failed to encode default config for: \(name)")
+        context.performGroupedAndWait { context in
+            if let existing = fetch(name: name, context: context) {
+                changes(existing)
+                existing.hasInitialDefault = false
+            } else {
+                let feature = Feature.insertNewObject(in: context)
+                feature.name = name
+                changes(feature)
+                feature.hasInitialDefault = true
             }
 
-            insert(name: name,
-                   status: defaultInstance.status,
-                   config: defaultConfigData,
-                   team: team,
-                   context: context)
+            context.saveOrRollback()
         }
     }
 
-    private static func insert(name: Name,
-                               status: Status,
-                               config: Data?,
-                               team: Team,
-                               context: NSManagedObjectContext) {
+    private func updateNeedsToNotifyUser(oldStatus: Status, newStatus: Status) {
+        let hasStatusChanged = oldStatus != newStatus
 
-        // There should be at most one instance per feature, so only allow inserting
-        // on a single context to avoid race conditions.
-        assert(context.zm_isSyncContext, "Can only insert `Feature` instance on the sync context")
+        switch name {
+        case .conferenceCalling:
+            needsToNotifyUser = hasStatusChanged && newStatus == .enabled
 
-        let feature = Feature.insertNewObject(in: context)
-        feature.name = name
-        feature.status = status
-        feature.config = config
-        feature.team = team
+        case .fileSharing, .selfDeletingMessages:
+            needsToNotifyUser = hasStatusChanged
+
+        default:
+            break
+        }
     }
 
-    public func updateNeedsToNotifyUser(oldData: Data?, newData: Data?) {
+    private func updateNeedsToNotifyUser(oldData: Data?, newData: Data?) {
         switch name {
         case .appLock:
-            guard !needsToNotifyUser else { return }
-            
             let decoder = JSONDecoder()
-            guard let oldValue = oldData,
+
+            guard
+                !needsToNotifyUser,
+                let oldValue = oldData,
                 let newValue = newData,
                 let oldConfig = try? decoder.decode(Feature.AppLock.Config.self, from: oldValue),
-                let newConfig = try? decoder.decode(Feature.AppLock.Config.self, from: newValue) else {
-                    return
+                let newConfig = try? decoder.decode(Feature.AppLock.Config.self, from: newValue)
+            else {
+                return
             }
+
             needsToNotifyUser = oldConfig.enforceAppLock != newConfig.enforceAppLock
+
+        case .conferenceCalling, .fileSharing:
+            return
+
+        case .selfDeletingMessages:
+            let decoder = JSONDecoder()
+
+            guard
+                !needsToNotifyUser,
+                let oldValue = oldData,
+                let newValue = newData,
+                let oldConfig = try? decoder.decode(Feature.SelfDeletingMessages.Config.self, from: oldValue),
+                let newConfig = try? decoder.decode(Feature.SelfDeletingMessages.Config.self, from: newValue)
+            else {
+                return
+            }
+
+            needsToNotifyUser = oldConfig.enforcedTimeoutSeconds != newConfig.enforcedTimeoutSeconds
         }
     }
 }

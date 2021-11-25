@@ -157,22 +157,6 @@ NSString * const ZMMessageDecryptionErrorCodeKey = @"decryptionErrorCode";
     return message;
 }
 
-+ (BOOL)isDataAnimatedGIF:(NSData *)data
-{
-    if(data.length == 0) {
-        return NO;
-    }
-    BOOL isAnimated = NO;
-    CGImageSourceRef source = CGImageSourceCreateWithData((__bridge CFDataRef) data, NULL);
-    VerifyReturnValue(source != NULL, NO);
-    NSString *type = CFBridgingRelease(CGImageSourceGetType(source));
-    if(UTTypeConformsTo((__bridge CFStringRef) type, kUTTypeGIF)) {
-        isAnimated = CGImageSourceGetCount(source) > 1;
-    }
-    CFRelease(source);
-    return isAnimated;
-}
-
 - (BOOL)isUnreadMessage
 {
     NSDate *lastReadTimeStamp = self.conversation.lastReadServerTimeStamp;
@@ -308,13 +292,9 @@ NSString * const ZMMessageDecryptionErrorCodeKey = @"decryptionErrorCode";
 }
 
 - (void)updateWithUpdateEvent:(ZMUpdateEvent *)event forConversation:(ZMConversation *)conversation
-{
-    if (self.managedObjectContext != conversation.managedObjectContext) {
-        conversation = [ZMConversation conversationWithRemoteID:conversation.remoteIdentifier createIfNeeded:NO inContext:self.managedObjectContext];
-    }
-    
+{    
     self.visibleInConversation = conversation;
-    ZMUser *sender = [ZMUser userWithRemoteID:event.senderUUID createIfNeeded:YES inContext:self.managedObjectContext];
+    ZMUser *sender = [ZMUser fetchOrCreateWith:event.senderUUID domain:event.senderDomain in:self.managedObjectContext];
     if (sender != nil && !sender.isZombieObject && self.managedObjectContext == sender.managedObjectContext) {
         self.sender = sender;
     } else {
@@ -330,12 +310,13 @@ NSString * const ZMMessageDecryptionErrorCodeKey = @"decryptionErrorCode";
     NSUUID *conversationUUID = event.conversationUUID;
     
     VerifyReturnNil(conversationUUID != nil);
-    
-    if (nil != prefetchResult.conversationsByRemoteIdentifier[conversationUUID]) {
-        return prefetchResult.conversationsByRemoteIdentifier[conversationUUID];
+
+    ZMConversation *conversation = prefetchResult.conversationsByRemoteIdentifier[conversationUUID];
+    if (nil != conversation && (conversation.domain == nil || conversation.domain == event.conversationDomain)) {
+        return conversation;
     }
-    
-    return [ZMConversation conversationWithRemoteID:conversationUUID createIfNeeded:YES inContext:moc];
+
+    return [ZMConversation fetchOrCreateWith:conversationUUID domain:event.conversationDomain in:moc];
 }
 
 - (void)removeMessageClearingSender:(BOOL)clearingSender
@@ -821,13 +802,8 @@ NSString * const ZMMessageDecryptionErrorCodeKey = @"decryptionErrorCode";
     
     NSString *messageText = [[[updateEvent.payload dictionaryForKey:@"data"] optionalStringForKey:@"message"] stringByRemovingExtremeCombiningCharacters];
     NSString *name = [[[updateEvent.payload dictionaryForKey:@"data"] optionalStringForKey:@"name"] stringByRemovingExtremeCombiningCharacters];
-    
-    NSMutableSet *usersSet = [NSMutableSet set];
-    for(NSString *userId in [[updateEvent.payload dictionaryForKey:@"data"] optionalArrayForKey:@"user_ids"]) {
-        ZMUser *user = [ZMUser userWithRemoteID:[NSUUID uuidWithTransportString:userId] createIfNeeded:YES inContext:moc];
-        [usersSet addObject:user];
-    }
-    
+
+    NSMutableSet *usersSet = [NSMutableSet setWithArray:[self usersFromUpdateEvent:updateEvent context:moc]];
     ZMSystemMessage *message = [[ZMSystemMessage alloc] initWithNonce:NSUUID.UUID managedObjectContext:moc];
     message.systemMessageType = type;
     message.visibleInConversation = conversation;

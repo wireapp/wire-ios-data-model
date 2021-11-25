@@ -407,7 +407,7 @@ class ConversationListObserverTests: NotificationDispatcherTestBase {
         XCTAssertEqual(pendingList.count, 0)
         XCTAssertEqual(normalList.count, 1)
         
-        XCTAssertEqual(pendingObserver.changes.count, 2)
+        XCTAssertEqual(pendingObserver.changes.count, 1)
         XCTAssertEqual(normalObserver.changes.count, 1)
         if let pendingNote = pendingObserver.changes.last {
             XCTAssertEqual(pendingNote.insertedIndexes, IndexSet())
@@ -973,7 +973,7 @@ class ConversationListObserverTests: NotificationDispatcherTestBase {
 
         // when
         syncMOC.performGroupedBlockAndWait {
-            let team = Team.fetch(withRemoteIdentifier: teamId, in: self.syncMOC)
+            let team = Team.fetch(with: teamId, in: self.syncMOC)
             let conversation = ZMConversation.insertNewObject(in:self.syncMOC)
             conversation.conversationType = .group
             conversation.team = team
