@@ -1076,5 +1076,4 @@ extension UserClientTests {
             }
         }
     }
-    
 }
