@@ -18,7 +18,7 @@
 
 import Foundation
 
-@objc
+@objc(ZMEditableUser)
 public protocol ZMEditableUser: NSObjectProtocol {
     var name: String? { get set }
     var accentColorValue: ZMAccentColor { get set }

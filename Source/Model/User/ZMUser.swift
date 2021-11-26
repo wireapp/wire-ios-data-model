@@ -27,6 +27,7 @@ public enum ZMBlockState: Int {
 }
 
 @objcMembers
+@objc(ZMUser)
 public final class ZMUser: ZMManagedObject {
     @NSManaged private(set) var normalizedName: String?
     

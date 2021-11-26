@@ -19,6 +19,7 @@
 import Foundation
 
 @objcMembers
+@objc(ZMSession)
 final class ZMSession: ZMManagedObject {
     @NSManaged var selfUser: ZMUser
     
