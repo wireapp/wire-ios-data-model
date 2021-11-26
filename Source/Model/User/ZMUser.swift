@@ -123,8 +123,6 @@ public final class ZMUser: ZMManagedObject {
     @NSManaged public var needsRichProfileUpdate: Bool
     
     @NSManaged public var accentColorValue: ZMAccentColor
-    
-    
 }
 
 public extension ZMUserKeys {
@@ -267,7 +265,6 @@ extension ZMUser {
         
         return result
     }
-    
     
     public var managedByWire: Bool {
         managedBy == nil || managedBy == "wire"
@@ -890,7 +887,7 @@ extension ZMUser: UserType {
     }
 
     @objc class func keyPathsForValuesAffectingIsUnderLegalHold() -> Set<String> {
-        return [UserClientsKey, "clients.deviceClass"]
+        return [ZMUserKeys.userClientsKey, "clients.deviceClass"]
     }
     
     public var allClients: [UserClientType] {
