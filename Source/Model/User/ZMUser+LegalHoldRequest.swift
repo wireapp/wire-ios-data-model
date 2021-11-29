@@ -144,18 +144,13 @@ public struct LegalHoldRequest: Codable, Hashable {
 
 }
 
-extension ZMUserKeys {
-    /// The key path to access the current legal hold request.
-    static let legalHoldRequest = "legalHoldRequest"
-}
-
 extension ZMUser: SelfLegalHoldSubject {
 
     // MARK: - Legal Hold Status
 
     /// The keys that affect the legal hold status for the user.
     static func keysAffectingLegalHoldStatus() -> Set<String> {
-        return [#keyPath(ZMUser.clients), ZMUserKeys.legalHoldRequest]
+        return [#keyPath(ZMUser.clients), ZMUserKeys.legalHoldRequestKey]
     }
 
     /// The current legal hold status for the user.
@@ -175,15 +170,15 @@ extension ZMUser: SelfLegalHoldSubject {
 
     var legalHoldRequest: LegalHoldRequest? {
         get {
-            willAccessValue(forKey: ZMUserKeys.legalHoldRequest)
+            willAccessValue(forKey: ZMUserKeys.legalHoldRequestKey)
             let value = primitiveLegalHoldRequest.flatMap(LegalHoldRequest.decode)
-            didAccessValue(forKey: ZMUserKeys.legalHoldRequest)
+            didAccessValue(forKey: ZMUserKeys.legalHoldRequestKey)
             return value
         }
         set {
-            willChangeValue(forKey: ZMUserKeys.legalHoldRequest)
+            willChangeValue(forKey: ZMUserKeys.legalHoldRequestKey)
             primitiveLegalHoldRequest = newValue.flatMap { $0.encode() }
-            didChangeValue(forKey: ZMUserKeys.legalHoldRequest)
+            didChangeValue(forKey: ZMUserKeys.legalHoldRequestKey)
         }
     }
     

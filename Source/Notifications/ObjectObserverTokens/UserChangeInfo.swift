@@ -47,11 +47,11 @@ extension ZMUser : ObjectInSnapshot {
             #keyPath(ZMUser.availability),
             #keyPath(ZMUser.readReceiptsEnabled),
             #keyPath(ZMUser.readReceiptsEnabledChangedRemotely),
-            ZMUserKeys.RichProfile,
+            #keyPath(ZMUser.richProfile),
             #keyPath(ZMUser.isServiceUser),
             #keyPath(ZMUser.serviceIdentifier),
             #keyPath(ZMUser.providerIdentifier),
-            ZMUserKeys.legalHoldRequest,
+            ZMUserKeys.legalHoldRequestKey,
             #keyPath(ZMUser.isUnderLegalHold),
             #keyPath(ZMUser.analyticsIdentifier)
         ]
@@ -146,7 +146,7 @@ extension ZMUser : ObjectInSnapshot {
     }
     
     public var richProfileChanged : Bool {
-        return changedKeys.contains(ZMUserKeys.RichProfile)
+        return changedKeys.contains(#keyPath(ZMUser.richProfile))
     }
 
     public var legalHoldStatusChanged: Bool {

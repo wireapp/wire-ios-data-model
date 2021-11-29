@@ -18,10 +18,6 @@
 
 import Foundation
 
-@objc public class ZMUserKeys: NSObject {
-    public static let RichProfile = "richProfile"
-}
-
 @objc public class UserRichProfileField: NSObject, Codable {
     public var type: String
     public var value: String
@@ -41,28 +37,24 @@ import Foundation
 }
 
 extension ZMUser {
-    private enum Keys {
-        static let RichProfile = "richProfile"
-    }
-    
     @NSManaged private var primitiveRichProfile: Data?
     public var richProfile: [UserRichProfileField] {
         get {
-            self.willAccessValue(forKey: ZMUserKeys.RichProfile)
+            self.willAccessValue(forKey: #keyPath(ZMUser.richProfile))
             let fields: [UserRichProfileField]
             if let data = primitiveRichProfile {
                 fields = (try? JSONDecoder().decode([UserRichProfileField].self, from:data)) ?? []
             } else {
                 fields = []
             }
-            self.didAccessValue(forKey: ZMUserKeys.RichProfile)
+            self.didAccessValue(forKey: #keyPath(ZMUser.richProfile))
             return fields
         }
         set {
             if newValue != richProfile {
-                self.willChangeValue(forKey: ZMUserKeys.RichProfile)
+                self.willChangeValue(forKey: #keyPath(ZMUser.richProfile))
                 primitiveRichProfile = try? JSONEncoder().encode(newValue)
-                self.didChangeValue(forKey: ZMUserKeys.RichProfile)
+                self.didChangeValue(forKey: #keyPath(ZMUser.richProfile))
             }
         }
     }

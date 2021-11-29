@@ -43,17 +43,21 @@ public final class ZMUser: ZMManagedObject {
     
     public var handle: String? {
         get {
-            willAccessValue(forKey: ZMUserKeys.handleKey)
-            let value = primitiveValue(forKey: ZMUserKeys.handleKey) as? String
-            didAccessValue(forKey: ZMUserKeys.handleKey)
+            let key = #keyPath(ZMUser.handle)
+            
+            willAccessValue(forKey: key)
+            let value = primitiveValue(forKey: key) as? String
+            didAccessValue(forKey: key)
             
             return value
         }
         
         set {
-            willChangeValue(forKey: ZMUserKeys.handleKey)
-            setPrimitiveValue(newValue, forKey: ZMUserKeys.handleKey)
-            didChangeValue(forKey: ZMUserKeys.handleKey)
+            let key = #keyPath(ZMUser.handle)
+            
+            willChangeValue(forKey: key)
+            setPrimitiveValue(newValue, forKey: key)
+            didChangeValue(forKey: key)
         }
     }
     
@@ -71,19 +75,22 @@ public final class ZMUser: ZMManagedObject {
     
     public var name: String? {
         get {
-            willAccessValue(forKey: ZMUserKeys.nameKey)
-            let value = primitiveValue(forKey: ZMUserKeys.nameKey) as? String
-            didAccessValue(forKey: ZMUserKeys.nameKey)
+            let key = #keyPath(ZMUser.name)
+            
+            willAccessValue(forKey: key)
+            let value = primitiveValue(forKey: key) as? String
+            didAccessValue(forKey: key)
             
             return value
         }
         
         set {
+            let key = #keyPath(ZMUser.name)
             let newName = newValue?.removingExtremeCombiningCharacters
             
-            willChangeValue(forKey: ZMUserKeys.nameKey)
-            setPrimitiveValue(newName, forKey: ZMUserKeys.nameKey)
-            didChangeValue(forKey: ZMUserKeys.nameKey)
+            willChangeValue(forKey: key)
+            setPrimitiveValue(newName, forKey: key)
+            didChangeValue(forKey: key)
             
             guard let normalizingName = newName else {
                 self.normalizedName = nil
@@ -96,17 +103,21 @@ public final class ZMUser: ZMManagedObject {
     
     public var emailAddress: String? {
         get {
-            willAccessValue(forKey: ZMUserKeys.emailAddressKey)
-            let value = primitiveValue(forKey: ZMUserKeys.emailAddressKey) as? String
-            didAccessValue(forKey: ZMUserKeys.emailAddressKey)
+            let key = #keyPath(ZMUser.emailAddress)
+            
+            willAccessValue(forKey: key)
+            let value = primitiveValue(forKey: key) as? String
+            didAccessValue(forKey: key)
             
             return value
         }
         
         set {
-            willChangeValue(forKey: ZMUserKeys.emailAddressKey)
-            setPrimitiveValue(newValue, forKey: ZMUserKeys.emailAddressKey)
-            didChangeValue(forKey: ZMUserKeys.emailAddressKey)
+            let key = #keyPath(ZMUser.emailAddress)
+            
+            willChangeValue(forKey: key)
+            setPrimitiveValue(newValue, forKey: key)
+            didChangeValue(forKey: key)
             
             guard let normalizingEmailAddress = newValue else {
                 self.normalizedEmailAddress = nil
@@ -126,7 +137,7 @@ public final class ZMUser: ZMManagedObject {
     @NSManaged public var accentColorValue: ZMAccentColor
 }
 
-public extension ZMUserKeys {
+@objc public class ZMUserKeys: NSObject {
     static let sessionObjectIDKey = "ZMSessionManagedObjectID"
     @objc static let ZMPersistedClientIdKey = "PersistedClientId"
     
@@ -195,7 +206,7 @@ extension ZMUser {
     }
     
     public override class func sortKey() -> String? {
-        ZMUserKeys.normalizedNameKey
+        #keyPath(ZMUser.normalizedName)
     }
     
     public var isServiceUser: Bool {
@@ -340,40 +351,40 @@ extension ZMUser {
     public override var ignoredKeys: Set<AnyHashable>? {
         return (super.ignoredKeys ?? Set())
             .union([
-                ZMUserKeys.analyticsIdentifierKey,
-                ZMUserKeys.normalizedNameKey,
-                ZMUserKeys.conversationsCreatedKey,
                 ZMUserKeys.activeCallConversationsKey,
-                ZMUserKeys.connectionKey,
-                ZMUserKeys.conversationsCreatedKey,
-                ZMUserKeys.participantRolesKey,
-                ZMUserKeys.normalizedEmailAddressKey,
-                ZMUserKeys.systemMessagesKey,
-                ZMUserKeys.userClientsKey,
-                ZMUserKeys.showingUserAddedKey,
-                ZMUserKeys.showingUserRemovedKey,
-                ZMUserKeys.reactionsKey,
-                ZMUserKeys.addressBookEntryKey,
-                ZMUserKeys.handleKey,
-                ZMUserKeys.membershipKey,
-                ZMUserKeys.createdTeamsKey,
-                ZMUserKeys.serviceIdentifierKey,
-                ZMUserKeys.providerIdentifierKey,
-                ZMUserKeys.expiresAtKey,
                 ZMUserKeys.teamIdentifierDataKey,
-                ZMUserKeys.usesCompanyLoginKey,
-                ZMUserKeys.needsPropertiesUpdateKey,
-                ZMUserKeys.readReceiptsEnabledChangedRemotelyKey,
-                ZMUserKeys.isAccountDeletedKey,
-                ZMUserKeys.managedByKey,
-                ZMUserKeys.richProfileKey,
-                ZMUserKeys.needsRichProfileUpdateKey,
                 ZMUserKeys.createdTeamMembersKey,
                 ZMUserKeys.legalHoldRequestKey,
-                ZMUserKeys.needsToAcknowledgeLegalHoldStatusKey,
-                ZMUserKeys.needsToRefetchLabelsKey,
-                ZMUserKeys.lastServerSyncedActiveConversations, // OBSOLETE
-                ZMUserKeys.domainKey
+                ZMUserKeys.lastServerSyncedActiveConversations,
+                #keyPath(ZMUser.analyticsIdentifier),
+                #keyPath(ZMUser.normalizedName),
+                #keyPath(ZMUser.conversationsCreated),
+                #keyPath(ZMUser.connection),
+                #keyPath(ZMUser.conversationsCreated),
+                #keyPath(ZMUser.participantRoles),
+                #keyPath(ZMUser.normalizedEmailAddress),
+                #keyPath(ZMUser.systemMessages),
+                #keyPath(ZMUser.clients),
+                #keyPath(ZMUser.showingUserAdded),
+                #keyPath(ZMUser.showingUserRemoved),
+                #keyPath(ZMUser.reactions),
+                #keyPath(ZMUser.addressBookEntry),
+                #keyPath(ZMUser.handle),
+                #keyPath(ZMUser.membership),
+                #keyPath(ZMUser.createdTeams),
+                #keyPath(ZMUser.serviceIdentifier),
+                #keyPath(ZMUser.providerIdentifier),
+                #keyPath(ZMUser.expiresAt),
+                #keyPath(ZMUser.usesCompanyLogin),
+                #keyPath(ZMUser.needsPropertiesUpdate),
+                #keyPath(ZMUser.readReceiptsEnabledChangedRemotely),
+                #keyPath(ZMUser.isAccountDeleted),
+                #keyPath(ZMUser.managedBy),
+                #keyPath(ZMUser.richProfile),
+                #keyPath(ZMUser.needsRichProfileUpdate),
+                #keyPath(ZMUser.needsToAcknowledgeLegalHoldStatus),
+                #keyPath(ZMUser.needsToRefetchLabels),
+                #keyPath(ZMUser.domain),
             ])
     }
     
@@ -382,7 +393,7 @@ extension ZMUser {
         require(emailAddress.count > 0, "emailAddress required")
         
         let request = NSFetchRequest<ZMUser>(entityName: entityName())
-        request.predicate = NSPredicate(format: "%K = %@", argumentArray: [ZMUserKeys.emailAddressKey, emailAddress])
+        request.predicate = NSPredicate(format: "%K = %@", argumentArray: [#keyPath(ZMUser.emailAddress), emailAddress])
         let users = context.fetchOrAssert(request: request)
         
         require(users.count <= 1, "More than one user with the same email address")
@@ -395,7 +406,7 @@ extension ZMUser {
         require(phoneNumber.count > 0, "phoneNumber required")
         
         let request = NSFetchRequest<ZMUser>(entityName: entityName())
-        request.predicate = NSPredicate(format: "%K = %@", argumentArray: [ZMUserKeys.phoneNumberKey, phoneNumber])
+        request.predicate = NSPredicate(format: "%K = %@", argumentArray: [#keyPath(ZMUser.phoneNumber), phoneNumber])
         let users = context.fetchOrAssert(request: request)
         
         require(users.count <= 1, "More than one user with the same phone number")
