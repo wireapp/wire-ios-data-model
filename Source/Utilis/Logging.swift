@@ -18,7 +18,7 @@
 
 import Foundation
 
-public enum Logging {
+enum Logging {
 
     /// For logs related to processing message data, which may included
     /// work related to `GenericMessage` profotobuf data or the `ZMClientMessage`
@@ -26,5 +26,6 @@ public enum Logging {
 
     static let messageProcessing = ZMSLog(tag: "Message Processing")
     static let localStorage = ZMSLog(tag: "local-storage")
+    static let eventProcessing = ZMSLog(tag: "event-processing")
 
 }
