@@ -1,6 +1,6 @@
 //
 // Wire
-// Copyright (C) 2018 Wire Swiss GmbH
+// Copyright (C) 2021 Wire Swiss GmbH
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -18,15 +18,19 @@
 
 public extension WireProtos.Asset.Original {
     var hasRasterImage: Bool {
-        guard case .image? = self.metaData,
-            UTType(mimeType: mimeType)?.isSVG == false else { return false }
-        return true
+        guard case .image? = metaData else {
+            return false
+        }
+        
+        guard let uti = UTIHelper.convertToUti(mime: mimeType) else { return false }
+        
+        return !UTIHelper.conformsToVectorType(uti: uti)
     }
 }
 
 fileprivate extension ImageAsset {
     var isRaster: Bool {
-        return UTType(mimeType: mimeType)?.isSVG == false
+        return !UTIHelper.conformsToVectorType(mime: mimeType)
     }
 }
 

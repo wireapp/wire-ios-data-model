@@ -24,7 +24,7 @@ extension ZMConversation {
 
     /// An error describing why a message couldn't be appended to the conversation.
 
-    public enum AppendMessageError: LocalizedError {
+    public enum AppendMessageError: LocalizedError, Equatable {
 
         case missingManagedObjectContext
         case malformedNonce
@@ -33,6 +33,7 @@ extension ZMConversation {
         case failedToRemoveImageMetadata
         case invalidImageUrl
         case invalidFileUrl
+        case fileSharingIsRestricted
 
         public var errorDescription: String? {
             switch self {
@@ -50,6 +51,8 @@ extension ZMConversation {
                 return "Invalid image url."
             case .invalidFileUrl:
                 return "Invalid file url."
+            case .fileSharingIsRestricted:
+                return "File sharing is restricted."
             }
         }
 
@@ -99,7 +102,7 @@ extension ZMConversation {
             $0.zoom = locationData.zoomLevel
         }
 
-        let message = GenericMessage(content: locationContent, nonce: nonce, expiresAfter: messageDestructionTimeoutValue)
+        let message = GenericMessage(content: locationContent, nonce: nonce, expiresAfter: activeMessageDestructionTimeoutValue)
         return try appendClientMessage(with: message)
     }
 
@@ -117,7 +120,7 @@ extension ZMConversation {
     @discardableResult
     public func appendKnock(nonce: UUID = UUID()) throws -> ZMConversationMessage {
         let content = Knock.with { $0.hotKnock = false }
-        let message = GenericMessage(content: content, nonce: nonce, expiresAfter: messageDestructionTimeoutValue)
+        let message = GenericMessage(content: content, nonce: nonce, expiresAfter: activeMessageDestructionTimeoutValue)
         return try appendClientMessage(with: message)
     }
 
@@ -148,7 +151,7 @@ extension ZMConversation {
         }
 
         let text = Text(content: content, mentions: mentions, linkPreviews: [], replyingTo: quotedMessage as? ZMOTRMessage)
-        let genericMessage = GenericMessage(content: text, nonce: nonce, expiresAfter: messageDestructionTimeoutValue)
+        let genericMessage = GenericMessage(content: text, nonce: nonce, expiresAfter: activeMessageDestructionTimeoutValue)
 
         let clientMessage = try appendClientMessage(with: genericMessage, expires: true, hidden: false, configure: {
             $0.linkPreviewState = fetchLinkPreview ? .waitingToBeProcessed : .done
@@ -213,12 +216,14 @@ extension ZMConversation {
         }
 
         // mimeType is assigned first, to make sure UI can handle animated GIF file correctly.
-        let mimeType = ZMAssetMetaDataEncoder.contentType(forImageData: imageData) ?? ""
+        let mimeType = imageData.mimeType ?? ""
 
         // We update the size again when the the preprocessing is done.
         let imageSize = ZMImagePreprocessor.sizeOfPrerotatedImage(with: imageData)
 
-        let asset = WireProtos.Asset(imageSize: imageSize, mimeType: mimeType, size: UInt64(imageData.count))
+        let asset = WireProtos.Asset(imageSize: imageSize,
+                                     mimeType: mimeType,
+                                     size: UInt64(imageData.count))
 
         return try append(asset: asset, nonce: nonce, expires: true, prepareMessage: { message in
             moc.zm_fileAssetCache.storeAssetData(message, format: .original, encrypted: false, data: imageData)
@@ -272,9 +277,13 @@ extension ZMConversation {
             message = try ZMAssetClientMessage(asset: asset,
                                                nonce: nonce,
                                                managedObjectContext: moc,
-                                               expiresAfter: messageDestructionTimeoutValue)
+                                               expiresAfter: activeMessageDestructionTimeoutValue?.rawValue)
         } catch {
             throw AppendMessageError.failedToProcessMessageData(reason: error.localizedDescription)
+        }
+
+        guard !message.isRestricted else {
+            throw AppendMessageError.fileSharingIsRestricted
         }
 
         message.sender = ZMUser.selfUser(in: moc)

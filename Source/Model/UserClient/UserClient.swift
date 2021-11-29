@@ -24,6 +24,7 @@ import WireUtilities
 
 public let ZMUserClientNumberOfKeysRemainingKey = "numberOfKeysRemaining"
 public let ZMUserClientNeedsToUpdateSignalingKeysKey = "needsToUploadSignalingKeys"
+public let ZMUserClientNeedsToUpdateCapabilitiesKey = "needsToUpdateCapabilities"
 
 public let ZMUserClientMarkedToDeleteKey = "markedToDelete"
 public let ZMUserClientMissingKey = "missingClients"
@@ -83,7 +84,9 @@ public class UserClient: ZMManagedObject, UserClientType {
     @NSManaged public var apsVerificationKey: Data?
     @NSManaged public var apsDecryptionKey: Data?
     @NSManaged public var needsToUploadSignalingKeys: Bool
+    @NSManaged public var needsToUpdateCapabilities: Bool
     @NSManaged public var needsToNotifyOtherUserAboutSessionReset: Bool
+    @NSManaged public var needsSessionMigration: Bool
     @NSManaged public var discoveredByMessage: ZMOTRMessage?
 
     private enum Keys {
@@ -163,7 +166,12 @@ public class UserClient: ZMManagedObject, UserClientType {
     }
 
     public override func keysTrackedForLocalModifications() -> Set<String> {
-        return [ZMUserClientMarkedToDeleteKey, ZMUserClientNumberOfKeysRemainingKey, ZMUserClientMissingKey, ZMUserClientNeedsToUpdateSignalingKeysKey, Keys.PushToken]
+        return [ZMUserClientMarkedToDeleteKey,
+                ZMUserClientNumberOfKeysRemainingKey,
+                ZMUserClientMissingKey,
+                ZMUserClientNeedsToUpdateSignalingKeysKey,
+                ZMUserClientNeedsToUpdateCapabilitiesKey,
+                Keys.PushToken]
     }
     
     public override static func sortKey() -> String {
@@ -226,6 +234,7 @@ public class UserClient: ZMManagedObject, UserClientType {
             newClient.user = user
             newClient.needsToBeUpdatedFromBackend = true
             newClient.discoveryDate = Date()
+            newClient.needsSessionMigration = user.domain == nil
             // Form reverse relationship
             user.mutableSetValue(forKey: "clients").add(newClient)
             return newClient
@@ -398,6 +407,10 @@ public extension UserClient {
         
         let selfUser = ZMUser.selfUser(in: context)
         client.user = client.user ?? selfUser
+
+        if isNewClient {
+            client.needsSessionMigration = selfUser.domain == nil
+        }
 
         if client.isLegalHoldDevice, isNewClient {
             selfUser.legalHoldRequest = nil
@@ -748,3 +761,89 @@ extension UserClient {
 
 }
 
+// MARK: - Update SelfClient Capability
+extension UserClient {
+
+    public static func triggerSelfClientCapabilityUpdate(_ context: NSManagedObjectContext) {
+        guard let selfClient = ZMUser.selfUser(in: context).selfClient() else { return }
+
+        selfClient.needsToUpdateCapabilities = true
+        selfClient.setLocallyModifiedKeys(Set(arrayLiteral: ZMUserClientNeedsToUpdateCapabilitiesKey))
+
+        context.enqueueDelayedSave()
+    }
+
+}
+
+// MARK: - Session identifier
+
+extension UserClient {
+    
+    /// Session identifier of the local cryptobox session with this client.
+
+    public var sessionIdentifier: EncryptionSessionIdentifier? {
+        if needsSessionMigration {
+            return sessionIdentifier_V2
+        } else {
+            return sessionIdentifier_V3
+        }
+    }
+    
+    /// Previous session identifiers.
+
+    private var sessionIdentifier_V1: String? {
+        return self.remoteIdentifier
+    }
+
+    private var sessionIdentifier_V2: EncryptionSessionIdentifier? {
+        guard
+            let userIdentifier = self.user?.remoteIdentifier,
+            let clientIdentifier = self.remoteIdentifier
+        else {
+            return nil
+        }
+
+        return EncryptionSessionIdentifier(userId: userIdentifier.uuidString,
+                                           clientId: clientIdentifier)
+    }
+
+    private var sessionIdentifier_V3: EncryptionSessionIdentifier? {
+        guard
+            let domain = self.user?.domain,
+            let userIdentifier = self.user?.remoteIdentifier,
+            let clientIdentifier = self.remoteIdentifier
+        else {
+            return nil
+        }
+
+        return EncryptionSessionIdentifier(domain: domain,
+                                           userId: userIdentifier.uuidString,
+                                           clientId: clientIdentifier)
+    }
+
+    /// Migrates from old session identifier to new session identifier if needed.
+
+    public func migrateSessionIdentifierFromV1IfNeeded(sessionDirectory: EncryptionSessionsDirectory) {
+        guard
+            let sessionIdentifier_V1 = sessionIdentifier_V1,
+            let sessionIdentifier = sessionIdentifier_V2
+        else {
+            return
+        }
+
+        sessionDirectory.migrateSession(from: sessionIdentifier_V1,
+                                        to: sessionIdentifier)
+    }
+
+    public func migrateSessionIdentifierFromV2IfNeeded(sessionDirectory: EncryptionSessionsDirectory) {
+        guard
+            let sessionIdentifier_V2 = sessionIdentifier_V2,
+            let sessionIdentifier = sessionIdentifier_V3
+        else {
+            return
+        }
+
+        sessionDirectory.migrateSession(from: sessionIdentifier_V2.rawValue,
+                                        to: sessionIdentifier)
+    }
+}

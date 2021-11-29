@@ -137,7 +137,7 @@ static NSString *const ImageSmallProfileDataKey = @"imageSmallProfileData";
     user.remoteIdentifier = uuid;
 
     // when
-    ZMUser *found = [ZMUser userWithRemoteID:uuid createIfNeeded:false inContext:self.uiMOC];
+    ZMUser *found = [ZMUser fetchWith:uuid in:self.uiMOC];
 
     // then
     XCTAssertEqualObjects(found.remoteIdentifier, uuid);
@@ -154,7 +154,7 @@ static NSString *const ImageSmallProfileDataKey = @"imageSmallProfileData";
     user.remoteIdentifier = uuid;
 
     // when
-    ZMUser *found = [ZMUser userWithRemoteID:secondUUID createIfNeeded:NO inContext:self.uiMOC];
+    ZMUser *found = [ZMUser fetchWith:secondUUID in:self.uiMOC];
 
     // then
     XCTAssertNil(found);
@@ -167,14 +167,64 @@ static NSString *const ImageSmallProfileDataKey = @"imageSmallProfileData";
 
     [self.syncMOC performBlockAndWait:^{
         // when
-        ZMUser *found = [ZMUser userWithRemoteID:uuid createIfNeeded:YES inContext:self.syncMOC];
+        ZMUser *created = [ZMUser fetchOrCreateWith:uuid domain:nil in:self.syncMOC];
         
         // then
-        XCTAssertNotNil(found);
-        XCTAssertEqualObjects(uuid, found.remoteIdentifier);
+        XCTAssertNotNil(created);
+        XCTAssertEqualObjects(uuid, created.remoteIdentifier);
     }];
 }
 
+- (void)testThatItTreatsEmptyDomainAsNil
+{
+    // given
+    NSUUID *uuid = [NSUUID createUUID];
+
+    [self.syncMOC performBlockAndWait:^{
+        // when
+        ZMUser *created = [ZMUser fetchOrCreateWith:uuid domain:@"" in:self.syncMOC];
+
+        // then
+        XCTAssertNotNil(created);
+        XCTAssertEqualObjects(uuid, created.remoteIdentifier);
+        XCTAssertEqualObjects(nil, created.domain);
+    }];
+}
+
+- (void)testThatItIgnoresDomainWhenFederationIsDisabled
+{
+    // given
+    NSUUID *uuid = [NSUUID createUUID];
+
+    [self.syncMOC performBlockAndWait:^{
+        // when
+        self.syncMOC.zm_isFederationEnabled = NO;
+        ZMUser *created = [ZMUser fetchOrCreateWith:uuid domain:@"a.com" in:self.syncMOC];
+
+        // then
+        XCTAssertNotNil(created);
+        XCTAssertEqualObjects(uuid, created.remoteIdentifier);
+        XCTAssertEqualObjects(nil, created.domain);
+    }];
+}
+
+- (void)testThatItAssignsDomainWhenFederationIsEnabled
+{
+    // given
+    NSUUID *uuid = [NSUUID createUUID];
+    NSString *domain = @"a.com";
+
+    [self.syncMOC performBlockAndWait:^{
+        // when
+        self.syncMOC.zm_isFederationEnabled = YES;
+        ZMUser *created = [ZMUser fetchOrCreateWith:uuid domain:domain in:self.syncMOC];
+
+        // then
+        XCTAssertNotNil(created);
+        XCTAssertEqualObjects(uuid, created.remoteIdentifier);
+        XCTAssertEqualObjects(domain, created.domain);
+    }];
+}
 
 - (void)testThatItReturnsAnExistingUserByPhone
 {
@@ -1303,8 +1353,6 @@ static NSString *const ImageSmallProfileDataKey = @"imageSmallProfileData";
 @end
 
 
-
-
 @implementation ZMUserTests (Connections)
 
 - (void)testThatIsConnectedIsTrueWhenThereIsAnAcceptedConnection
@@ -1339,7 +1387,7 @@ static NSString *const ImageSmallProfileDataKey = @"imageSmallProfileData";
     XCTAssertFalse(user.isConnected);
     XCTAssertFalse(user.isBlocked);
     XCTAssertFalse(user.isPendingApprovalByOtherUser);
-    XCTAssertTrue(user.isPendingApprovalBySelfUser);
+    XCTAssertFalse(user.isPendingApprovalBySelfUser);
     XCTAssertTrue(user.canBeConnected);
 }
 
@@ -1362,6 +1410,25 @@ static NSString *const ImageSmallProfileDataKey = @"imageSmallProfileData";
     XCTAssertTrue(user.canBeConnected);
 }
 
+//
+- (void)testBlockStateReasonValue_WhenAConnectionStatusIsMissingLegalholdConsent
+{
+    // given
+    ZMUser *user = [ZMUser insertNewObjectInManagedObjectContext:self.uiMOC];
+    ZMConnection *connection = [ZMConnection insertNewObjectInManagedObjectContext:self.uiMOC];
+    connection.status = ZMConnectionStatusBlockedMissingLegalholdConsent;
+    connection.to = user;
+
+    // then
+    XCTAssertEqual(user.blockState, ZMBlockStateBlockedMissingLegalholdConsent);
+    XCTAssertTrue(user.isBlocked);
+
+    XCTAssertFalse(user.isConnected);
+    XCTAssertFalse(user.isIgnored);
+    XCTAssertFalse(user.isPendingApprovalByOtherUser);
+    XCTAssertFalse(user.isPendingApprovalBySelfUser);
+    XCTAssertTrue(user.canBeConnected);
+}
 
 - (void)testThatIsPendingBySelfUserIsTrueWhenThereIsAPendingConnection
 {
@@ -1459,374 +1526,7 @@ static NSString *const ImageSmallProfileDataKey = @"imageSmallProfileData";
     XCTAssertEqual(oneToOne, connectedUser.oneToOneConversation);
 }
 
-
-- (void)testThatBlockingAUserSetsTheConnectionStatusToBlocked
-{
-    // given
-    ZMUser *user = [ZMUser insertNewObjectInManagedObjectContext:self.uiMOC];
-    ZMConnection *connection = [ZMConnection insertNewObjectInManagedObjectContext:self.uiMOC];
-    connection.status = ZMConnectionStatusAccepted;
-    connection.to = user;
-    [self.uiMOC saveOrRollback];
-    
-    // when
-    [user block];
-    
-    // then
-    XCTAssertTrue(self.uiMOC.hasChanges);
-    XCTAssertEqual(connection.status, ZMConnectionStatusBlocked);
-}
-
-- (void)testThatBlockingABlockedUserDoesNotChangeAnything
-{
-    // given
-    ZMUser *user = [ZMUser insertNewObjectInManagedObjectContext:self.uiMOC];
-    ZMConnection *connection = [ZMConnection insertNewObjectInManagedObjectContext:self.uiMOC];
-    connection.status = ZMConnectionStatusBlocked;
-    connection.to = user;
-    [self.uiMOC saveOrRollback];
-    
-    // when
-    [user block];
-    
-    // then
-    XCTAssertFalse(self.uiMOC.hasChanges);
-    XCTAssertEqual(connection.status, ZMConnectionStatusBlocked);
-}
-
-
-- (void)testThatBlockingAnInvalidConnectionDoesNotChangeAnything
-{
-    // given
-    ZMUser *user = [ZMUser insertNewObjectInManagedObjectContext:self.uiMOC];
-    ZMConnection *connection = [ZMConnection insertNewObjectInManagedObjectContext:self.uiMOC];
-    connection.status = ZMConnectionStatusInvalid;
-    connection.to = user;
-    [self.uiMOC saveOrRollback];
-    
-    // when
-    [user block];
-    
-    // then
-    XCTAssertFalse(self.uiMOC.hasChanges);
-    XCTAssertEqual(connection.status, ZMConnectionStatusInvalid);
-}
-
-
-- (void)testThatBlockingASentConnectionSetsTheConnectionStatusToBlocked
-{
-    // given
-    ZMUser *user = [ZMUser insertNewObjectInManagedObjectContext:self.uiMOC];
-    ZMConnection *connection = [ZMConnection insertNewObjectInManagedObjectContext:self.uiMOC];
-    connection.status = ZMConnectionStatusSent;
-    connection.to = user;
-    [self.uiMOC saveOrRollback];
-    
-    // when
-    [user block];
-    
-    // then
-    XCTAssertTrue(self.uiMOC.hasChanges);
-    XCTAssertEqual(connection.status, ZMConnectionStatusBlocked);
-}
-
-
-- (void)testThatBlockingAnIgnoredUserSetsTheConnectionStatusToBlocked
-{
-    // given
-    ZMUser *user = [ZMUser insertNewObjectInManagedObjectContext:self.uiMOC];
-    ZMConnection *connection = [ZMConnection insertNewObjectInManagedObjectContext:self.uiMOC];
-    connection.status = ZMConnectionStatusIgnored;
-    connection.to = user;
-    [self.uiMOC saveOrRollback];
-    
-    // when
-    [user block];
-    
-    // then
-    XCTAssertTrue(self.uiMOC.hasChanges);
-    XCTAssertEqual(connection.status, ZMConnectionStatusBlocked);
-}
-
-
-- (void)testThatBlockingAPendingConnectionSetsTheConnectionStatusToBlocked
-{
-    // given
-    ZMUser *user = [ZMUser insertNewObjectInManagedObjectContext:self.uiMOC];
-    ZMConnection *connection = [ZMConnection insertNewObjectInManagedObjectContext:self.uiMOC];
-    connection.status = ZMConnectionStatusPending;
-    connection.to = user;
-    [self.uiMOC saveOrRollback];
-    
-    // when
-    [user block];
-    
-    // then
-    XCTAssertTrue(self.uiMOC.hasChanges);
-    XCTAssertEqual(connection.status, ZMConnectionStatusBlocked);
-}
-
-
-
-- (void)testThatConnectingToAnAlreadyConnectedUserDoesNotCreateAnyChanges;
-{
-    // given
-    NSUUID *uuid = [NSUUID createUUID];
-    ZMUser *user = [ZMUser insertNewObjectInManagedObjectContext:self.uiMOC];
-    user.remoteIdentifier = uuid;
-    ZMConnection *connection = [ZMConnection insertNewObjectInManagedObjectContext:self.uiMOC];
-    connection.status = ZMConnectionStatusAccepted;
-    connection.to = user;
-    [self.uiMOC saveOrRollback];
-    
-    // when
-    [user connectWithMessage:@"Foo, bar, baz!"];
-    
-    // then
-    XCTAssertFalse(self.uiMOC.hasChanges);
-    XCTAssertEqual(connection.status, ZMConnectionStatusAccepted);
-}
-
-- (void)testThatConnectingToAUserThatHasNotAcceptedYetDoesNotCreateAnyChanges;
-{
-    // given
-    NSUUID *uuid = [NSUUID createUUID];
-    ZMUser *user = [ZMUser insertNewObjectInManagedObjectContext:self.uiMOC];
-    user.remoteIdentifier = uuid;
-    ZMConnection *connection = [ZMConnection insertNewObjectInManagedObjectContext:self.uiMOC];
-    connection.status = ZMConnectionStatusSent;
-    connection.to = user;
-    [self.uiMOC saveOrRollback];
-    
-    // when
-    [user connectWithMessage:@"Foo, bar, baz!"];
-    
-    // then
-    XCTAssertFalse(self.uiMOC.hasChanges);
-    XCTAssertEqual(connection.status, ZMConnectionStatusSent);
-}
-
-- (void)testThatConnectingToAnIgnoredUserSetsTheConnectionStatusToAccepted;
-{
-    // given
-    NSUUID *uuid = [NSUUID createUUID];
-    ZMUser *user = [ZMUser insertNewObjectInManagedObjectContext:self.uiMOC];
-    user.remoteIdentifier = uuid;
-    ZMConnection *connection = [ZMConnection insertNewObjectInManagedObjectContext:self.uiMOC];
-    connection.status = ZMConnectionStatusIgnored;
-    connection.to = user;
-    connection.message = @"Some old text";
-    [self.uiMOC saveOrRollback];
-    NSString *originalText = [connection.message copy];
-    
-    // when
-    [user connectWithMessage:@"Foo, bar, baz!"];
-    
-    // then
-    XCTAssertEqual(connection.status, ZMConnectionStatusAccepted);
-    XCTAssertEqualObjects(connection.message, originalText, @"This will stay whatever the other user set it to.");
-}
-
-- (void)testThatConnectingToABlockedUserSetsTheConnectionStatusToAccepted;
-{
-    // given
-    NSUUID *uuid = [NSUUID createUUID];
-    ZMUser *user = [ZMUser insertNewObjectInManagedObjectContext:self.uiMOC];
-    user.remoteIdentifier = uuid;
-    ZMConnection *connection = [ZMConnection insertNewObjectInManagedObjectContext:self.uiMOC];
-    connection.status = ZMConnectionStatusBlocked;
-    connection.to = user;
-    connection.message = @"Some old text";
-    [self.uiMOC saveOrRollback];
-    NSString *originalText = [connection.message copy];
-    
-    // when
-    [user connectWithMessage:@"Foo, bar, baz!"];
-    
-    // then
-    XCTAssertEqual(connection.status, ZMConnectionStatusAccepted);
-    XCTAssertEqualObjects(connection.message, originalText, @"This will stay whatever the other user set it to.");
-}
-
-- (void)testThatConnectingToAPendingUserSetsTheConnectionStatusToAcceptedAndConversationTypeToOneToOneAndUpdatesModificationDate
-{
-    // given
-    NSUUID *uuid = [NSUUID createUUID];
-    ZMUser *user = [ZMUser insertNewObjectInManagedObjectContext:self.uiMOC];
-    user.remoteIdentifier = uuid;
-    ZMConnection *connection = [ZMConnection insertNewObjectInManagedObjectContext:self.uiMOC];
-    ZMConversation *conversation = [ZMConversation insertNewObjectInManagedObjectContext:self.uiMOC];
-    connection.status = ZMConnectionStatusPending;
-    connection.to = user;
-    connection.message = @"Some old text";
-    connection.conversation = conversation;
-    conversation.conversationType = ZMConversationTypeConnection;
-    
-    [self.uiMOC saveOrRollback];
-    NSString *originalText = [connection.message copy];
-    
-    // when
-    [user connectWithMessage:@"Foo, bar, baz!"];
-    
-    // then
-    XCTAssertEqual(connection.status, ZMConnectionStatusAccepted);
-    XCTAssertEqualObjects(connection.message, originalText, @"This will stay whatever the other user set it to.");
-    XCTAssertEqual(conversation.conversationType, ZMConversationTypeOneOnOne);
-    XCTAssertEqualWithAccuracy(conversation.lastModifiedDate.timeIntervalSince1970, [NSDate date].timeIntervalSince1970, 0.1);
-}
-
-- (void)testThatConnectingToAUserSetsTheConnectionStatusAsHavingLocalModifications
-{
-    // given
-    NSUUID *uuid = [NSUUID createUUID];
-    ZMUser *user = [ZMUser insertNewObjectInManagedObjectContext:self.uiMOC];
-    user.remoteIdentifier = uuid;
-    ZMConnection *connection = [ZMConnection insertNewObjectInManagedObjectContext:self.uiMOC];
-    connection.status = ZMConnectionStatusPending;
-    connection.to = user;
-    connection.message = @"Some old text";
-    [self.uiMOC saveOrRollback];
-    [connection setValue:[NSSet set] forKey:@"modifiedKeys"]; // Simulate no local changes
-    
-    // when
-    [user connectWithMessage:@"Foo, bar, baz!"];
-    [self.uiMOC saveOrRollback];
-    
-    // then
-    XCTAssertTrue([connection hasLocalModificationsForKey:@"status"]);
-    XCTAssertFalse([connection hasLocalModificationsForKey:@"message"]);
-}
-
-- (void)testThatConnectingToAUserThatIHaveNoConnectionWithCreatesANewConnectionWithConversation
-{
-    // given
-    NSUUID *uuid = [NSUUID createUUID];
-    ZMUser *user = [ZMUser insertNewObjectInManagedObjectContext:self.uiMOC];
-    user.remoteIdentifier = uuid;
-    [self.uiMOC saveOrRollback];
-    XCTAssertEqual([ZMConnection connectionsInMangedObjectContext:self.uiMOC].count, 0u);
-    
-    
-    // when
-    [user connectWithMessage:@"Bla bla bla"];
-    [self.uiMOC saveOrRollback];
-    WaitForAllGroupsToBeEmpty(0.5);
-    
-    // then
-    NSArray *connections = [ZMConnection connectionsInMangedObjectContext:self.uiMOC];
-    XCTAssertEqual(connections.count, 1u);
-    ZMConnection *connection = connections[0];
-    XCTAssertEqual(connection.to, user);
-    XCTAssertEqual(connection.status, ZMConnectionStatusSent);
-    XCTAssertNotNil(connection.conversation);
-}
-
-- (void)testThatConnectingToAUserThatIHavePreviouslyCancelledCreatesNewConnectionWithSameConversation
-{
-    ZMConnection *connection = [self createNewConnection:ZMConnectionStatusCancelled];
-    ZMUser *user = connection.to;
-    ZMConversation *conversation = connection.conversation;
-    
-    // when
-    [connection.to connectWithMessage:@"Bla bla bla"];
-    [self.uiMOC saveOrRollback];
-    WaitForAllGroupsToBeEmpty(0.5);
-    
-    // then
-    NSArray *connections = [ZMConnection connectionsInMangedObjectContext:self.uiMOC];
-    XCTAssertEqual(connections.count, 1u);
-    XCTAssertNotEqual(connections.firstObject, connection);
-    
-    connection = connections.firstObject;
-    XCTAssertEqual(connection.to, user);
-    XCTAssertEqual(connection.conversation, conversation);
-    XCTAssertEqual(connection.status, ZMConnectionStatusSent);
-}
-
-- (ZMConnection *)createNewConnection:(ZMConnectionStatus)status
-{
-    NSUUID *uuid = [NSUUID createUUID];
-    ZMUser *user = [ZMUser insertNewObjectInManagedObjectContext:self.uiMOC];
-    user.remoteIdentifier = uuid;
-    ZMConnection *connection = [ZMConnection insertNewSentConnectionToUser:user];
-    connection.status = status;
-    connection.message = @"Some old text";
-    [self.uiMOC saveOrRollback];
-    [connection setValue:[NSSet set] forKey:@"modifiedKeys"]; // Simulate no local changes
-    return connection;
-}
-
-- (void)testThatCancellingConnectionSetsConnectionStatusToCancelled
-{
-    // given
-    ZMConnection *connection = [self createNewConnection:ZMConnectionStatusSent];
-    // when
-    [connection.to cancelConnectionRequest];
-    [self.uiMOC saveOrRollback];
-    
-    // then
-    XCTAssertTrue([connection hasLocalModificationsForKey:@"status"]);
-    XCTAssertEqual(connection.status, ZMConnectionStatusCancelled);
-}
-
-- (void)testThatItCanNotCancelIncommingConnectionRequest
-{
-    // given
-    ZMConnection *connection = [self createNewConnection:ZMConnectionStatusPending];
-    
-    // when
-    [connection.to cancelConnectionRequest];
-    [self.uiMOC saveOrRollback];
-    
-    // then
-    XCTAssertFalse([connection hasLocalModificationsForKey:@"status"]);
-    XCTAssertEqual(connection.status, ZMConnectionStatusPending);
-}
-
-- (void)testThatItCanNotCancelAcceptedConnectionRequest
-{
-    // given
-    ZMConnection *connection = [self createNewConnection:ZMConnectionStatusAccepted];
-
-    // and when
-    [connection.to cancelConnectionRequest];
-    [self.uiMOC saveOrRollback];
-    
-    // then
-    XCTAssertFalse([connection hasLocalModificationsForKey:@"status"]);
-    XCTAssertEqual(connection.status, ZMConnectionStatusAccepted);
-}
-
-- (void)testThatItCanNotCancelBlockedConnectionRequest
-{
-    // given
-    ZMConnection *connection = [self createNewConnection:ZMConnectionStatusBlocked];
-    
-    // when
-    [connection.to cancelConnectionRequest];
-    [self.uiMOC saveOrRollback];
-    
-    // then
-    XCTAssertFalse([connection hasLocalModificationsForKey:@"status"]);
-    XCTAssertEqual(connection.status, ZMConnectionStatusBlocked);
-}
-
-- (void)testThatItCanNotCancelIgnoredConnectionRequest
-{
-    // given
-    ZMConnection *connection = [self createNewConnection:ZMConnectionStatusIgnored];
-    
-    // when
-    [connection.to cancelConnectionRequest];
-    [self.uiMOC saveOrRollback];
-    
-    // then
-    XCTAssertFalse([connection hasLocalModificationsForKey:@"status"]);
-    XCTAssertEqual(connection.status, ZMConnectionStatusIgnored);
-}
-
 @end
-
 
 
 @implementation ZMUserTests (Validation)
@@ -2384,6 +2084,29 @@ static NSString * const domainValidCharactersLowercased = @"abcdefghijklmnopqrst
     connection.status = ZMConnectionStatusBlocked;
 
     // then
+    XCTAssertTrue(user1.isBlocked);
+    XCTAssert([self waitForCustomExpectationsWithTimeout:0.5]);
+}
+
+- (void)testThatItRecalculatesBlockStateReasonExposureWhenConnectionChanges
+{
+    // given
+    ZMUser *user1 = [ZMUser insertNewObjectInManagedObjectContext:self.uiMOC];
+    ZMConnection *connection = [ZMConnection insertNewObjectInManagedObjectContext:self.uiMOC];
+    connection.status = ZMConnectionStatusAccepted;
+    connection.to = user1;
+
+    XCTAssertEqual(user1.blockState, ZMBlockStateNone);
+
+    // expect
+
+    [self keyValueObservingExpectationForObject:user1 keyPath:@"blockStateReason" expectedValue:nil];
+
+    // when
+    connection.status = ZMConnectionStatusBlockedMissingLegalholdConsent;
+
+    // then
+    XCTAssertEqual(user1.blockState, ZMBlockStateBlockedMissingLegalholdConsent);
     XCTAssertTrue(user1.isBlocked);
     XCTAssert([self waitForCustomExpectationsWithTimeout:0.5]);
 }

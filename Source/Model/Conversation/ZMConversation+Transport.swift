@@ -56,7 +56,9 @@ extension ZMConversation {
         public static let nameKey = "name";
         public static let typeKey = "type";
         public static let IDKey = "id";
+        public static let qualifiedIDKey = "qualified_id";
         public static let targetKey = "target";
+        public static let domainKey = "domain";
         
         public static let othersKey = "others";
         public static let membersKey = "members";
@@ -88,66 +90,18 @@ extension ZMConversation {
             self.updateServerModified(timeStamp)
         }
     }
-    
-    @objc
-    public func update(transportData: [String: Any], serverTimeStamp: Date?) {
-        
-        guard let moc = self.managedObjectContext else { return }
-        
-        let teamID = transportData.UUID(fromKey: PayloadKeys.teamIdKey)
-        self.updateTeam(identifier: teamID)
 
-        if let remoteId = transportData.UUID(fromKey: PayloadKeys.IDKey) {
-            require(remoteId == self.remoteIdentifier,
-                    "Remote IDs not matching for conversation \(remoteId) vs. \(String(describing: self.remoteIdentifier))")
-        }
+    public func updateMessageDestructionTimeout(timeout: TimeInterval) {
+        // Backend is sending the miliseconds, we need to convert to seconds.
+        setMessageDestructionTimeoutValue(.init(rawValue: timeout / 1000), for: .groupConversation)
+    }
 
-        if let name = transportData[PayloadKeys.nameKey] as? String {
-            self.userDefinedName = name
-        }
-    
-        if let conversationType = (transportData[PayloadKeys.typeKey] as? Int)
-            .flatMap(BackendConversationType.clientConversationType)
-        {
-            self.conversationType = conversationType
-        }
-        
-        if let serverTimeStamp = serverTimeStamp {
-            // If the lastModifiedDate is non-nil, e.g. restore from backup, do not update the lastModifiedDate
-            if self.lastModifiedDate == nil {
-                self.updateLastModified(serverTimeStamp)
-            }
-            self.updateServerModified(serverTimeStamp)
-        }
-    
-        if let creatorId = transportData.UUID(fromKey: PayloadKeys.creatorKey) {
-            self.creator = ZMUser(remoteID: creatorId, createIfNeeded: true, in: moc)!
-        }
-        
-        if let members = transportData[PayloadKeys.membersKey] as? [String: Any] {
-            self.updateMembers(payload: members)
-            if let selfStatus = members[PayloadKeys.selfKey] as? [String: Any] {
-                self.updateSelfStatus(dictionary: selfStatus, timeStamp: nil, previousLastServerTimeStamp: nil)
-            }
-            self.updatePotentialGapSystemMessagesIfNeeded(users: self.localParticipants)
-        } else {
-            zmLog.error("Invalid members in conversation JSON: \(transportData)")
-        }
-
-        
-        self.updateReceiptMode(transportData[PayloadKeys.receiptMode] as? Int)
-        
-        self.accessModeStrings = transportData[PayloadKeys.accessModeKey] as? [String]
-        self.accessRoleString = transportData[PayloadKeys.accessRoleKey] as? String
-        
-        if let messageTimerNumber = transportData[PayloadKeys.messageTimer] as? Double {
-            // Backend is sending the miliseconds, we need to convert to seconds.
-            self.syncedMessageDestructionTimeout = messageTimerNumber / 1000;
-        }
-        self.markToDownloadRolesIfNeeded()
+    public func updateAccessStatus(accessModes: [String], role: String) {
+        accessModeStrings = accessModes
+        accessRoleString = role
     }
     
-    private func updateReceiptMode(_ receiptMode: Int?) {
+    public func updateReceiptMode(_ receiptMode: Int?) {
         if let receiptMode = receiptMode {
             let enabled = receiptMode > 0
             let receiptModeChanged = !self.hasReadReceiptsEnabled && enabled
@@ -159,28 +113,29 @@ extension ZMConversation {
             }
         }
     }
-    
-    /// Parse the "members" section
-    private func updateMembers(payload: [String: Any]) {
-        
-        guard let usersInfos = payload[PayloadKeys.othersKey] as? [[String: Any]],
-            let moc = self.managedObjectContext else {
-                return
+
+    public func updateMembers(_ usersAndRoles: [(ZMUser, Role?)], selfUserRole: Role?) {
+        guard let context = self.managedObjectContext else {
+            return
         }
-        
-        let usersAndRoles = self.usersPayloadToUserAndRole(
-            payload: usersInfos,
-            userIdKey: PayloadKeys.IDKey)
+
         let allParticipants = Set(usersAndRoles.map { $0.0 })
         let removedParticipants = self.localParticipantsExcludingSelf.subtracting(allParticipants)
-        
-        zmLog.debug("Removing participants: \(removedParticipants.map({ $0.remoteIdentifier })) in \(remoteIdentifier?.transportString() ?? "N/A")")
-  
-        self.addParticipantsAndUpdateConversationState(usersAndRoles: usersAndRoles)
-        self.removeParticipantsAndUpdateConversationState(users: removedParticipants, initiatingUser: ZMUser.selfUser(in: moc))
+        addParticipantsAndUpdateConversationState(usersAndRoles: usersAndRoles)
+        removeParticipantsAndUpdateConversationState(users: removedParticipants,
+                                                     initiatingUser: ZMUser.selfUser(in: context))
+
+        let selfUser = ZMUser.selfUser(in: context)
+        if let role = selfUserRole {
+            addParticipantAndUpdateConversationState(user: selfUser, role: role)
+        } else if !isSelfAnActiveMember {
+            addParticipantAndUpdateConversationState(user: selfUser, role: nil)
+        }
+
+        updatePotentialGapSystemMessagesIfNeeded(users: localParticipants)
     }
     
-    func updateTeam(identifier: UUID?) {
+    public func updateTeam(identifier: UUID?) {
         guard let teamId = identifier,
             let moc = self.managedObjectContext else { return }
         self.teamRemoteIdentifier = teamId
@@ -198,31 +153,13 @@ extension ZMConversation {
         latestSystemMessage.removedUsers = removedUsers
         latestSystemMessage.updateNeedsUpdatingUsersIfNeeded()
     }
-    
-    /// Pass timestamp when the timestamp equals the time of the lastRead / cleared event, otherwise pass nil
-    public func updateSelfStatus(dictionary: [String: Any], timeStamp: Date?, previousLastServerTimeStamp: Date?) {
-        self.updateMuted(with: dictionary)
-        
-        let selfUser = ZMUser.selfUser(in: self.managedObjectContext!)
-        if let roleName = dictionary[ZMConversation.PayloadKeys.conversationRoleKey] as? String {
-            let role = Role.fetchOrCreateRole(
-                with: roleName,
-                teamOrConversation: TeamOrConversation.matching(self),
-                in: self.managedObjectContext!)
-            self.addParticipantAndUpdateConversationState(user: selfUser, role: role)
-        } else if !self.isSelfAnActiveMember {
-            self.addParticipantAndUpdateConversationState(user: selfUser, role: nil)
+
+    public func updateArchivedStatus(archived: Bool, referenceDate: Date) {
+        guard updateArchived(referenceDate, synchronize: false) else {
+            return
         }
-        
-        if  self.updateIsArchived(payload: dictionary) && self.isArchived,
-            let previousLastServerTimeStamp = previousLastServerTimeStamp,
-            let timeStamp = timeStamp,
-            let clearedTimeStamp = self.clearedTimeStamp,
-            clearedTimeStamp == previousLastServerTimeStamp
-        {
-            self.updateCleared(timeStamp, synchronize: false)
-        }
-        self.markToDownloadRolesIfNeeded()
+
+        internalIsArchived = archived
     }
     
     private func updateIsArchived(payload: [String: Any]) -> Bool {
@@ -233,8 +170,16 @@ extension ZMConversation {
         }
         return false
     }
-    
-    
+
+    /// Update the muted status when from event or response payloads
+    public func updateMutedStatus(status: Int32, referenceDate: Date) {
+        guard updateMuted(referenceDate, synchronize: false) else {
+            return
+        }
+
+        mutedStatus = status
+    }
+
     @objc(shouldAddEvent:)
     public func shouldAdd(event: ZMUpdateEvent) -> Bool {
         if let clearedTime = self.clearedTimeStamp, let time = event.timestamp,
@@ -248,69 +193,15 @@ extension ZMConversation {
 
 // MARK: - Payload parsing utils
 
-public struct ConversationParsing {
-    private init() {}
-    
-    public static func parseUsersPayloadToUserAndRole(
-        payload: [[String: Any]],
-        userIdKey: String,
-        conversation: ZMConversation
-        ) -> [(ZMUser, Role?)] {
-        return conversation.usersPayloadToUserAndRole(payload: payload, userIdKey: userIdKey)
-    }
-}
-
 extension ZMConversation {
-    
-    /// Extract user and role from a list of dictionaries
-    func usersPayloadToUserAndRole(
-        payload: [[String: Any]],
-        userIdKey: String
-    ) -> [(ZMUser, Role?)] {
-        
-        let uuidsToRoles = payload.reduce([UUID:String?]()) { (prev, payload) in
-            guard let id = payload.UUID(fromKey: userIdKey) else { return prev }
-            let role = payload[ZMConversation.PayloadKeys.conversationRoleKey] as? String
-            return prev.updated(other: [id: role])
-        }
-        let users = self.fetchOrCreateAllUsers(
-            uuids: Set(uuidsToRoles.keys)
-        )
-        return users.map {
-            user -> (ZMUser, Role?) in
-            if let roleEntry = uuidsToRoles[user.remoteIdentifier!],
-                let roleName = roleEntry
-            {
-                let role = self.fetchOrCreateRoleForConversation(name: roleName)
-                return (user, role)
-            } else {
-                return (user, nil)
-            }
-        }
-    }
-    
-    private func fetchOrCreateRoleForConversation(name: String) -> Role {
+
+    public func fetchOrCreateRoleForConversation(name: String) -> Role {
         return Role.fetchOrCreateRole(
             with: name,
             teamOrConversation: self.team != nil ? .team(self.team!) : .conversation(self),
             in: self.managedObjectContext!)
     }
     
-    /// Fetch or create all users in the list
-    private func fetchOrCreateAllUsers(uuids: Set<UUID>) -> Set<ZMUser> {
-        var users = ZMUser.users(withRemoteIDs: uuids, in: self.managedObjectContext!)
-        if users.count != uuids.count {
-            
-            // Some users didn't exist so we need create the missing users
-            let missingUsers = uuids.subtracting(
-                users.map { $0.remoteIdentifier! }
-            )
-            users.formUnion(missingUsers.map {
-                ZMUser(remoteID: $0, createIfNeeded: true, in: self.managedObjectContext!)!
-            })
-        }
-        return Set(users)
-    }
 }
 
 
@@ -323,6 +214,10 @@ extension Dictionary where Key == String, Value == Any {
     func date(fromKey key: String) -> Date? {
         return (self as NSDictionary).optionalDate(forKey: key)
     }
+
+    func domain(fromKey key: String) -> String? {
+        return optionalDictionary(forKey: key)?.optionalString(forKey: ZMConversation.PayloadKeys.domainKey)
+    }
 }
 
 extension Dictionary where Key == String, Value == Any? {
@@ -334,4 +229,5 @@ extension Dictionary where Key == String, Value == Any? {
     func date(fromKey key: String) -> Date? {
         return (self as NSDictionary).optionalDate(forKey: key)
     }
+
 }

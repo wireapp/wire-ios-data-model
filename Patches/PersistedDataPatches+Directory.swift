@@ -22,7 +22,7 @@ extension PersistedDataPatch {
 
     /// List of patches to apply
     static let allPatchesToApply = [
-        PersistedDataPatch(version: "41.0.0", block: UserClient.migrateAllSessionsClientIdentifiers),
+        PersistedDataPatch(version: "41.0.0", block: UserClient.migrateAllSessionsClientIdentifiersV2),
         PersistedDataPatch(version: "43.0.4", block: ZMConversation.migrateAllSecureWithIgnored),
         PersistedDataPatch(version: "58.4.1", block: Team.deleteLocalTeamsAndMembers),
         PersistedDataPatch(version: "62.1.0", block: Member.migrateRemoteIdentifiers),
@@ -38,6 +38,7 @@ extension PersistedDataPatch {
         PersistedDataPatch(version: "234.1.1", block: InvalidConnectionRemoval.removeInvalid),
         PersistedDataPatch(version: "236.0.0", block: MigrateSenderClient.migrateSenderClientID),
         PersistedDataPatch(version: "243.0.0", block: InvalidFeatureRemoval.removeInvalid),
+        PersistedDataPatch(version: "273.2.0", block: InvalidDomainRemoval.removeDuplicatedEntitiesWithInvalidDomain),
     ]
 
 }

@@ -83,7 +83,12 @@ final class UserClientTests: ZMBaseManagedObjectTest {
     }
     
     func testThatItTracksCorrectKeys() {
-        let expectedKeys = Set(arrayLiteral: ZMUserClientMarkedToDeleteKey, ZMUserClientNumberOfKeysRemainingKey, ZMUserClientMissingKey, ZMUserClientNeedsToUpdateSignalingKeysKey, "pushToken")
+        let expectedKeys = Set(arrayLiteral: ZMUserClientMarkedToDeleteKey,
+                               ZMUserClientNumberOfKeysRemainingKey,
+                               ZMUserClientMissingKey,
+                               ZMUserClientNeedsToUpdateSignalingKeysKey,
+                               ZMUserClientNeedsToUpdateCapabilitiesKey,
+                               "pushToken")
         let client = UserClient.insertNewObject(in: self.uiMOC)
 
         XCTAssertEqual(client.keysTrackedForLocalModifications() , expectedKeys)
@@ -210,7 +215,7 @@ final class UserClientTests: ZMBaseManagedObjectTest {
             let otherUser = ZMUser.insertNewObject(in:self.syncMOC)
             otherUser.remoteIdentifier = UUID.create()
             otherClient1.user = otherUser
-            let connection = ZMConnection.insertNewSentConnection(to: otherUser)!
+            let connection = ZMConnection.insertNewSentConnection(to: otherUser)
             connection.status = .accepted
             
             let conversation = ZMConversation.insertNewObject(in:self.syncMOC)
@@ -340,7 +345,7 @@ final class UserClientTests: ZMBaseManagedObjectTest {
             otherUser.remoteIdentifier = UUID.create()
             otherClient.user = otherUser
             
-            let connection = ZMConnection.insertNewSentConnection(to: otherUser)!
+            let connection = ZMConnection.insertNewSentConnection(to: otherUser)
             connection.status = .accepted
         }
         XCTAssertTrue(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
@@ -511,6 +516,24 @@ extension UserClientTests {
     
 }
 
+// MARK : Capabilities
+
+extension UserClientTests {
+
+    func testThatItSetsKeysNeedingToBeSynced_Capabilities() {
+        // given
+        let selfClient = createSelfClient()
+
+        // when
+        UserClient.triggerSelfClientCapabilityUpdate(self.uiMOC)
+
+        // then
+        XCTAssertTrue(selfClient.needsToUpdateCapabilities)
+        XCTAssertTrue(selfClient.keysThatHaveLocalModifications.contains(ZMUserClientNeedsToUpdateCapabilitiesKey))
+    }
+
+}
+
 // MARK : fetchFingerprintOrPrekeys
 
 extension UserClientTests {
@@ -553,8 +576,43 @@ extension UserClientTests {
         XCTAssertEqual(newClient.user, ZMUser.selfUser(in: uiMOC))
         XCTAssertNil(newClient.sessionIdentifier)
     }
-    
-    
+
+    func testThatItSetsNeedsSessionMigration_WhenInsertingANewSelfUserClientAndDomainIsNil() {
+        // given
+        _ = createSelfClient()
+        let newClientPayload : [String : AnyObject] = ["id": UUID().transportString() as AnyObject,
+                                                       "type": "permanent" as AnyObject,
+                                                       "time": Date().transportString() as AnyObject]
+        // when
+        var newClient : UserClient!
+        self.performPretendingUiMocIsSyncMoc {
+            newClient = UserClient.createOrUpdateSelfUserClient(newClientPayload, context: self.uiMOC)
+            XCTAssert(self.waitForAllGroupsToBeEmpty(withTimeout: 0.5))
+        }
+
+        // then
+        XCTAssertTrue(newClient.needsSessionMigration)
+    }
+
+    func testThatItSetsNeedsSessionMigration_WhenInsertingANewSelfUserClientAndDomainIsSet() {
+        // given
+        _ = createSelfClient()
+        ZMUser.selfUser(in: uiMOC).domain = "example.com"
+
+        let newClientPayload : [String : AnyObject] = ["id": UUID().transportString() as AnyObject,
+                                                       "type": "permanent" as AnyObject,
+                                                       "time": Date().transportString() as AnyObject]
+        // when
+        var newClient : UserClient!
+        self.performPretendingUiMocIsSyncMoc {
+            newClient = UserClient.createOrUpdateSelfUserClient(newClientPayload, context: self.uiMOC)
+            XCTAssert(self.waitForAllGroupsToBeEmpty(withTimeout: 0.5))
+        }
+
+        // then
+        XCTAssertFalse(newClient.needsSessionMigration)
+    }
+
     func testThatItDoNothingWhenHasAFingerprint() {
         // GIVEN
         let fingerprint = Data(base64Encoded: "cmVhZGluZyB0ZXN0cyBpcyBjb29s")
@@ -685,6 +743,33 @@ extension UserClientTests {
             XCTAssertNotNil(client)
             XCTAssertEqual(client?.remoteIdentifier, "badf00d")
             XCTAssertEqual(client?.user, otherUser)
+        }
+    }
+
+    func testThatItSetsNeedsToMigrateSession_WhenCreatingUserClientAndDomainIsNil() {
+        self.syncMOC.performGroupedBlockAndWait {
+            // GIVEN
+            let otherUser = ZMUser.insertNewObject(in: self.syncMOC)
+            otherUser.remoteIdentifier = UUID.create()
+            // WHEN
+            let client = UserClient.fetchUserClient(withRemoteId: "badf00d", forUser: otherUser, createIfNeeded: true)
+
+            // THEN
+            XCTAssertEqual(client?.needsSessionMigration, true)
+        }
+    }
+
+    func testThatItSetsNeedsToMigrateSession_WhenCreatingUserClientAndDomainIsSet() {
+        self.syncMOC.performGroupedBlockAndWait {
+            // GIVEN
+            let otherUser = ZMUser.insertNewObject(in: self.syncMOC)
+            otherUser.remoteIdentifier = UUID.create()
+            otherUser.domain = "example.com"
+            // WHEN
+            let client = UserClient.fetchUserClient(withRemoteId: "badf00d", forUser: otherUser, createIfNeeded: true)
+
+            // THEN
+            XCTAssertEqual(client?.needsSessionMigration, false)
         }
     }
     
@@ -844,3 +929,151 @@ extension UserClientTests {
         
 }
 
+// MARK: - Session Identifier
+
+extension UserClientTests {
+    
+    func testThatItReturnsCorrectSessionIdentifier_WhenSessionNeedsMigration() {
+        // given
+        let user = createUser(in: uiMOC)
+        
+        let client = UserClient.insertNewObject(in: uiMOC)
+        let clientID = UUID().uuidString
+        client.remoteIdentifier = clientID
+        client.user = user
+        client.needsSessionMigration = true
+        
+        let userID = client.user!.remoteIdentifier.uuidString
+        let expectedSessionIdentifier = EncryptionSessionIdentifier(userId: userID,
+                                                                    clientId: clientID)
+        
+        // when
+        let sessionIdentifier = client.sessionIdentifier
+        
+        // then
+        XCTAssertEqual(sessionIdentifier, expectedSessionIdentifier)
+    }
+    
+    func testThatItReturnsCorrectSessionIdentifier_WhenSessionDoesNotNeedMigration() {
+        // given
+        let domain = UUID().uuidString
+        let user = createUser(in: uiMOC)
+        user.domain = domain
+        
+        let client = UserClient.insertNewObject(in: uiMOC)
+        let clientID = UUID().uuidString
+        client.remoteIdentifier = clientID
+        client.user = user
+        client.needsSessionMigration = false
+        
+        let userID = client.user!.remoteIdentifier.uuidString
+        let expectedSessionIdentifier = EncryptionSessionIdentifier(domain: domain,
+                                                                    userId: userID,
+                                                                    clientId: clientID)
+        
+        // when
+        let sessionIdentifier = client.sessionIdentifier
+        
+        // then
+        XCTAssertEqual(sessionIdentifier, expectedSessionIdentifier)
+    }
+    
+    func testThatItMigratesSessionIdentifierFromV2ToV3_WhenUserDomainIsAvailable() {
+        syncMOC.performGroupedBlockAndWait{ [self] in
+            // given
+            let selfClient = createSelfClient(onMOC: syncMOC)
+
+            let otherClient = UserClient.insertNewObject(in: syncMOC)
+            otherClient.remoteIdentifier = UUID.create().transportString()
+            let otherUser = ZMUser.insertNewObject(in: syncMOC)
+            let otherUserID = UUID().create()
+            otherUser.remoteIdentifier = otherUserID
+            otherClient.user = otherUser
+            otherClient.needsSessionMigration = true
+
+            var preKeys : [(id: UInt16, prekey: String)] = []
+            selfClient.keysStore.encryptionContext.perform { sessionsDirectory in
+                preKeys = try! sessionsDirectory.generatePrekeys(0 ..< 2)
+            }
+
+            guard let preKey = preKeys.first else {
+                XCTFail("could not generate prekeys")
+                return
+            }
+
+            let userID = otherUserID.uuidString
+            let clientID = otherClient.remoteIdentifier!
+            let otherUserDomain = UUID().uuidString
+
+            let v2SessionIdentifier = EncryptionSessionIdentifier(userId: userID,
+                                                                  clientId: clientID)
+            let v3SessionIdentifier = EncryptionSessionIdentifier(domain: otherUserDomain,
+                                                                  userId: userID,
+                                                                  clientId: clientID)
+            
+            XCTAssertTrue(selfClient.establishSessionWithClient(otherClient, usingPreKey: preKey.prekey))
+            XCTAssertTrue(otherClient.hasSessionWithSelfClient)
+
+            selfClient.keysStore.encryptionContext.perform { sessionsDirectory in
+                XCTAssertTrue(sessionsDirectory.hasSession(for: v2SessionIdentifier))
+                XCTAssertFalse(sessionsDirectory.hasSession(for: v3SessionIdentifier))
+            }
+
+            otherUser.domain = otherUserDomain
+
+            selfClient.keysStore.encryptionContext.perform { sessionsDirectory in
+                // when
+                otherClient.migrateSessionIdentifierFromV2IfNeeded(sessionDirectory: sessionsDirectory)
+
+                // then
+                XCTAssertFalse(sessionsDirectory.hasSession(for: v2SessionIdentifier))
+                XCTAssertTrue(sessionsDirectory.hasSession(for: v3SessionIdentifier))
+            }
+        }
+        
+    }
+    
+    func testThatItDoesNotMigrateSessionIdentifierFromV2ToV3_WhenUserDomainIsUnavailable() {
+        self.syncMOC.performGroupedBlockAndWait{ [self] in
+            // given
+            let selfClient = createSelfClient(onMOC: syncMOC)
+            
+            let otherClient = UserClient.insertNewObject(in: syncMOC)
+            otherClient.remoteIdentifier = UUID.create().transportString()
+            let otherUser = ZMUser.insertNewObject(in: syncMOC)
+            let otherUserID = UUID().create()
+            otherUser.remoteIdentifier = otherUserID
+            otherClient.user = otherUser
+            otherClient.needsSessionMigration = true
+            
+            var preKeys : [(id: UInt16, prekey: String)] = []
+            selfClient.keysStore.encryptionContext.perform { sessionsDirectory in
+                preKeys = try! sessionsDirectory.generatePrekeys(0 ..< 2)
+            }
+            
+            guard let preKey = preKeys.first else {
+                XCTFail("could not generate prekeys")
+                return
+            }
+            
+            let userID = otherUserID.uuidString
+            let clientID = otherClient.remoteIdentifier!
+            
+            let v2SessionIdentifier = EncryptionSessionIdentifier(userId: userID,
+                                                                  clientId: clientID)
+            
+            XCTAssertTrue(selfClient.establishSessionWithClient(otherClient, usingPreKey: preKey.prekey))
+            XCTAssertTrue(otherClient.hasSessionWithSelfClient)
+
+            otherClient.keysStore.encryptionContext.perform { sessionsDirectory in
+                XCTAssertTrue(sessionsDirectory.hasSession(for: v2SessionIdentifier))
+                
+                // when
+                otherClient.migrateSessionIdentifierFromV2IfNeeded(sessionDirectory: sessionsDirectory)
+
+                // then
+                XCTAssertTrue(sessionsDirectory.hasSession(for: v2SessionIdentifier))
+            }
+        }
+    }
+}

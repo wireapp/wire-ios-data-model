@@ -19,8 +19,54 @@
 import Foundation
 import WireProtos
 
+public enum ConversationRemoveParticipantError: Error {
+   case unknown,
+        invalidOperation,
+        conversationNotFound
+}
+
+public enum ConversationAddParticipantsError: Error {
+   case unknown,
+        invalidOperation,
+        accessDenied,
+        notConnectedToUser,
+        conversationNotFound,
+        tooManyMembers,
+        missingLegalHoldConsent
+}
+
+public class AddParticipantAction: EntityAction {
+    public var resultHandler: ResultHandler?
+
+    public typealias Result = Void
+    public typealias Failure = ConversationAddParticipantsError
+
+    public let userIDs: [NSManagedObjectID]
+    public let conversationID: NSManagedObjectID
+
+    public required init(users: [ZMUser], conversation: ZMConversation) {
+        userIDs = users.map(\.objectID)
+        conversationID = conversation.objectID
+    }
+}
+
+public class RemoveParticipantAction: EntityAction {
+    public var resultHandler: ResultHandler?
+
+    public typealias Result = Void
+    public typealias Failure = ConversationRemoveParticipantError
+
+    public let userID: NSManagedObjectID
+    public let conversationID: NSManagedObjectID
+
+    public required init(user: ZMUser, conversation: ZMConversation) {
+        userID = user.objectID
+        conversationID = conversation.objectID
+    }
+}
+
 extension ZMConversation {
-        
+
     func sortedUsers(_ users: Set<ZMUser>) -> [ZMUser] {
         let nameDescriptor = NSSortDescriptor(key: "normalizedName", ascending: true)
         let sortedUser = (users as NSSet?)?.sortedArray(using: [nameDescriptor]) as? [ZMUser]
@@ -39,7 +85,7 @@ extension ZMConversation {
     @objc
     public var isSelfAnActiveMember: Bool {
         return self.participantRoles.contains(where: { (role) -> Bool in
-            role.user.isSelfUser == true
+            role.user?.isSelfUser == true
         })
     }
     // MARK: - keyPathsForValuesAffecting
@@ -77,7 +123,52 @@ extension ZMConversation {
     public class func keyPathsForValuesAffectingLocalParticipantsExcludingSelf() -> Set<String> {
         return Set(ZMConversation.participantRolesKeys)
     }
-    
+
+    // MARK: - Participant actions
+
+    public func addParticipants(_ participants: [UserType],
+                                completion: @escaping AddParticipantAction.ResultHandler) {
+        guard
+            let context = managedObjectContext
+        else {
+            return completion(.failure(ConversationAddParticipantsError.unknown))
+        }
+
+        let users = participants.materialize(in: context)
+
+        guard
+            conversationType == .group,
+            !users.isEmpty,
+            !users.contains(ZMUser.selfUser(in: context))
+        else {
+            return completion(.failure(ConversationAddParticipantsError.invalidOperation))
+        }
+
+        var action = AddParticipantAction(users: users, conversation: self)
+        action.onResult(resultHandler: completion)
+        action.send(in: context.notificationContext)
+    }
+
+    public func removeParticipant(_ participant: UserType,
+                                  completion: @escaping RemoveParticipantAction.ResultHandler) {
+        guard
+            let context = managedObjectContext
+        else {
+            return completion(.failure(ConversationRemoveParticipantError.unknown))
+        }
+
+        guard
+            conversationType == .group,
+            let user = participant as? ZMUser
+        else {
+            return completion(.failure(ConversationRemoveParticipantError.invalidOperation))
+        }
+
+        var action = RemoveParticipantAction(user: user, conversation: self)
+        action.onResult(resultHandler: completion)
+        action.send(in: context.notificationContext)
+    }
+
     //MARK: - Participants methods
     
     /// Participants that are in the conversation, according to the local state,
@@ -91,7 +182,7 @@ extension ZMConversation {
     /// even if that state is not yet synchronized with the backend
     @objc
     public var localParticipants: Set<ZMUser> {
-        return Set(localParticipantRoles.map { $0.user })
+        return Set(localParticipantRoles.compactMap { $0.user })
     }
     
     /// Participants that are in the conversation, according to the local state
@@ -165,7 +256,7 @@ extension ZMConversation {
             return (result == .created) ? pr : nil
         }
         
-        let addedSelfUser = doesExistsOnBackend && addedRoles.contains(where: {$0.user.isSelfUser})
+        let addedSelfUser = doesExistsOnBackend && addedRoles.contains(where: {$0.user?.isSelfUser == true})
         if addedSelfUser {
             self.markToDownloadRolesIfNeeded()
             self.needsToBeUpdatedFromBackend = true
@@ -173,7 +264,7 @@ extension ZMConversation {
         
         if !addedRoles.isEmpty {
             self.checkIfArchivedStatusChanged(addedSelfUser: addedSelfUser)
-            self.checkIfVerificationLevelChanged(addedUsers: Set(addedRoles.map { $0.user}),  addedSelfUser: addedSelfUser)
+            self.checkIfVerificationLevelChanged(addedUsers: Set(addedRoles.compactMap { $0.user }),  addedSelfUser: addedSelfUser)
         }
     }
 
@@ -240,7 +331,7 @@ extension ZMConversation {
         
         guard let moc = self.managedObjectContext else { return }
         let existingUsers = Set(self.participantRoles.map { $0.user })
-        
+
         let removedUsers = Set(users.compactMap { user -> ZMUser? in
             
             guard existingUsers.contains(user),
@@ -298,23 +389,19 @@ extension ZMConversation {
     
     /// Check if roles are missing, and mark them to download if needed
     @objc public func markToDownloadRolesIfNeeded() {
-        guard self.conversationType == .group else { return }
-        
-        let selfUser = ZMUser.selfUser(in: self.managedObjectContext!)
-        let notInMyTeam = self.teamRemoteIdentifier == nil ||
-            selfUser.team?.remoteIdentifier != self.teamRemoteIdentifier
-        
-        guard notInMyTeam else { return }
-        
-        if self.nonTeamRoles.isEmpty ||
-            self.nonTeamRoles.first(where: {!$0.actions.isEmpty}) == nil // there are no roles with actions
-        {
-            self.needsToDownloadRoles = true
+        guard
+            conversationType == .group,
+            !isTeamConversation
+        else { return }
+
+        // if there are no roles with actions
+        if nonTeamRoles.isEmpty || !nonTeamRoles.contains(where: { !$0.actions.isEmpty }) {
+            needsToDownloadRoles = true
         }
     }
     
     // MARK: - Utils
-    func has(participantWithId userId: UserId?) -> Bool {
+    func has(participantWithId userId: Proteus_UserId?) -> Bool {
         return localParticipants.contains { $0.userId == userId }
     }
 }
