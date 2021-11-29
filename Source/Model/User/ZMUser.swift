@@ -203,7 +203,10 @@ extension ZMUser {
     }
     
     static var keyPathsForValuesAffectingIsServiceUser: Set<String> {
-        Set([ZMUserKeys.serviceIdentifierKey, ZMUserKeys.providerIdentifierKey])
+        Set([
+            #keyPath(ZMUser.serviceIdentifier),
+            #keyPath(ZMUser.providerIdentifier)
+        ])
     }
     
     public var isSelfUser: Bool {
@@ -241,12 +244,15 @@ extension ZMUser {
         imageData(for: .preview)
     }
     
-    var keyPathsForValuesAffectingIsConnected: Set<String> {
-        Set([ZMUserKeys.connectionKey, "connection.status"])
+    static var keyPathsForValuesAffectingIsConnected: Set<String> {
+        Set([
+            #keyPath(ZMUser.connection),
+            #keyPath(ZMUser.connection.status)
+        ])
     }
     
-    var keyPathsForValuesAffectingConnectionRequestMessage: Set<String> {
-        Set(["connection.message"])
+    static var keyPathsForValuesAffectingConnectionRequestMessage: Set<String> {
+        Set([#keyPath(ZMUser.connection.status)])
     }
     
     @objc
@@ -758,23 +764,38 @@ extension ZMUser {
 extension ZMUser {
     
     static var keyPathsForValuesAffectingIsBlocked: Set<String> {
-        Set([ZMUserKeys.connectionKey, "connection.status"])
+        Set([
+            #keyPath(ZMUser.connection),
+            #keyPath(ZMUser.connection.status)
+        ])
     }
     
     static var keyPathsForValuesAffectingBlockStateReason: Set<String> {
-        Set([ZMUserKeys.connectionKey, "connection.status"])
+        Set([
+            #keyPath(ZMUser.connection),
+            #keyPath(ZMUser.connection.status)
+        ])
     }
     
     static var keyPathsForValuesAffectingIsIgnored: Set<String> {
-        Set([ZMUserKeys.connectionKey, "connection.status"])
+        Set([
+            #keyPath(ZMUser.connection),
+            #keyPath(ZMUser.connection.status)
+        ])
     }
     
     static var keyPathsForValuesAffectingIsPendingApprovalBySelfUser: Set<String> {
-        Set([ZMUserKeys.connectionKey, "connection.status"])
+        Set([
+            #keyPath(ZMUser.connection),
+            #keyPath(ZMUser.connection.status)
+        ])
     }
     
     static var keyPathsForValuesAffectingIsPendingApprovalByOtherUser: Set<String> {
-        Set([ZMUserKeys.connectionKey, "connection.status"])
+        Set([
+            #keyPath(ZMUser.connection),
+            #keyPath(ZMUser.connection.status)
+        ])
     }
     
     public var isBlocked: Bool {
@@ -887,8 +908,11 @@ extension ZMUser: UserType {
         return clients.any(\.isLegalHoldDevice)
     }
 
-    @objc class func keyPathsForValuesAffectingIsUnderLegalHold() -> Set<String> {
-        return [ZMUserKeys.userClientsKey, "clients.deviceClass"]
+    class func keyPathsForValuesAffectingIsUnderLegalHold() -> Set<String> {
+        Set([
+            #keyPath(ZMUser.clients),
+            #keyPath(ZMUser.clients.deviceClass)
+        ])
     }
     
     public var allClients: [UserClientType] {
