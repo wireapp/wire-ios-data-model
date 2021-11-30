@@ -150,7 +150,7 @@ public class FeatureService {
             $0.status = guestLink.status
         }
 
-        guard needsToNotifyUser(for: .fileSharing) else { return }
+        guard needsToNotifyUser(for: .guestLinks) else { return }
 
         switch guestLink.status {
         case .disabled:
