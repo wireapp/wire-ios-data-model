@@ -139,14 +139,14 @@ public class FeatureService {
     }
 
     public func fetchGuestLink() -> Feature.GuestLink {
-        guard let feature = Feature.fetch(name: .guestLink, context: context) else {
+        guard let feature = Feature.fetch(name: .guestLinks, context: context) else {
             return .init()
         }
         return .init(status: feature.status)
     }
 
     public func storeGuestLink(_ guestLink: Feature.GuestLink) {
-        Feature.updateOrCreate(havingName: .guestLink, in: context) {
+        Feature.updateOrCreate(havingName: .guestLinks, in: context) {
             $0.status = guestLink.status
         }
 
@@ -154,10 +154,10 @@ public class FeatureService {
 
         switch guestLink.status {
         case .disabled:
-            notifyChange(.guestLinkDisabled)
+            notifyChange(.guestLinksDisabled)
 
         case .enabled:
-            notifyChange(.guestLinkEnabled)
+            notifyChange(.guestLinksEnabled)
         }
     }
 
@@ -178,7 +178,7 @@ public class FeatureService {
             case .selfDeletingMessages:
                 storeSelfDeletingMessages(.init())
 
-            case .guestLink:
+            case .guestLinks:
                 storeGuestLink(.init())
             }
         }
@@ -235,8 +235,8 @@ extension FeatureService {
         case selfDeletingMessagesIsEnabled(enforcedTimeout: UInt?)
         case fileSharingEnabled
         case fileSharingDisabled
-        case guestLinkEnabled
-        case guestLinkDisabled
+        case guestLinksEnabled
+        case guestLinksDisabled
 
     }
 
