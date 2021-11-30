@@ -946,7 +946,7 @@ extension ZMUserTests_Swift {
         uiMOC.saveOrRollback()
 
         // THEN
-        XCTAssertEqual(sut.modifiedKeys, Set([ZMUserKeys.readReceiptsEnabledKey]))
+        XCTAssertEqual(sut.modifiedKeys, Set([ZMUser.readReceiptsEnabledKey]))
     }
     
     func testThatItDoesNotSetModifiedKeysForEnableReadReceipts() {

@@ -150,7 +150,7 @@ extension ZMUser: SelfLegalHoldSubject {
 
     /// The keys that affect the legal hold status for the user.
     static func keysAffectingLegalHoldStatus() -> Set<String> {
-        return [#keyPath(ZMUser.clients), ZMUserKeys.legalHoldRequestKey]
+        return [#keyPath(ZMUser.clients), ZMUser.legalHoldRequestKey]
     }
 
     /// The current legal hold status for the user.
@@ -170,15 +170,15 @@ extension ZMUser: SelfLegalHoldSubject {
 
     var legalHoldRequest: LegalHoldRequest? {
         get {
-            willAccessValue(forKey: ZMUserKeys.legalHoldRequestKey)
+            willAccessValue(forKey: ZMUser.legalHoldRequestKey)
             let value = primitiveLegalHoldRequest.flatMap(LegalHoldRequest.decode)
-            didAccessValue(forKey: ZMUserKeys.legalHoldRequestKey)
+            didAccessValue(forKey: ZMUser.legalHoldRequestKey)
             return value
         }
         set {
-            willChangeValue(forKey: ZMUserKeys.legalHoldRequestKey)
+            willChangeValue(forKey: ZMUser.legalHoldRequestKey)
             primitiveLegalHoldRequest = newValue.flatMap { $0.encode() }
-            didChangeValue(forKey: ZMUserKeys.legalHoldRequestKey)
+            didChangeValue(forKey: ZMUser.legalHoldRequestKey)
         }
     }
     

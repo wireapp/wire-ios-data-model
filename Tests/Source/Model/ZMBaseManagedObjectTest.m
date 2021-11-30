@@ -220,7 +220,7 @@
     selfClient.remoteIdentifier = [NSString createAlphanumericalString];
     selfClient.user = selfUser;
     
-    [moc setPersistentStoreMetadata:selfClient.remoteIdentifier forKey:ZMUserKeys.ZMPersistedClientIdKey];
+    [moc setPersistentStoreMetadata:selfClient.remoteIdentifier forKey:ZMUser.ZMPersistedClientIdKey];
     
     [self performPretendingUiMocIsSyncMoc:^{
         NSDictionary *payload = @{@"id": selfClient.remoteIdentifier, @"type": @"permanent", @"time": [[NSDate date] transportString]};

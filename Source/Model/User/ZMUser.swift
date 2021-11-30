@@ -29,6 +29,58 @@ public enum ZMBlockState: Int {
 @objcMembers
 @objc(ZMUser)
 public final class ZMUser: ZMManagedObject {
+    static let sessionObjectIDKey = "ZMSessionManagedObjectID"
+    static let ZMPersistedClientIdKey = "PersistedClientId"
+    static let accentKey = "accentColorValue"
+    static let selfUserObjectIDAsStringKey = "SelfUserObjectID"
+    static let selfUserObjectIDKey = "ZMSelfUserManagedObjectID"
+    static let sessionObjectIDAsStringKey = "SessionObjectID"
+    static let selfUserKey = "ZMSelfUser"
+    static let normalizedNameKey = "normalizedName"
+    static let normalizedEmailAddressKey = "normalizedEmailAddress"
+    static let remoteIdentifierKey = "remoteIdentifier"
+    static let conversationsCreatedKey = "conversationsCreated"
+    static let activeCallConversationsKey = "activeCallConversations"
+    static let connectionKey = "connection"
+    static let emailAddressKey = "emailAddress"
+    static let phoneNumberKey = "phoneNumber"
+    static let nameKey = "name"
+    static let handleKey = "handle"
+    static let systemMessagesKey = "systemMessages"
+    static let isAccountDeletedKey = "isAccountDeleted"
+    static let showingUserAddedKey = "showingUserAdded"
+    static let showingUserRemovedKey = "showingUserRemoved"
+    static let userClientsKey = "clients"
+    static let reactionsKey = "reactions"
+    static let addressBookEntryKey = "addressBookEntry"
+    static let membershipKey = "membership"
+    static let createdTeamsKey = "createdTeams"
+    static let serviceIdentifierKey = "serviceIdentifier"
+    static let providerIdentifierKey = "providerIdentifier"
+    static let availabilityKey = "availability"
+    static let expiresAtKey = "expiresAt"
+    static let usesCompanyLoginKey = "usesCompanyLogin"
+    static let createdTeamMembersKey = "createdTeamMembers"
+    static let readReceiptsEnabledKey = "readReceiptsEnabled"
+    static let needsPropertiesUpdateKey = "needsPropertiesUpdate"
+    static let readReceiptsEnabledChangedRemotelyKey = "readReceiptsEnabledChangedRemotely"
+    static let teamIdentifierDataKey = "teamIdentifier_data"
+    static let teamIdentifierKey = "teamIdentifier"
+    static let managedByKey = "managedBy"
+    static let extendedMetadataKey = "extendedMetadata"
+    static let richProfileKey = "richProfile"
+    static let needsRichProfileUpdateKey = "needsRichProfileUpdate"
+    static let legalHoldRequestKey = "legalHoldRequest"
+    static let needsToAcknowledgeLegalHoldStatusKey = "needsToAcknowledgeLegalHoldStatus"
+    static let needsToRefetchLabelsKey = "needsToRefetchLabels"
+    static let participantRolesKey = "participantRoles"
+    static let analyticsIdentifierKey = "analyticsIdentifier"
+    static let lastServerSyncedActiveConversations = "lastServerSyncedActiveConversations"
+    
+    override public static func domainKey() -> String? {
+        "domain"
+    }
+    
     @NSManaged private(set) var normalizedName: String?
     
     @NSManaged var normalizedEmailAddress: String?
@@ -137,68 +189,6 @@ public final class ZMUser: ZMManagedObject {
     @NSManaged public var accentColorValue: ZMAccentColor
 }
 
-@objc public class ZMUserKeys: NSObject {
-    static let sessionObjectIDKey = "ZMSessionManagedObjectID"
-    @objc static let ZMPersistedClientIdKey = "PersistedClientId"
-    
-    static let accentKey = "accentColorValue"
-    static let selfUserObjectIDAsStringKey = "SelfUserObjectID"
-    static let selfUserObjectIDKey = "ZMSelfUserManagedObjectID"
-    
-    static let sessionObjectIDAsStringKey = "SessionObjectID"
-    static let selfUserKey = "ZMSelfUser"
-    static let normalizedNameKey = "normalizedName"
-    static let normalizedEmailAddressKey = "normalizedEmailAddress"
-    static let remoteIdentifierKey = "remoteIdentifier"
-    
-    static let conversationsCreatedKey = "conversationsCreated"
-    static let activeCallConversationsKey = "activeCallConversations"
-    static let connectionKey = "connection"
-    static let emailAddressKey = "emailAddress"
-    static let phoneNumberKey = "phoneNumber"
-    static let nameKey = "name"
-    static let handleKey = "handle"
-    static let systemMessagesKey = "systemMessages"
-    static let isAccountDeletedKey = "isAccountDeleted"
-    static let showingUserAddedKey = "showingUserAdded"
-    static let showingUserRemovedKey = "showingUserRemoved"
-    static let userClientsKey = "clients"
-    static let reactionsKey = "reactions"
-    static let addressBookEntryKey = "addressBookEntry"
-    static let membershipKey = "membership"
-    static let createdTeamsKey = "createdTeams"
-    static let serviceIdentifierKey = "serviceIdentifier"
-    static let providerIdentifierKey = "providerIdentifier"
-    static let availabilityKey = "availability"
-    static let expiresAtKey = "expiresAt"
-    static let usesCompanyLoginKey = "usesCompanyLogin"
-    static let createdTeamMembersKey = "createdTeamMembers"
-    static let readReceiptsEnabledKey = "readReceiptsEnabled"
-    static let needsPropertiesUpdateKey = "needsPropertiesUpdate"
-    static let readReceiptsEnabledChangedRemotelyKey = "readReceiptsEnabledChangedRemotely"
-    
-    static let teamIdentifierDataKey = "teamIdentifier_data"
-    static let teamIdentifierKey = "teamIdentifier"
-    
-    static let managedByKey = "managedBy"
-    static let extendedMetadataKey = "extendedMetadata"
-    
-    static let richProfileKey = "richProfile"
-    static let needsRichProfileUpdateKey = "needsRichProfileUpdate"
-    
-    static let legalHoldRequestKey = "legalHoldRequest"
-    static let needsToAcknowledgeLegalHoldStatusKey = "needsToAcknowledgeLegalHoldStatus"
-    
-    static let needsToRefetchLabelsKey = "needsToRefetchLabels"
-    static let participantRolesKey = "participantRoles"
-    
-    static let analyticsIdentifierKey = "analyticsIdentifier"
-    
-    static let lastServerSyncedActiveConversations = "lastServerSyncedActiveConversations"
-    
-    static let domainKey = "domain"
-}
-
 extension ZMUser {
     @objc
     public static override func entityName() -> String {
@@ -236,7 +226,7 @@ extension ZMUser {
     @objc
     public func selfClient() -> UserClient? {
         guard
-            let id = managedObjectContext?.persistentStoreMetadata(forKey: ZMUserKeys.ZMPersistedClientIdKey),
+            let id = managedObjectContext?.persistentStoreMetadata(forKey: ZMUser.ZMPersistedClientIdKey),
             let persistedClientID = id as? String
         else {
             return nil
@@ -351,11 +341,11 @@ extension ZMUser {
     public override var ignoredKeys: Set<AnyHashable>? {
         return (super.ignoredKeys ?? Set())
             .union([
-                ZMUserKeys.activeCallConversationsKey,
-                ZMUserKeys.teamIdentifierDataKey,
-                ZMUserKeys.createdTeamMembersKey,
-                ZMUserKeys.legalHoldRequestKey,
-                ZMUserKeys.lastServerSyncedActiveConversations,
+                ZMUser.activeCallConversationsKey,
+                ZMUser.teamIdentifierDataKey,
+                ZMUser.createdTeamMembersKey,
+                ZMUser.legalHoldRequestKey,
+                ZMUser.lastServerSyncedActiveConversations,
                 #keyPath(ZMUser.analyticsIdentifier),
                 #keyPath(ZMUser.normalizedName),
                 #keyPath(ZMUser.conversationsCreated),
@@ -645,8 +635,8 @@ extension ZMUser {
     
     static func createSessionIfNeeded(in context: NSManagedObjectContext,
                                       with existingSelfUser: ZMUser?) -> ZMUser {
-        context.userInfo.removeObject(forKey: ZMUserKeys.selfUserObjectIDKey)
-        context.setPersistentStoreMetadata(nil as Data?, key: ZMUserKeys.selfUserObjectIDAsStringKey)
+        context.userInfo.removeObject(forKey: ZMUser.selfUserObjectIDKey)
+        context.setPersistentStoreMetadata(nil as Data?, key: ZMUser.selfUserObjectIDAsStringKey)
         
         let request = ZMSession.sortedFetchRequest()
         let session: ZMSession
@@ -683,10 +673,10 @@ extension ZMUser {
         
         session.selfUser = selfUser
         
-        context.userInfo[ZMUserKeys.sessionObjectIDKey] = session.objectID
+        context.userInfo[ZMUser.sessionObjectIDKey] = session.objectID
         
         let metadata = session.objectID.uriRepresentation().absoluteString
-        context.setPersistentStoreMetadata(metadata, key: ZMUserKeys.sessionObjectIDAsStringKey)
+        context.setPersistentStoreMetadata(metadata, key: ZMUser.sessionObjectIDAsStringKey)
         
         let _ = context.makeMetadataPersistent()
         
@@ -701,14 +691,14 @@ extension ZMUser {
     }
     
     static func unboxSelfUser(from context: NSManagedObjectContext) -> ZMUser? {
-        let boxedSelfUser = context.userInfo[ZMUserKeys.selfUserKey] as? ZMBoxedSelfUser
+        let boxedSelfUser = context.userInfo[ZMUser.selfUserKey] as? ZMBoxedSelfUser
         return boxedSelfUser?.selfUser
     }
     
     public static func boxSelfUser(_ selfUser: ZMUser, inContextUserInfo context: NSManagedObjectContext) {
         let boxed = ZMBoxedSelfUser()
         boxed.selfUser = selfUser
-        context.userInfo[ZMUserKeys.selfUserKey] = boxed
+        context.userInfo[ZMUser.selfUserKey] = boxed
     }
     
     static func hasSessionEntity(in context: NSManagedObjectContext) -> Bool {
@@ -722,14 +712,14 @@ extension ZMUser {
         }
         
         var selfUser: ZMUser
-        if let sessionID = storedObjectID(for: ZMUserKeys.sessionObjectIDKey,
-                                          persistedMetadataKey: ZMUserKeys.sessionObjectIDAsStringKey,
+        if let sessionID = storedObjectID(for: ZMUser.sessionObjectIDKey,
+                                          persistedMetadataKey: ZMUser.sessionObjectIDAsStringKey,
                                           in: context),
            let existingSelfUser = obtainCachedSession(by: sessionID, in: context) {
             selfUser = existingSelfUser
             
-        } else if let selfUserID = storedObjectID(for: ZMUserKeys.selfUserObjectIDKey,
-                                                  persistedMetadataKey: ZMUserKeys.selfUserObjectIDAsStringKey,
+        } else if let selfUserID = storedObjectID(for: ZMUser.selfUserObjectIDKey,
+                                                  persistedMetadataKey: ZMUser.selfUserObjectIDAsStringKey,
                                                   in: context),
                   let existingSelfUser = obtainCachedSession(by: selfUserID, in: context) {
             selfUser = createSessionIfNeeded(in: context, with: existingSelfUser)
