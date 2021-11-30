@@ -138,7 +138,7 @@ public class FeatureService {
         }
     }
 
-    public func fetchGuestLink() -> Feature.SelfDeletingMessages {
+    public func fetchGuestLink() -> Feature.GuestLink {
         guard let feature = Feature.fetch(name: .guestLink, context: context) else {
             return .init()
         }
