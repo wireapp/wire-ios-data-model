@@ -138,14 +138,14 @@ public class FeatureService {
         }
     }
 
-    public func fetchGuestLink() -> Feature.GuestLink {
+    public func fetchGuestLinks() -> Feature.GuestLinks {
         guard let feature = Feature.fetch(name: .guestLinks, context: context) else {
             return .init()
         }
         return .init(status: feature.status)
     }
 
-    public func storeGuestLink(_ guestLink: Feature.GuestLink) {
+    public func storeGuestLinks(_ guestLink: Feature.GuestLinks) {
         Feature.updateOrCreate(havingName: .guestLinks, in: context) {
             $0.status = guestLink.status
         }
@@ -179,7 +179,7 @@ public class FeatureService {
                 storeSelfDeletingMessages(.init())
 
             case .guestLinks:
-                storeGuestLink(.init())
+                storeGuestLinks(.init())
             }
         }
     }
