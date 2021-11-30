@@ -138,6 +138,29 @@ public class FeatureService {
         }
     }
 
+    public func fetchGuestLink() -> Feature.SelfDeletingMessages {
+        guard let feature = Feature.fetch(name: .guestLink, context: context) else {
+            return .init()
+        }
+        return .init(status: feature.status)
+    }
+
+    public func storeGuestLink(_ guestLink: Feature.GuestLink) {
+        Feature.updateOrCreate(havingName: .guestLink, in: context) {
+            $0.status = guestLink.status
+        }
+
+        guard needsToNotifyUser(for: .fileSharing) else { return }
+
+        switch guestLink.status {
+        case .disabled:
+            notifyChange(.guestLinkDisabled)
+
+        case .enabled:
+            notifyChange(.guestLinkEnabled)
+        }
+    }
+
     // MARK: - Helpers
 
     func createDefaultConfigsIfNeeded() {
@@ -154,6 +177,9 @@ public class FeatureService {
 
             case .selfDeletingMessages:
                 storeSelfDeletingMessages(.init())
+
+            case .guestLink:
+                storeGuestLink(.init())
             }
         }
     }
@@ -209,6 +235,8 @@ extension FeatureService {
         case selfDeletingMessagesIsEnabled(enforcedTimeout: UInt?)
         case fileSharingEnabled
         case fileSharingDisabled
+        case guestLinkEnabled
+        case guestLinkDisabled
 
     }
 
