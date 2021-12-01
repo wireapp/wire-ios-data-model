@@ -20,7 +20,7 @@ import Foundation
 
 public extension Feature {
 
-    struct GuestLinks: Codable {
+    struct ConversationGuestLinks: Codable {
 
         // MARK: - Properties
 

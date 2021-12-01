@@ -138,26 +138,26 @@ public class FeatureService {
         }
     }
 
-    public func fetchGuestLinks() -> Feature.GuestLinks {
-        guard let feature = Feature.fetch(name: .guestLinks, context: context) else {
+    public func fetchConversationGuestLinks() -> Feature.ConversationGuestLinks {
+        guard let feature = Feature.fetch(name: .conversationGuestLinks, context: context) else {
             return .init()
         }
         return .init(status: feature.status)
     }
 
-    public func storeGuestLinks(_ guestLink: Feature.GuestLinks) {
-        Feature.updateOrCreate(havingName: .guestLinks, in: context) {
-            $0.status = guestLink.status
+    public func storeConversationGuestLinks(_ conversationGuestLinks: Feature.ConversationGuestLinks) {
+        Feature.updateOrCreate(havingName: .conversationGuestLinks, in: context) {
+            $0.status = conversationGuestLinks.status
         }
 
-        guard needsToNotifyUser(for: .guestLinks) else { return }
+        guard needsToNotifyUser(for: .conversationGuestLinks) else { return }
 
-        switch guestLink.status {
+        switch conversationGuestLinks.status {
         case .disabled:
-            notifyChange(.guestLinksDisabled)
+            notifyChange(.conversationGuestLinksDisabled)
 
         case .enabled:
-            notifyChange(.guestLinksEnabled)
+            notifyChange(.conversationGuestLinksEnabled)
         }
     }
 
@@ -178,8 +178,8 @@ public class FeatureService {
             case .selfDeletingMessages:
                 storeSelfDeletingMessages(.init())
 
-            case .guestLinks:
-                storeGuestLinks(.init())
+            case .conversationGuestLinks:
+                storeConversationGuestLinks(.init())
             }
         }
     }
@@ -235,8 +235,8 @@ extension FeatureService {
         case selfDeletingMessagesIsEnabled(enforcedTimeout: UInt?)
         case fileSharingEnabled
         case fileSharingDisabled
-        case guestLinksEnabled
-        case guestLinksDisabled
+        case conversationGuestLinksEnabled
+        case conversationGuestLinksDisabled
 
     }
 
