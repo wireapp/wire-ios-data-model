@@ -66,7 +66,7 @@ extension ZMConversation {
             
             // modified keys are set "automatically" on the uiMOC
             if synchronize && managedObjectContext.zm_isSyncContext {
-                setLocallyModifiedKeys(Set([ZMConversationLastReadServerTimeStampKey]))
+                setLocallyModifiedKeys(Set([ZMConversation.ZMConversationLastReadServerTimeStampKey]))
             }
             
             NotificationInContext(name: ZMConversation.lastReadDidChangeNotificationName, context: managedObjectContext.notificationContext, object: self, userInfo: nil).post()
@@ -95,7 +95,7 @@ extension ZMConversation {
             clearedTimeStamp = timestamp
             
             if synchronize && managedObjectContext.zm_isSyncContext {
-                setLocallyModifiedKeys(Set([ZMConversationClearedTimeStampKey]))
+                setLocallyModifiedKeys(Set([ZMConversation.ZMConversationClearedTimeStampKey]))
             }
         }
     }
@@ -108,13 +108,13 @@ extension ZMConversation {
             archivedChangedTimestamp = timestamp
             
             if synchronize && managedObjectContext.zm_isSyncContext {
-                setLocallyModifiedKeys([ZMConversationArchivedChangedTimeStampKey])
+                setLocallyModifiedKeys([ZMConversation.ZMConversationArchivedChangedTimeStampKey])
             }
             
             return true
         } else if timestamp == archivedChangedTimestamp {
             if synchronize {
-                setLocallyModifiedKeys([ZMConversationArchivedChangedTimeStampKey])
+                setLocallyModifiedKeys([ZMConversation.ZMConversationArchivedChangedTimeStampKey])
             }
             
             return true
@@ -131,13 +131,13 @@ extension ZMConversation {
             silencedChangedTimestamp = timestamp
             
             if synchronize && managedObjectContext.zm_isSyncContext {
-                setLocallyModifiedKeys([ZMConversationSilencedChangedTimeStampKey])
+                setLocallyModifiedKeys([ZMConversation.ZMConversationSilencedChangedTimeStampKey])
             }
             
             return true
         } else if timestamp == silencedChangedTimestamp {
             if synchronize {
-                setLocallyModifiedKeys([ZMConversationSilencedChangedTimeStampKey])
+                setLocallyModifiedKeys([ZMConversation.ZMConversationSilencedChangedTimeStampKey])
             }
             
             return true

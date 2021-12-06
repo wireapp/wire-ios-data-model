@@ -18,7 +18,6 @@
 
 
 #import "ZMBaseManagedObjectTest.h"
-#import "ZMConversation+Internal.h"
 #import "NSManagedObjectContext+zmessaging-Internal.h"
 #import "ZMManagedObject+Internal.h"
 

@@ -119,7 +119,7 @@ extension ZMUser : SideEffectSource {
 
         conversations.forEach {
             if $0.allUsersTrusted {
-                keys.insert(SecurityLevelKey)
+                keys.insert(ZMConversation.SecurityLevelKey)
             }
             if keys.count > 0 {
                 affectedObjects[$0] = Changes(changedKeys: keys)

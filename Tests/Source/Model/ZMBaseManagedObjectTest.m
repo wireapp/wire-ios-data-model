@@ -27,9 +27,7 @@
 #import "MockModelObjectContextFactory.h"
 
 #import "ZMUser+Internal.h"
-#import "ZMConversation+Internal.h"
 #import "ZMMessage+Internal.h"
-#import "ZMConversation+UnreadCount.h"
 
 #import "NSString+RandomString.h"
 
@@ -86,8 +84,8 @@
 
     [ZMPersistentCookieStorage setDoNotPersistToKeychain:!self.shouldUseRealKeychain];
 
-    self.originalConversationLastReadTimestampTimerValue = ZMConversationDefaultLastReadTimestampSaveDelay;
-    ZMConversationDefaultLastReadTimestampSaveDelay = 0.02;
+    self.originalConversationLastReadTimestampTimerValue = ZMConversation.ZMConversationDefaultLastReadTimestampSaveDelay;
+    ZMConversation.ZMConversationDefaultLastReadTimestampSaveDelay = 0.02;
 
     self.userIdentifier = NSUUID.UUID;
     self.coreDataStack = [self createCoreDataStack];
@@ -126,7 +124,7 @@
 
 - (void)tearDown;
 {
-    ZMConversationDefaultLastReadTimestampSaveDelay = self.originalConversationLastReadTimestampTimerValue;
+    ZMConversation.ZMConversationDefaultLastReadTimestampSaveDelay = self.originalConversationLastReadTimestampTimerValue;
 
     WaitForAllGroupsToBeEmpty(500); // we want the test to get stuck if there is something wrong. Better than random failures
     [self wipeCaches];

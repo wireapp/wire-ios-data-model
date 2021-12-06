@@ -20,7 +20,7 @@ import Foundation
 
 extension ZMConversation {
     
-    open override func prepareForDeletion() {
+    public override func prepareForDeletion() {
         super.prepareForDeletion()
         
         allMessages.forEach({ managedObjectContext?.zm_fileAssetCache?.deleteAssetData($0)} )

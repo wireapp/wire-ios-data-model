@@ -25,7 +25,6 @@
 
 #import "ZMMessage+Internal.h"
 #import "NSManagedObjectContext+zmessaging.h"
-#import "ZMConversation+Internal.h"
 #import "WireDataModel/WireDataModel-Swift.h"
 
 #pragma mark - Image message

@@ -19,9 +19,9 @@
 
 @import CoreData;
 
+#import <WireDataModel/WireDataModel-Swift.h>
 #import "ZMFetchRequestBatch.h"
 #import "ZMMessage+Internal.h"
-#import "ZMConversation+Internal.h"
 
 #import "NSManagedObjectContext+zmessaging.h"
 
@@ -132,7 +132,7 @@
 - (NSArray <ZMConversation *>*)fetchConversationsInManagedObjectContext:(NSManagedObjectContext *)moc
 {
     NSSet *identifierData = [self.remoteIdentifiersToFetch mapWithBlock:^NSData *(NSUUID *identifier) { return identifier.data; }];
-    NSPredicate *conversationPredicate = [self predicateForKey:ZMConversationRemoteIdentifierDataKey matchingValues:identifierData];
+    NSPredicate *conversationPredicate = [self predicateForKey:ZMConversation.ZMConversationRemoteIdentifierDataKey matchingValues:identifierData];
     NSFetchRequest *conversationRequest = [ZMConversation sortedFetchRequestWithPredicate:conversationPredicate];
     conversationRequest.returnsObjectsAsFaults = NO;
     return [moc executeFetchRequestOrAssert:conversationRequest];

@@ -18,7 +18,6 @@
 
 
 #import "ZMConversationListDirectory.h"
-#import "ZMConversation+Internal.h"
 #import "ZMConversationList+Internal.h"
 #import <WireDataModel/WireDataModel-Swift.h>
 
@@ -108,8 +107,8 @@ static NSString * const PendingKey = @"Pending";
     NSFetchRequest *allConversationsRequest = [ZMConversation sortedFetchRequest];
     // Since this is extremely likely to trigger the "participantRoles" and "connection" relationships, we make sure these gets prefetched:
     NSMutableArray *keyPaths = [NSMutableArray arrayWithArray:allConversationsRequest.relationshipKeyPathsForPrefetching];
-    [keyPaths addObject:ZMConversationParticipantRolesKey];
-    [keyPaths addObject:ZMConversationConnectionKey];
+    [keyPaths addObject:ZMConversation.ZMConversationParticipantRolesKey];
+    [keyPaths addObject:ZMConversation.ZMConversationConnectionKey];
     allConversationsRequest.relationshipKeyPathsForPrefetching = keyPaths;
     
     NSError *error;

@@ -19,7 +19,6 @@
 @import WireProtos;
 
 #import "ZMUpdateEvent+WireDataModel.h"
-#import "ZMConversation+Internal.h"
 #import "ZMMessage+Internal.h"
 #import "ZMUser+Internal.h"
 #import <WireDataModel/WireDataModel-Swift.h>

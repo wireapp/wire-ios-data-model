@@ -22,7 +22,6 @@
 #import <CoreData/CoreData.h>
 #import <WireTransport/WireTransport.h>
 
-#import "ZMConversation+Internal.h"
 #import "ZMManagedObject+Internal.h"
 #import "ZMBaseManagedObjectTest.h"
 

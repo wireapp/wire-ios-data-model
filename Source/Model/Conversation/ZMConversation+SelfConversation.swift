@@ -27,6 +27,27 @@ extension ZMConversation {
         case missingClearedTimestamp
 
     }
+    
+    var isSelfConversation: Bool {
+        conversationType == .`self`
+    }
+    
+    @objc(selfConversationIdentifierInContext:)
+    public static func selfConversationIdentifier(in context: NSManagedObjectContext) -> UUID {
+        let selfUser = ZMUser.selfUser(in: context)
+        return selfUser.remoteIdentifier
+    }
+    
+    @objc(selfConversationInContext:)
+    public static func selfConversation(in context: NSManagedObjectContext) -> ZMConversation {
+        let selfUserID = selfConversationIdentifier(in: context)
+        
+        guard let selfConversation = fetch(with: selfUserID, in: context) else {
+            fatal("No self conversation")
+        }
+        
+        return selfConversation
+    }
 
     /// Append a `LastRead` message derived from a given conversation to the self conversation.
     ///

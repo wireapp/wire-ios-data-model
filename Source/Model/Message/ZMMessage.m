@@ -24,12 +24,9 @@
 
 
 #import "ZMMessage+Internal.h"
-#import "ZMConversation.h"
 #import "ZMUser+Internal.h"
 #import "NSManagedObjectContext+zmessaging.h"
-#import "ZMConversation+Internal.h"
 
-#import "ZMConversation+UnreadCount.h"
 #import "ZMUpdateEvent+WireDataModel.h"
 
 #import <WireDataModel/WireDataModel-Swift.h>
@@ -435,7 +432,7 @@ NSString * const ZMMessageDecryptionErrorCodeKey = @"decryptionErrorCode";
     BOOL checkedAllHiddenMessages = NO;
     BOOL checkedAllVisibleMessage = NO;
 
-    if (![conversation hasFaultForRelationshipNamed:ZMConversationAllMessagesKey]) {
+    if (![conversation hasFaultForRelationshipNamed:ZMConversation.ZMConversationAllMessagesKey]) {
         checkedAllVisibleMessage = YES;
         for (ZMMessage *message in conversation.allMessages) {
             if (message.isFault) {
@@ -446,7 +443,7 @@ NSString * const ZMMessageDecryptionErrorCodeKey = @"decryptionErrorCode";
         }
     }
     
-    if (![conversation hasFaultForRelationshipNamed:ZMConversationHiddenMessagesKey]) {
+    if (![conversation hasFaultForRelationshipNamed:ZMConversation.ZMConversationHiddenMessagesKey]) {
         checkedAllHiddenMessages = YES;
         for (ZMMessage *message in conversation.hiddenMessages) {
             if (message.isFault) {

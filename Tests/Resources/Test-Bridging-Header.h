@@ -19,7 +19,6 @@
 
 #import "ZMManagedObject+Internal.h"
 #import "ZMMessage+Internal.h"
-#import "ZMConversation+Internal.h"
 #import "ZMUser+Internal.h"
 #import "ZMConnection+Internal.h"
 #import "ZMEditableUser.h"

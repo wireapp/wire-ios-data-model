@@ -35,11 +35,6 @@
 #import <WireDataModel/ZMUser+OneOnOne.h>
 #import <WireDataModel/UserClientTypes.h>
 
-#import <WireDataModel/ZMConversation.h>
-#import <WireDataModel/ZMConversation+Internal.h>
-#import <WireDataModel/ZMConversation+UnreadCount.h>
-#import <WireDataModel/ZMConversationSecurityLevel.h>
-
 #import <WireDataModel/ZMConnection+Internal.h>
 
 #import <WireDataModel/ZMConversationList.h>

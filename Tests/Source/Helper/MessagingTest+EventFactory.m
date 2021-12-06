@@ -23,7 +23,6 @@
 
 #import "MessagingTest+EventFactory.h"
 #import "ZMUser+Internal.h"
-#import "ZMConversation+Internal.h"
 
 NSString * const EventConversationAdd = @"conversation.message-add";
 NSString * const EventConversationAddClientMessage = @"conversation.client-message-add";

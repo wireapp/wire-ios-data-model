@@ -124,7 +124,7 @@ extension ZMConversation : ObjectInSnapshot {
     }
 
     public var securityLevelChanged : Bool {
-        return changedKeysContain(keys: SecurityLevelKey)
+        return changedKeysContain(keys: ZMConversation.SecurityLevelKey)
     }
         
     public var createdRemotelyChanged : Bool {

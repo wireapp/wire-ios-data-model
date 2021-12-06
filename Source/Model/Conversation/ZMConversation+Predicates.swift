@@ -21,7 +21,7 @@ import Foundation
 
 extension ZMConversation {
     
-    override open class func predicateForFilteringResults() -> NSPredicate {
+    public override class func predicateForFilteringResults() -> NSPredicate {
         let selfType = ZMConversationType.init(rawValue: 1)!
         return NSPredicate(format: "\(ZMConversationConversationTypeKey) != \(ZMConversationType.invalid.rawValue) && \(ZMConversationConversationTypeKey) != \(selfType.rawValue)")
     }
@@ -181,6 +181,41 @@ extension ZMConversation {
     class func predicateForConversationsNeedingToBeCalculatedUnreadMessages() -> NSPredicate {
          return NSPredicate(format: "%K == YES", ZMConversationNeedsToCalculateUnreadMessagesKey)
     }
+    
+    
+    public override static func predicateForObjectsThatNeedToBeInsertedUpstream() -> NSPredicate? {
+        let superPredicate = super.predicateForObjectsThatNeedToBeInsertedUpstream()
+        
+        let onlyGroupPredicate = NSPredicate(format: "%K == %@", argumentArray: [#keyPath(ZMConversation.conversationType), ZMConversationType.group.rawValue])
+        
+        let predicates = [superPredicate, onlyGroupPredicate].compactMap { $0 }
+        return NSCompoundPredicate(andPredicateWithSubpredicates: predicates)
+    }
+    
+    public override static func predicateForObjectsThatNeedToBeUpdatedUpstream() -> NSPredicate? {
+        let superPredicate = super.predicateForObjectsThatNeedToBeUpdatedUpstream()
+        
+        let onlyGroupPredicate = NSPredicate(format: "(%K != NULL) AND (%K != %@) AND (%K == 0)", argumentArray: [ZMConversationRemoteIdentifierDataKey, #keyPath(ZMConversation.conversationType), ZMConversationType.invalid.rawValue, #keyPath(ZMConversation.needsToBeUpdatedFromBackend)])
+        
+        let predicates = [superPredicate, onlyGroupPredicate].compactMap { $0 }
+        return NSCompoundPredicate(andPredicateWithSubpredicates: predicates)
+    }
+    
+    @objc(predicateForSearchQuery:team:moc:)
+    static func predicate(for searchQuery: String, team: Team?, context: NSManagedObjectContext) -> NSPredicate {
+        let teamPredicate = NSPredicate(format: "(%K == %@)", argumentArray: [#keyPath(ZMConversation.team), team ?? NSNull()])
+        let selfUserPredicate = predicate(forSearchQuery: searchQuery, selfUser: ZMUser.selfUser(in: context))
+        
+        let predicates = [teamPredicate, selfUserPredicate].compactMap { $0 }
+        return NSCompoundPredicate(andPredicateWithSubpredicates: predicates)
+    }
+    
+    @objc(userDefinedNamePredicateForSearchString:)
+    public static func userDefinedNamePredicate(forSearch searchString: String) -> NSPredicate {
+        let normalizedSearchString = (searchString as NSString).normalizedForSearch() as String
+        return NSPredicate(formatDictionary: [#keyPath(ZMConversation.normalizedUserDefinedName): "%K MATCHES %@"], matchingSearch: normalizedSearchString)
+    }
+    
 }
 
 extension String {

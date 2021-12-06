@@ -64,7 +64,7 @@ class RolesMigrationTests: DiskDatabaseTest {
         oneToOneConvo.needsToDownloadRoles = false
         oneToOneConvo.needsToBeUpdatedFromBackend = false
         
-        let selfConvo = ZMConversation.selfConversation(in: self.moc)
+        let selfConvo = ZMConversation.selfConversation(in: self.moc) 
         selfConvo.conversationType = .self
         selfConvo.addParticipantAndUpdateConversationState(user: selfUser, role: nil)
         selfConvo.userDefinedName = "Self"

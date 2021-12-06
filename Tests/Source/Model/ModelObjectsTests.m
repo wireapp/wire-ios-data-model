@@ -20,7 +20,6 @@
 #import "ModelObjectsTests.h"
 
 #import "ZMManagedObject+Internal.h"
-#import "ZMConversation+Internal.h"
 #import "ZMUser+Internal.h"
 #import "ZMConnection+Internal.h"
 #import "ZMMessage+Internal.h"

@@ -33,7 +33,7 @@ class ZMConversationTests_Silencing: ZMConversationTestsBase {
         
         // then
         XCTAssertEqual(conversation.silencedChangedTimestamp, timestamp)
-        XCTAssertTrue(conversation.modifiedKeys!.contains(ZMConversationSilencedChangedTimeStampKey))
+        XCTAssertTrue(conversation.modifiedKeys!.contains(ZMConversation.ZMConversationSilencedChangedTimeStampKey))
     }
     
     // We still want to synchronize silenced changes even if nothing has happend in between
@@ -50,7 +50,7 @@ class ZMConversationTests_Silencing: ZMConversationTestsBase {
         
         // then
         XCTAssertEqual(conversation.silencedChangedTimestamp, timestamp)
-        XCTAssertTrue(conversation.modifiedKeys!.contains(ZMConversationSilencedChangedTimeStampKey))
+        XCTAssertTrue(conversation.modifiedKeys!.contains(ZMConversation.ZMConversationSilencedChangedTimeStampKey))
     }
     
     func testThatSilencingUpdatesPropertiesWhenPerformedOnSEContext() {
@@ -66,7 +66,7 @@ class ZMConversationTests_Silencing: ZMConversationTestsBase {
             
             // then
             XCTAssertEqual(conversation.silencedChangedTimestamp, timestamp)
-            XCTAssertTrue(conversation.modifiedKeys!.contains(ZMConversationSilencedChangedTimeStampKey))
+            XCTAssertTrue(conversation.modifiedKeys!.contains(ZMConversation.ZMConversationSilencedChangedTimeStampKey))
         }
     }
     

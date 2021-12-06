@@ -70,7 +70,7 @@ extension ZMClientMessage {
         return NSPredicate(
             format: "%K.%K == %@",
             ZMMessageConversationKey,
-            ZMConversationRemoteIdentifierDataKey,
+            ZMConversation.ZMConversationRemoteIdentifierDataKey,
             (identifier as NSUUID).data() as NSData
         )
     }

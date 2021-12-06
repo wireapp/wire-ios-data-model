@@ -21,13 +21,9 @@
 
 #import "ZMConversationTests.h"
 #import "ZMUser.h"
-#import "ZMConversation+Internal.h"
 #import "ZMMessage+Internal.h"
 #import "ZMConversationList+Internal.h"
 #import "ZMConnection+Internal.h"
-#import "ZMConversation+Internal.h"
-#import "ZMConversationList+Internal.h"
-#import "ZMConversation+UnreadCount.h"
 #import "WireDataModelTests-Swift.h"
 
 
@@ -226,7 +222,7 @@
     XCTAssert([self.uiMOC saveOrRollback]);
     
     // Then
-    XCTAssertFalse([sut.keysThatHaveLocalModifications containsObject:ZMConversationUserDefinedNameKey]);
+    XCTAssertFalse([sut.keysThatHaveLocalModifications containsObject:ZMConversation.ZMConversationUserDefinedNameKey]);
 }
 
 - (void)testThatItDoesNotIgnoreAModifiedDisplayNameWhenNotInserting
@@ -241,23 +237,23 @@
     XCTAssert([self.uiMOC saveOrRollback]);
     
     // Then
-    XCTAssert([sut.keysThatHaveLocalModifications containsObject:ZMConversationUserDefinedNameKey]);
+    XCTAssert([sut.keysThatHaveLocalModifications containsObject:ZMConversation.ZMConversationUserDefinedNameKey]);
 }
 
 - (void)testThatWeCanSetAttributesOnConversation
 {
     [self checkConversationAttributeForKey:@"draftMessage" value:[[DraftMessage alloc] initWithText:@"My draft message text" mentions:@[] quote:nil]];
-    [self checkConversationAttributeForKey:ZMConversationUserDefinedNameKey value:@"Foo"];
+    [self checkConversationAttributeForKey:ZMConversation.ZMConversationUserDefinedNameKey value:@"Foo"];
     [self checkConversationAttributeForKey:@"normalizedUserDefinedName" value:@"Foo"];
     [self checkConversationAttributeForKey:@"conversationType" value:@(1)];
     [self checkConversationAttributeForKey:@"lastModifiedDate" value:[NSDate dateWithTimeIntervalSince1970:123456]];
     [self checkConversationAttributeForKey:@"remoteIdentifier" value:[NSUUID createUUID]];
-    [self checkConversationAttributeForKey:ZMConversationIsArchivedKey value:@YES];
-    [self checkConversationAttributeForKey:ZMConversationIsArchivedKey value:@NO];
+    [self checkConversationAttributeForKey:ZMConversation.ZMConversationIsArchivedKey value:@YES];
+    [self checkConversationAttributeForKey:ZMConversation.ZMConversationIsArchivedKey value:@NO];
     [self checkConversationAttributeForKey:@"needsToBeUpdatedFromBackend" value:@YES];
     [self checkConversationAttributeForKey:@"needsToBeUpdatedFromBackend" value:@NO];
-    [self checkConversationAttributeForKey:ZMConversationLastReadServerTimeStampKey value:[NSDate date]];
-    [self checkConversationAttributeForKey:ZMConversationLastServerTimeStampKey value:[NSDate date]];
+    [self checkConversationAttributeForKey:ZMConversation.ZMConversationLastReadServerTimeStampKey value:[NSDate date]];
+    [self checkConversationAttributeForKey:ZMConversation.ZMConversationLastServerTimeStampKey value:[NSDate date]];
 }
 
 - (void)checkConversationAttributeForKey:(NSString *)key value:(id)value;
@@ -269,12 +265,12 @@
 {
     // given
     NSSet *expected = [NSSet setWithArray:@[
-                          ZMConversationUserDefinedNameKey,
-                          ZMConversationLastReadServerTimeStampKey,
-                          ZMConversationClearedTimeStampKey,
-                          ZMConversationSilencedChangedTimeStampKey,
-                          ZMConversationArchivedChangedTimeStampKey,
-                          ]];
+        ZMConversation.ZMConversationUserDefinedNameKey,
+        ZMConversation.ZMConversationLastReadServerTimeStampKey,
+        ZMConversation.ZMConversationClearedTimeStampKey,
+        ZMConversation.ZMConversationSilencedChangedTimeStampKey,
+        ZMConversation.ZMConversationArchivedChangedTimeStampKey,
+    ]];
     
     // when
     ZMConversation *conversation = [ZMConversation insertNewObjectInManagedObjectContext:self.uiMOC];
@@ -482,7 +478,7 @@
     // given
     ZMConversation *conversation = [ZMConversation insertNewObjectInManagedObjectContext:self.uiMOC];
     conversation.conversationType = ZMConversationTypeGroup;
-    [conversation setLocallyModifiedKeys:[NSSet setWithObject:ZMConversationUserDefinedNameKey]];
+    [conversation setLocallyModifiedKeys:[NSSet setWithObject:ZMConversation.ZMConversationUserDefinedNameKey]];
     
     NSPredicate *predicate = [ZMConversation predicateForObjectsThatNeedToBeUpdatedUpstream];
 
@@ -494,7 +490,7 @@
 {
     // given
     ZMConversation *conversation = [ZMConversation insertNewObjectInManagedObjectContext:self.uiMOC];
-    [conversation setLocallyModifiedKeys:[NSSet setWithObject:ZMConversationUserDefinedNameKey]];
+    [conversation setLocallyModifiedKeys:[NSSet setWithObject:ZMConversation.ZMConversationUserDefinedNameKey]];
     NSPredicate *predicate = [ZMConversation predicateForObjectsThatNeedToBeUpdatedUpstream];
     ZMConversationType types[] = {
         ZMConversationTypeConnection,
@@ -520,7 +516,7 @@
     ZMConversation *conversation = [ZMConversation insertNewObjectInManagedObjectContext:self.uiMOC];
     conversation.conversationType = ZMConversationTypeConnection;
     conversation.remoteIdentifier = NSUUID.createUUID;
-    [conversation setLocallyModifiedKeys:[NSSet setWithObject:ZMConversationArchivedChangedTimeStampKey]];
+    [conversation setLocallyModifiedKeys:[NSSet setWithObject:ZMConversation.ZMConversationArchivedChangedTimeStampKey]];
     
     NSPredicate *predicate = [ZMConversation predicateForObjectsThatNeedToBeUpdatedUpstream];
     
@@ -597,7 +593,7 @@
     ZMConversation *conversation = [ZMConversation insertNewObjectInManagedObjectContext:self.uiMOC];
     
     // when
-    NSString *longText = [@"" stringByPaddingToLength:ZMConversationMaxTextMessageLength + 1000 withString:@"😋" startingAtIndex:0];
+    NSString *longText = [@"" stringByPaddingToLength:ZMConversation.ZMConversationMaxTextMessageLength + 1000 withString:@"😋" startingAtIndex:0];
     
     // then
     id<ZMConversationMessage> message = (id)[conversation appendMessageWithText:longText];
@@ -1318,7 +1314,7 @@
     [self.uiMOC saveOrRollback];
     [conversation resetLocallyModifiedKeys:[conversation keysThatHaveLocalModifications]];
     [self.uiMOC saveOrRollback];
-    XCTAssertFalse([[conversation keysThatHaveLocalModifications] containsObject:ZMConversationUserDefinedNameKey]);
+    XCTAssertFalse([[conversation keysThatHaveLocalModifications] containsObject:ZMConversation.ZMConversationUserDefinedNameKey]);
     XCTAssertFalse([[conversation keysThatHaveLocalModifications] containsObject:@"normalizedUserDefinedName"]);
     
     // when
@@ -1326,7 +1322,7 @@
     [self.uiMOC saveOrRollback];
     
     // then
-    XCTAssertTrue([[conversation keysThatHaveLocalModifications] containsObject:ZMConversationUserDefinedNameKey]);
+    XCTAssertTrue([[conversation keysThatHaveLocalModifications] containsObject:ZMConversation.ZMConversationUserDefinedNameKey]);
     XCTAssertFalse([[conversation keysThatHaveLocalModifications] containsObject:@"normalizedUserDefinedName"]);
 }
 

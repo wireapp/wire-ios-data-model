@@ -18,7 +18,6 @@
 
 
 #import "NSManagedObjectContext+zmessaging.h"
-#import "ZMConversation+Internal.h"
 #import "ZMConnection+Internal.h"
 #import "ZMConversationListDirectory.h"
 #import <WireDataModel/WireDataModel-Swift.h>
@@ -116,7 +115,7 @@
             [keysAffectingSorting addObject:key];
         }
     }
-    _conversationKeysAffectingSorting = [[keysAffectingSorting copy] setByAddingObject:ZMConversationListIndicatorKey];
+    _conversationKeysAffectingSorting = [[keysAffectingSorting copy] setByAddingObject:ZMConversation.ZMConversationListIndicatorKey];
 }
 
 - (void)createBackingList:(NSArray *)conversations

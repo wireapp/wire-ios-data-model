@@ -20,7 +20,6 @@
 @import WireDataModel;
 #import "ZMBaseManagedObjectTest.h"
 #import "ZMConversationListDirectory.h"
-#import "ZMConversation+Internal.h"
 #import "ZMConnection+Internal.h"
 #import "ZMUser+Internal.h"
 #import <WireDataModel/WireDataModel-Swift.h>

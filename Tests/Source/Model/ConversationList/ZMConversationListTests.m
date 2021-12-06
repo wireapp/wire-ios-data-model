@@ -21,7 +21,6 @@
 #import "ZMBaseManagedObjectTest.h"
 #import "ZMConversationList+Internal.h"
 #import "ZMConversationListDirectory.h"
-#import "ZMConversation+Internal.h"
 #import "NSManagedObjectContext+zmessaging.h"
 #import "ZMConnection+Internal.h"
 #import "ZMUser+Internal.h"
@@ -632,8 +631,8 @@
     ZMConversationList *list = self.uiMOC.conversationListDirectory.conversationsIncludingArchived;
     
     // then
-    XCTAssertTrue([list sortingIsAffectedByConversationKeys:[NSSet setWithObject:ZMConversationListIndicatorKey]]);
-    XCTAssertTrue([list sortingIsAffectedByConversationKeys:[NSSet setWithObject:ZMConversationIsArchivedKey]]);
+    XCTAssertTrue([list sortingIsAffectedByConversationKeys:[NSSet setWithObject:ZMConversation.ZMConversationListIndicatorKey]]);
+    XCTAssertTrue([list sortingIsAffectedByConversationKeys:[NSSet setWithObject:ZMConversation.ZMConversationIsArchivedKey]]);
     XCTAssertTrue([list sortingIsAffectedByConversationKeys:[NSSet setWithObject:@"lastModifiedDate"]]);
     XCTAssertTrue([list sortingIsAffectedByConversationKeys:[NSSet setWithObject:@"remoteIdentifier_data"]]);
 }
@@ -647,7 +646,7 @@
     
     NSMutableSet *conversationKeys = [NSMutableSet setWithArray:conversationEntity.propertiesByName.allKeys];
 
-    [conversationKeys removeObject:ZMConversationIsArchivedKey];
+    [conversationKeys removeObject:ZMConversation.ZMConversationIsArchivedKey];
     [conversationKeys removeObject:@"lastModifiedDate"];
     [conversationKeys removeObject:@"remoteIdentifier_data"];
     
