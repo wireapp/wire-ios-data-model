@@ -1,6 +1,6 @@
 //
 // Wire
-// Copyright (C) 2020 Wire Swiss GmbH
+// Copyright (C) 2019 Wire Swiss GmbH
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -16,30 +16,17 @@
 // along with this program. If not, see http://www.gnu.org/licenses/.
 //
 
-import XCTest
-@testable import WireDataModel
+import Foundation
 
-final class StringWordsTests: XCTestCase {
+extension ZMConversation {
 
-    func testThatSentenceIsSplitted() {
-        // given
-        let sut = "once upon a time"
+    func isFederating(with user: UserType) -> Bool {
+        guard
+            let domain = domain,
+            let userDomain = user.domain
+        else { return false }
 
-        // when
-        let words = sut.words
-
-        // then
-        XCTAssertEqual(words, ["once", "upon", "a", "time"])
+        return domain != userDomain
     }
 
-    func testThatSingleSymbolIsSplittedAsAWord() {
-        // given
-        let sut = "@"
-
-        // when
-        let words = sut.words
-
-        // then
-        XCTAssertEqual(words, ["@"])
-    }
 }
