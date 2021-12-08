@@ -186,7 +186,7 @@ public extension WireProtos.Asset.ImageMetaData {
 }
 
 public extension WireProtos.Asset.RemoteData {
-    init(withOTRKey otrKey: Data, sha256: Data, assetId: String? = nil, assetToken: String? = nil) {
+    init(withOTRKey otrKey: Data, sha256: Data, assetId: String? = nil, assetToken: String? = nil, assetDomain: String? = nil) {
         self = WireProtos.Asset.RemoteData.with {
             $0.otrKey = otrKey
             $0.sha256 = sha256
@@ -195,6 +195,9 @@ public extension WireProtos.Asset.RemoteData {
             }
             if let token = assetToken {
                 $0.assetToken = token
+            }
+            if let domain = assetDomain {
+                $0.assetDomain = domain
             }
         }
     }
@@ -229,15 +232,15 @@ extension GenericMessage {
         update(asset: asset)
     }
     
-    public mutating func updatePreview(assetId: String, token: String?) {
+    public mutating func updatePreview(assetId: String, token: String?, domain: String?) {
         updateAsset {
-            $0.preview.remote.update(assetId: assetId, token: token)
+            $0.preview.remote.update(assetId: assetId, token: token, domain: domain)
         }
     }
 
-    public mutating func updateUploaded(assetId: String, token: String?) {
+    public mutating func updateUploaded(assetId: String, token: String?, domain: String?) {
         updateAsset {
-            $0.uploaded.update(assetId: assetId, token: token)
+            $0.uploaded.update(assetId: assetId, token: token, domain: domain)
         }
     }
     
@@ -264,10 +267,15 @@ extension GenericMessage {
 }
 
 extension WireProtos.Asset.RemoteData {
-    mutating func update(assetId: String, token: String?) {
+    mutating func update(assetId: String, token: String?, domain: String?) {
         assetID = assetId
+        
         if let token = token {
             assetToken = token
+        }
+
+        if let domain = domain {
+            assetDomain = domain
         }
     }
 }
