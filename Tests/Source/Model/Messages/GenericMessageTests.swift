@@ -19,6 +19,8 @@
 import Foundation
 @testable import WireDataModel
 
+// swiftlint:disable line_length
+
 class GenericMessageTests: XCTestCase {
     func testThatItChecksTheCommonMessageTypesAsKnownMessage() {
         let generators: [() -> (GenericMessage)] = [ { return GenericMessage(content: Text(content: "hello")) }, { return GenericMessage(content: Knock()) }, { return GenericMessage(content: LastRead(conversationID: UUID.create(), lastReadTimestamp: Date())) }, { return GenericMessage(content: Cleared(timestamp: Date(), conversationID: UUID.create())) }, {
