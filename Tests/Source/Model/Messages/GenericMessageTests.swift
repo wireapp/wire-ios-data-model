@@ -18,21 +18,75 @@
 
 import Foundation
 @testable import WireDataModel
-
-// swiftlint:disable line_length
+import XCTest
 
 class GenericMessageTests: XCTestCase {
-    func testThatItChecksTheCommonMessageTypesAsKnownMessage() {
-        let generators: [() -> (GenericMessage)] = [ { return GenericMessage(content: Text(content: "hello")) }, { return GenericMessage(content: Knock()) }, { return GenericMessage(content: LastRead(conversationID: UUID.create(), lastReadTimestamp: Date())) }, { return GenericMessage(content: Cleared(timestamp: Date(), conversationID: UUID.create())) }, {
-                let sha256 = Data(base64Encoded: "47DEQpj8HBSa+/TImW+5JCeuQeRkm5NMpJWZG3hSuFU=")!
-                let otrKey = Data(base64Encoded: "4H1nD6bG2sCxC/tZBnIG7avLYhkCsSfv0ATNqnfug7w=")!
-                return GenericMessage(content: External(withOTRKey: otrKey, sha256: sha256))
-            }, { return GenericMessage(clientAction: .resetSession) }, { return GenericMessage(content: Calling(content: "Calling")) }, { return GenericMessage(content: WireProtos.Asset(imageSize: .zero, mimeType: "image/jpeg", size: 0)) }, { return GenericMessage(content: MessageHide(conversationId: UUID.create(), messageId: UUID.create())) }, { return GenericMessage(content: Location(latitude: 1, longitude: 2)) }, { return GenericMessage(content: MessageDelete(messageId: UUID.create())) }, { return GenericMessage(content: WireProtos.Reaction.createReaction(emoji: "test", messageID: UUID.create())) }, { return GenericMessage(content: WireProtos.Availability(.away)) }
-        ]
-
-        generators.forEach { generator in
-            let message = generator()
-            XCTAssertTrue(message.knownMessage)
-        }
+    
+    func testThatItChecksTheCommonMessageTypeOfTextAsKnownMessage() {
+        let textMessageType = GenericMessage(content: Text(content: "hello"))
+        XCTAssertTrue(textMessageType.knownMessage)
+    }
+    
+    func testThatItChecksTheCommonMessageTypeOfKnockAsKnownMessage() {
+        let knockMessageType = GenericMessage(content: Knock())
+        XCTAssertTrue(knockMessageType.knownMessage)
+    }
+    
+    func testThatItChecksTheCommonMessageTypeOfLastReadAsKnownMessage() {
+        let listReadMessageType = GenericMessage(content: LastRead(conversationID: UUID.create(), lastReadTimestamp: Date()))
+        XCTAssertTrue(listReadMessageType.knownMessage)
+    }
+    
+    func testThatItChecksTheCommonMessageTypeOfClearedAsKnownMessage() {
+        let clearedMessageType = GenericMessage(content: Cleared(timestamp: Date(), conversationID: UUID.create()))
+        XCTAssertTrue(clearedMessageType.knownMessage)
+    }
+    
+    func testThatItChecksTheCommonMessageTypeOfExternalAsKnownMessage() {
+        let sha256 = Data(base64Encoded: "47DEQpj8HBSa+/TImW+5JCeuQeRkm5NMpJWZG3hSuFU=")!
+        let otrKey = Data(base64Encoded: "4H1nD6bG2sCxC/tZBnIG7avLYhkCsSfv0ATNqnfug7w=")!
+        let externalMessageType = GenericMessage(content: External(withOTRKey: otrKey, sha256: sha256))
+        
+        XCTAssertTrue(externalMessageType.knownMessage)
+    }
+    
+    func testThatItChecksTheCommonMessageTypeOfResetSessionAsKnownMessage() {
+        let resetSessionMessageType = GenericMessage(clientAction: .resetSession)
+        XCTAssertTrue(resetSessionMessageType.knownMessage)
+    }
+    
+    func testThatItChecksTheCommonMessageTypeOfCallingAsKnownMessage() {
+        let callingMessageType = GenericMessage(content: Calling(content: "Calling"))
+        XCTAssertTrue(callingMessageType.knownMessage)
+    }
+    
+    func testThatItChecksTheCommonMessageTypeOfAssetAsKnownMessage() {
+        let assetMessageType = GenericMessage(content: WireProtos.Asset(imageSize: .zero, mimeType: "image/jpeg", size: 0))
+        XCTAssertTrue(assetMessageType.knownMessage)
+    }
+    
+    func testThatItChecksTheCommonMessageTypeOfHidingMessageAsKnownMessage() {
+        let hideMessageType = GenericMessage(content: MessageHide(conversationId: UUID.create(), messageId: UUID.create()))
+        XCTAssertTrue(hideMessageType.knownMessage)
+    }
+    
+    func testThatItCheckTheCommonMessageTypeOfLocationAsKnownMessage() {
+        let locationMessageType = GenericMessage(content: Location(latitude: 1, longitude: 2))
+        XCTAssertTrue(locationMessageType.knownMessage)
+    }
+    
+    func testThatItChecksTheCommonMessageTypeOfMessageDeletionAsKnownMessage() {
+        let deletionMessageType = GenericMessage(content: MessageDelete(messageId: UUID.create()))
+        XCTAssertTrue(deletionMessageType.knownMessage)
+    }
+    
+    func testThatItChecksTheCommonMessageTypeOfCreatingReactionAsKnownMessage() {
+        let creatingReactionMessageType = GenericMessage(content: WireProtos.Reaction.createReaction(emoji: "test", messageID: UUID.create()))
+        XCTAssertTrue(creatingReactionMessageType.knownMessage)
+    }
+    
+    func testThatItChecksTheCommonMessageTypeOfAvailabilityAsKnownMessage() {
+        let awayAvailabilityMessageType = GenericMessage(content: WireProtos.Availability(.away))
+        XCTAssertTrue(awayAvailabilityMessageType.knownMessage)
     }
 }
