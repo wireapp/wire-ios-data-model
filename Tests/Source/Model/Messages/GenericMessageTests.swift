@@ -22,27 +22,27 @@ import XCTest
 
 class GenericMessageTests: XCTestCase {
     
-    func testThatItChecksTheCommonMessageTypeOfTextAsKnownMessage() {
+    func testThatConsidersTextMessageTypeAsKnownMessage() {
         let textMessageType = GenericMessage(content: Text(content: "hello"))
         XCTAssertTrue(textMessageType.knownMessage)
     }
     
-    func testThatItChecksTheCommonMessageTypeOfKnockAsKnownMessage() {
+    func testThatItConsidersKnockMessageTypeAsKnownMessage() {
         let knockMessageType = GenericMessage(content: Knock())
         XCTAssertTrue(knockMessageType.knownMessage)
     }
     
-    func testThatItChecksTheCommonMessageTypeOfLastReadAsKnownMessage() {
-        let listReadMessageType = GenericMessage(content: LastRead(conversationID: UUID.create(), lastReadTimestamp: Date()))
-        XCTAssertTrue(listReadMessageType.knownMessage)
+    func testThatItConsidersLastReadMessageTypeAsKnownMessage() {
+        let lastReadMessageType = GenericMessage(content: LastRead(conversationID: UUID.create(), lastReadTimestamp: Date()))
+        XCTAssertTrue(lastReadMessageType.knownMessage)
     }
     
-    func testThatItChecksTheCommonMessageTypeOfClearedAsKnownMessage() {
+    func testThatItConsidersClearedMessageTypeAsKnownMessage() {
         let clearedMessageType = GenericMessage(content: Cleared(timestamp: Date(), conversationID: UUID.create()))
         XCTAssertTrue(clearedMessageType.knownMessage)
     }
     
-    func testThatItChecksTheCommonMessageTypeOfExternalAsKnownMessage() {
+    func testThatItConsidersExternalMessageTypeAsKnownMessage() {
         let sha256 = Data(base64Encoded: "47DEQpj8HBSa+/TImW+5JCeuQeRkm5NMpJWZG3hSuFU=")!
         let otrKey = Data(base64Encoded: "4H1nD6bG2sCxC/tZBnIG7avLYhkCsSfv0ATNqnfug7w=")!
         let externalMessageType = GenericMessage(content: External(withOTRKey: otrKey, sha256: sha256))
@@ -50,42 +50,42 @@ class GenericMessageTests: XCTestCase {
         XCTAssertTrue(externalMessageType.knownMessage)
     }
     
-    func testThatItChecksTheCommonMessageTypeOfResetSessionAsKnownMessage() {
+    func testThatItConsidersResetSessionMessageTypeAsKnownMessage() {
         let resetSessionMessageType = GenericMessage(clientAction: .resetSession)
         XCTAssertTrue(resetSessionMessageType.knownMessage)
     }
     
-    func testThatItChecksTheCommonMessageTypeOfCallingAsKnownMessage() {
+    func testThatItConsidersCallingMessageTypeAsKnownMessage() {
         let callingMessageType = GenericMessage(content: Calling(content: "Calling"))
         XCTAssertTrue(callingMessageType.knownMessage)
     }
     
-    func testThatItChecksTheCommonMessageTypeOfAssetAsKnownMessage() {
+    func testThatItConsidersAssetMessageTypeAsKnownMessage() {
         let assetMessageType = GenericMessage(content: WireProtos.Asset(imageSize: .zero, mimeType: "image/jpeg", size: 0))
         XCTAssertTrue(assetMessageType.knownMessage)
     }
     
-    func testThatItChecksTheCommonMessageTypeOfHidingMessageAsKnownMessage() {
+    func testThatItConsidersHidingMessageTypeAsKnownMessage() {
         let hideMessageType = GenericMessage(content: MessageHide(conversationId: UUID.create(), messageId: UUID.create()))
         XCTAssertTrue(hideMessageType.knownMessage)
     }
     
-    func testThatItCheckTheCommonMessageTypeOfLocationAsKnownMessage() {
+    func testThatItConsidersLocationMessageTypeAsKnownMessage() {
         let locationMessageType = GenericMessage(content: Location(latitude: 1, longitude: 2))
         XCTAssertTrue(locationMessageType.knownMessage)
     }
     
-    func testThatItChecksTheCommonMessageTypeOfMessageDeletionAsKnownMessage() {
+    func testThatItConsidersDeletionMessageTypeAsKnownMessage() {
         let deletionMessageType = GenericMessage(content: MessageDelete(messageId: UUID.create()))
         XCTAssertTrue(deletionMessageType.knownMessage)
     }
     
-    func testThatItChecksTheCommonMessageTypeOfCreatingReactionAsKnownMessage() {
+    func testThatItConsidersCreatingReactionMessageTypeAsKnownMessage() {
         let creatingReactionMessageType = GenericMessage(content: WireProtos.Reaction.createReaction(emoji: "test", messageID: UUID.create()))
         XCTAssertTrue(creatingReactionMessageType.knownMessage)
     }
     
-    func testThatItChecksTheCommonMessageTypeOfAvailabilityAsKnownMessage() {
+    func testThatItConsidersAvailabilityMessageTypeAsKnownMessage() {
         let awayAvailabilityMessageType = GenericMessage(content: WireProtos.Availability(.away))
         XCTAssertTrue(awayAvailabilityMessageType.knownMessage)
     }
