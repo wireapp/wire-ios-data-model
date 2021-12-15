@@ -22,11 +22,11 @@ import XCTest
 class CoreDataStackTests_EncryptionAtRest: DatabaseBaseTest {
 
     // @SF.Storage @TSFI.UserInterface @S0.1 @S0.2
-    func testThatItStoresAndClearsDatabaseKeyOnAllContexts() {
+    func testThatItStoresAndClearsDatabaseKeyOnAllContexts() throws {
         // Given
         let sut = createStorageStackAndWaitForCompletion()
         let account = Account(userName: "", userIdentifier: UUID())
-        let encryptionKeys = try! EncryptionKeys.createKeys(for: account)
+        let encryptionKeys = try XCTUnwrap( EncryptionKeys.createKeys(for: account))
 
         // When
         sut.storeEncryptionKeysInAllContexts(encryptionKeys: encryptionKeys)
