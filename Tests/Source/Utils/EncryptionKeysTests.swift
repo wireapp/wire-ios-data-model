@@ -76,7 +76,7 @@ class EncryptionKeysTests: XCTestCase {
         // given
 #if targetEnvironment(simulator)
         if #available(iOS 15, *) {
-            XCTExpectFailure("Expect to fail on iOS 15 simulator. ref: https://wearezeta.atlassian.net/browse/SQCORE-1188")```
+            XCTExpectFailure("Expect to fail on iOS 15 simulator. ref: https://wearezeta.atlassian.net/browse/SQCORE-1188")
         }
 #endif
         _ = try EncryptionKeys.createKeys(for: account)
