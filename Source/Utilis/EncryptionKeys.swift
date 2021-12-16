@@ -271,6 +271,7 @@ public struct EncryptionKeys {
         
         var error: Unmanaged<CFError>?
         guard let privateKey = SecKeyCreateRandomKey(attributes as CFDictionary, &error) else {
+            //Notice: accessError is nil when test with iOS 15 simulator. ref:https://wearezeta.atlassian.net/browse/SQCORE-1188
             let error = accessError?.takeRetainedValue()
             throw EncryptionKeysError.failedToGenerateAccountKey(underlyingError: error)
         }
