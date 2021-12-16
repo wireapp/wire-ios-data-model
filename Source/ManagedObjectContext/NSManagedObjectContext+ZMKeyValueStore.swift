@@ -1,6 +1,6 @@
 //
 // Wire
-// Copyright (C) 2017 Wire Swiss GmbH
+// Copyright (C) 2021 Wire Swiss GmbH
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -38,4 +38,5 @@ extension NSManagedObjectContext : ZMSynchonizableKeyValueStore {
     public func storedValue(key: String) -> Any? {
         return self.persistentStoreMetadata(forKey: key)
     }
+
 }

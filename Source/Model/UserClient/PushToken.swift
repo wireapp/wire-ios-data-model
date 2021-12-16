@@ -68,7 +68,7 @@ extension PushToken {
         self.isMarkedForDeletion = false
         self.isMarkedForDownload = false
     }
-    
+
     public var deviceTokenString: String {
         return deviceToken.zmHexEncodedString()
     }
