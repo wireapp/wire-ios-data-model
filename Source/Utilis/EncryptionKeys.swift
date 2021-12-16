@@ -120,8 +120,7 @@ public struct EncryptionKeys {
         case failedToDeleteItemFromKeychain(OSStatus)
         case failedToGenerateDatabaseKey(OSStatus)
         case failedToCopyPublicAccountKey
-        case failedToGenerateAccountKey(underlyingError: Error)
-        case failedToDecryptDatabaseKeyWithNoError
+        case failedToGenerateAccountKey(underlyingError: Error?)
         case failedToEncryptDatabaseKey(underlyingError: Error)
         case failedToDecryptDatabaseKey(underlyingError: Error)
     }
@@ -272,11 +271,8 @@ public struct EncryptionKeys {
         
         var error: Unmanaged<CFError>?
         guard let privateKey = SecKeyCreateRandomKey(attributes as CFDictionary, &error) else {
-            if let error = accessError?.takeRetainedValue() as? Error {
+            let error = accessError?.takeRetainedValue()
             throw EncryptionKeysError.failedToGenerateAccountKey(underlyingError: error)
-            }
-
-            throw EncryptionKeysError.failedToDecryptDatabaseKeyWithNoError
         }
         
         guard let publicKey = SecKeyCopyPublicKey(privateKey) else {
