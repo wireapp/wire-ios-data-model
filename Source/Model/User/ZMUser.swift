@@ -29,6 +29,8 @@ public enum ZMBlockState: Int {
 @objcMembers
 @objc(ZMUser)
 public final class ZMUser: ZMManagedObject {
+    public static let availabilityKey = "availability"
+
     static let sessionObjectIDKey = "ZMSessionManagedObjectID"
     static let ZMPersistedClientIdKey = "PersistedClientId"
     static let accentKey = "accentColorValue"
@@ -57,7 +59,6 @@ public final class ZMUser: ZMManagedObject {
     static let createdTeamsKey = "createdTeams"
     static let serviceIdentifierKey = "serviceIdentifier"
     static let providerIdentifierKey = "providerIdentifier"
-    static let availabilityKey = "availability"
     static let expiresAtKey = "expiresAt"
     static let usesCompanyLoginKey = "usesCompanyLogin"
     static let createdTeamMembersKey = "createdTeamMembers"
