@@ -28,32 +28,39 @@ public enum ZMConversationType: Int16 {
 }
 
 extension ZMConversation {
-    
+
     var internalConversationType: Int16 {
         get {
             let key = #keyPath(ZMConversation.conversationType)
-            
+
             willAccessValue(forKey: key)
             let value = primitiveValue(forKey: key) as? Int16
             didAccessValue(forKey: key)
-            
+
             return value ?? 0
         }
-        
+
         set {
             let key = #keyPath(ZMConversation.conversationType)
-            
+
             willChangeValue(forKey: key)
             setPrimitiveValue(newValue, forKey: key)
             didChangeValue(forKey: key)
-            
         }
     }
-    
+
     public var conversationType: ZMConversationType {
         get {
             guard var internalType = ZMConversationType(rawValue: internalConversationType) else { return .invalid }
-            
+
+            // Exception: the group conversation is considered a 1-1 if:
+            // 1. Belongs to the team.
+            // 2. Has no name given.
+            // 3. Conversation has only one other participant.
+
+            // Performance note: localParticipantsExcludingSelf will enumerate over all
+            // local participant roles, so check its count first to avoid unncessary iterations.
+
             if internalType == .group,
                teamRemoteIdentifier != nil,
                (userDefinedName ?? "").isEmpty,
@@ -61,13 +68,13 @@ extension ZMConversation {
                localParticipantsExcludingSelf.count == 1 {
                 internalType = .oneOnOne
             }
-            
+
             return internalType
         }
-        
+
         set {
             internalConversationType = newValue.rawValue
         }
     }
-    
+
 }
