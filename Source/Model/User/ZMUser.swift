@@ -210,7 +210,7 @@ extension ZMUser {
             #keyPath(ZMUser.providerIdentifier)
         ])
     }
-    
+
     public var isSelfUser: Bool {
         guard
             !isZombieObject,
@@ -218,12 +218,12 @@ extension ZMUser {
         else {
             return false
         }
-        
-        let aa = ZMUser.selfUser(in: context)
-        
-        return self == aa
+
+        let selfUserFromContext = ZMUser.selfUser(in: context)
+
+        return self == selfUserFromContext
     }
-    
+
     @objc
     public func selfClient() -> UserClient? {
         guard
