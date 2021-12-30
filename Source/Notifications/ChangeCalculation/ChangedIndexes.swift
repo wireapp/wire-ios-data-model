@@ -38,7 +38,7 @@ extension Array where Element: Hashable {
 public struct OrderedSetState<T: Hashable>: Equatable {
 
     public private(set) var array: [T]
-    public private(set) var order: [T : Int]
+    public private(set) var order: [T: Int]
 
     public init(array: [T]) {
         guard array.count == Set(array).count else {
