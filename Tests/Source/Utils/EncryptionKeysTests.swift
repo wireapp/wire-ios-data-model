@@ -32,18 +32,23 @@ class EncryptionKeysTests: XCTestCase {
         account = nil
     }
 
-    // @SF.Storage @TSFI.UserInterface
+    // @SF.Storage @TSFI.UserInterface @S0.1 @S0.2
     func testThatEncryptionKeysThrowsIfKeysDontExist() {
         XCTAssertThrowsError(try EncryptionKeys(account: account))
     }
 
-    // @SF.Storage @TSFI.UserInterface
+    // @SF.Storage @TSFI.UserInterface @S0.1 @S0.2
     func testThatPublicAccountKeyThrowsIfItDoesNotExist() throws {
         XCTAssertThrowsError(try EncryptionKeys.publicKey(for: account))
     }
 
     func testThatPublicAccountKeyIsReturnedIfItExists() throws {
         // given
+#if targetEnvironment(simulator)
+        if #available(iOS 15, *) {
+            XCTExpectFailure("Expect to fail on iOS 15 simulator. ref: https://wearezeta.atlassian.net/browse/SQCORE-1188")
+        }
+#endif
         _ = try EncryptionKeys.createKeys(for: account)
 
         // when
@@ -53,9 +58,14 @@ class EncryptionKeysTests: XCTestCase {
         XCTAssertNotNil(publicKey)
     }
 
-    // @SF.Storage @TSFI.UserInterface
+    // @SF.Storage @TSFI.UserInterface @S0.1 @S0.2
     func testThatEncryptionKeysAreSuccessfullyCreated() throws {
         // when
+#if targetEnvironment(simulator)
+        if #available(iOS 15, *) {
+            XCTExpectFailure("Expect to fail on iOS 15 simulator. ref: https://wearezeta.atlassian.net/browse/SQCORE-1188")
+        }
+#endif
         let encryptionkeys = try EncryptionKeys.createKeys(for: account)
 
         // then
@@ -64,6 +74,11 @@ class EncryptionKeysTests: XCTestCase {
 
     func testThatEncryptionKeysAreSuccessfullyFetched() throws {
         // given
+#if targetEnvironment(simulator)
+        if #available(iOS 15, *) {
+            XCTExpectFailure("Expect to fail on iOS 15 simulator. ref: https://wearezeta.atlassian.net/browse/SQCORE-1188")
+        }
+#endif
         _ = try EncryptionKeys.createKeys(for: account)
 
         // then
@@ -73,9 +88,14 @@ class EncryptionKeysTests: XCTestCase {
         XCTAssertEqual(encryptionKeys.databaseKey._storage.count, 32)
     }
 
-    // @SF.Storage @TSFI.UserInterface
+    // @SF.Storage @TSFI.UserInterface @S0.1 @S0.2
     func testThatEncryptionKeysAreSuccessfullyDeleted() throws {
         // given
+#if targetEnvironment(simulator)
+        if #available(iOS 15, *) {
+            XCTExpectFailure("Expect to fail on iOS 15 simulator. ref: https://wearezeta.atlassian.net/browse/SQCORE-1188")
+        }
+#endif
         _ = try EncryptionKeys.createKeys(for: account)
 
         // when
@@ -85,10 +105,15 @@ class EncryptionKeysTests: XCTestCase {
         XCTAssertThrowsError(try EncryptionKeys(account: account))
     }
 
-    // @SF.Storage @TSFI.UserInterface
+    // @SF.Storage @TSFI.UserInterface @S0.1 @S0.2
     func testThatAsymmetricKeysWorksWithExpectedAlgorithm() throws {
         // given
         let data = "Hello world".data(using: .utf8)!
+#if targetEnvironment(simulator)
+        if #available(iOS 15, *) {
+            XCTExpectFailure("Expect to fail on iOS 15 simulator. ref: https://wearezeta.atlassian.net/browse/SQCORE-1188")
+        }
+#endif
         let encryptionkeys = try EncryptionKeys.createKeys(for: account)
 
         // when
