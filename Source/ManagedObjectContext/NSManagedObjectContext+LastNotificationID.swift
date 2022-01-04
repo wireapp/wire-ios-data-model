@@ -22,14 +22,21 @@ private let lastUpdateEventIDKey = "LastUpdateEventID"
 
 @objc public protocol ZMLastNotificationIDStore {
 
-    var zm_lastNotificationID : UUID? { get set }
-    var zm_hasLastNotificationID : Bool { get }
+    var zm_lastNotificationID: UUID? { get set }
+    var zm_hasLastNotificationID: Bool { get }
 
 }
 
-extension NSManagedObjectContext : ZMLastNotificationIDStore {
+extension NSManagedObjectContext: ZMLastNotificationIDStore {
 
     public var zm_lastNotificationID: UUID? {
+        get {
+            guard let uuidString = self.persistentStoreMetadata(forKey: lastUpdateEventIDKey) as? String,
+                let uuid = UUID(uuidString: uuidString)
+                else { return nil }
+            return uuid
+        }
+
         set (newValue) {
             if let value = newValue, let previousValue = zm_lastNotificationID,
                 value.isType1UUID && previousValue.isType1UUID &&
@@ -39,18 +46,10 @@ extension NSManagedObjectContext : ZMLastNotificationIDStore {
             Logging.eventProcessing.debug("Setting zm_lastNotificationID = \( newValue?.transportString() ?? "nil" )")
             self.setPersistentStoreMetadata(newValue?.uuidString, key: lastUpdateEventIDKey)
         }
-        
-        get {
-            guard let uuidString = self.persistentStoreMetadata(forKey: lastUpdateEventIDKey) as? String,
-                let uuid = UUID(uuidString: uuidString)
-                else { return nil }
-            return uuid
-        }
     }
-    
+
     public var zm_hasLastNotificationID: Bool {
         return zm_lastNotificationID != nil
     }
 
 }
-
