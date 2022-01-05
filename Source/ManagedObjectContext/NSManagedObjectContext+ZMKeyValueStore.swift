@@ -26,7 +26,8 @@ public protocol KeyValueStore: NSObjectProtocol {
     
 }
 
-@objc public protocol ZMSynchonizableKeyValueStore : KeyValueStore {
+@objc
+public protocol ZMSynchonizableKeyValueStore: KeyValueStore {
     func enqueueDelayedSave()
 }
 
