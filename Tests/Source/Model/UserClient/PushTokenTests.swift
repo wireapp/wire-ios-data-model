@@ -33,7 +33,7 @@ final class PushTokenTests: XCTestCase {
     var sut: PushToken!
 
     override func setUp() {
-        sut = PushToken(deviceToken: Data([0x01, 0x02, 0x03]), appIdentifier: "some", transportType: "some", type: .standard, isRegistered: true)
+        sut = PushToken(deviceToken: Data([0x01, 0x02, 0x03]), appIdentifier: "some", transportType: "some", tokenType: .standard, isRegistered: true)
 
         super.setUp()
     }
@@ -92,7 +92,7 @@ final class PushTokenTests: XCTestCase {
         let expectedPushToken = PushToken(deviceToken: Data([0x01, 0x02, 0x03]),
                                           appIdentifier: "com.wire.zclient",
                                           transportType: "APNS_VOIP",
-                                          type: .voip,
+                                          tokenType: .voip,
                                           isRegistered: true)
         
         XCTAssertEqual(decodedPushToken, expectedPushToken)
@@ -103,7 +103,7 @@ final class PushTokenTests: XCTestCase {
         let mockPushToken = PushToken(deviceToken: Data([0x01, 0x02, 0x03]),
                                       appIdentifier: "com.wire.zclient",
                                       transportType: "APNS",
-                                      type: .standard,
+                                      tokenType: .standard,
                                       isRegistered: true)
         
         let pushTokenData = try! JSONEncoder().encode(mockPushToken)
@@ -115,7 +115,7 @@ final class PushTokenTests: XCTestCase {
         let expectedPushToken = PushToken(deviceToken: Data([0x01, 0x02, 0x03]),
                                           appIdentifier: "com.wire.zclient",
                                           transportType: "APNS",
-                                          type: .standard,
+                                          tokenType: .standard,
                                           isRegistered: true)
         
         XCTAssertEqual(decodedPushToken, expectedPushToken)

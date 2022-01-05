@@ -34,7 +34,7 @@ public struct PushToken: Equatable, Codable {
     public let deviceToken: Data
     public let appIdentifier: String
     public let transportType: String
-    public let type: TokenType
+    public let tokenType: TokenType
     public var isRegistered: Bool
     public var isMarkedForDeletion: Bool = false
     public var isMarkedForDownload: Bool = false
@@ -45,25 +45,25 @@ public struct PushToken: Equatable, Codable {
         appIdentifier = try container.decode(String.self, forKey: .appIdentifier)
         transportType = try container.decode(String.self, forKey: .transportType)
         
-        // Property 'type' was added to use two token types: voip (old) and apns (new). All old clients with voip token did not have this property, so we need to set it by default as .voip.
-        type = try container.decodeIfPresent(TokenType.self, forKey: .type) ?? .voip
+        // Property 'tokenType' was added to use two token types: voip (old) and apns (new). All old clients with voip token did not have this property, so we need to set it by default as .voip.
+        tokenType = try container.decodeIfPresent(TokenType.self, forKey: .tokenType) ?? .voip
         isRegistered = try container.decode(Bool.self, forKey: .isRegistered)
         isMarkedForDeletion = try container.decode(Bool.self, forKey: .isMarkedForDeletion)
         isMarkedForDownload = try container.decode(Bool.self, forKey: .isMarkedForDownload)
     }
 
     enum CodingKeys: String, CodingKey {
-        case deviceToken, appIdentifier, transportType, type, isRegistered, isMarkedForDeletion, isMarkedForDownload
+        case deviceToken, appIdentifier, transportType, tokenType, isRegistered, isMarkedForDeletion, isMarkedForDownload
     }
 }
 
 extension PushToken {
     
-    public init(deviceToken: Data, appIdentifier: String, transportType: String, type: TokenType, isRegistered: Bool) {
+    public init(deviceToken: Data, appIdentifier: String, transportType: String, tokenType: TokenType, isRegistered: Bool) {
         self.deviceToken = deviceToken
         self.appIdentifier = appIdentifier
         self.transportType = transportType
-        self.type = type
+        self.tokenType = tokenType
         self.isRegistered = isRegistered
         self.isMarkedForDeletion = false
         self.isMarkedForDownload = false
