@@ -74,7 +74,7 @@ final class PushTokenTests: XCTestCase {
         XCTAssertFalse(reset.isMarkedForDownload)
     }
     
-    func testThatItCreatesAPushTokenWithDefaultVoipTokenType() {
+    func testThatItCreatesAPushTokenWithDefaultVoipTokenType() throws {
         // given
         let mockPushToken = MockOldPushToken(deviceToken: Data([0x01, 0x02, 0x03]),
                                              appIdentifier: "com.wire.zclient",
@@ -83,10 +83,12 @@ final class PushTokenTests: XCTestCase {
                                              isMarkedForDeletion: false,
                                              isMarkedForDownload: false)
         
-        let pushTokenData = try! JSONEncoder().encode(mockPushToken)
+        guard let pushTokenData = try? JSONEncoder().encode(mockPushToken) else {
+            return XCTFail("The push token data cannot be encoded.")
+        }
        
         // when
-        let decodedPushToken = try! JSONDecoder().decode(PushToken.self, from: pushTokenData)
+        let decodedPushToken = try? JSONDecoder().decode(PushToken.self, from: pushTokenData)
         
         // then
         let expectedPushToken = PushToken(deviceToken: Data([0x01, 0x02, 0x03]),
@@ -98,7 +100,7 @@ final class PushTokenTests: XCTestCase {
         XCTAssertEqual(decodedPushToken, expectedPushToken)
     }
     
-    func testThatItDecodesPushToken() {
+    func testThatItDecodesPushToken() throws {
         // given
         let mockPushToken = PushToken(deviceToken: Data([0x01, 0x02, 0x03]),
                                       appIdentifier: "com.wire.zclient",
@@ -106,10 +108,12 @@ final class PushTokenTests: XCTestCase {
                                       tokenType: .standard,
                                       isRegistered: true)
         
-        let pushTokenData = try! JSONEncoder().encode(mockPushToken)
+        guard let pushTokenData = try? JSONEncoder().encode(mockPushToken) else {
+            return XCTFail("The push token data cannot be encoded.")
+        }
         
         // when
-        let decodedPushToken = try! JSONDecoder().decode(PushToken.self, from: pushTokenData)
+        let decodedPushToken = try? JSONDecoder().decode(PushToken.self, from: pushTokenData)
         
         // then
         let expectedPushToken = PushToken(deviceToken: Data([0x01, 0x02, 0x03]),
