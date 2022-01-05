@@ -77,11 +77,11 @@ final class PushTokenTests: XCTestCase {
     func testThatItCreatesAPushTokenWithDefaultVoipTokenType() {
         // given
         let mockPushToken = MockOldPushToken(deviceToken: Data([0x01, 0x02, 0x03]),
-                             appIdentifier: "com.wire.zclient",
-                             transportType: "APNS_VOIP",
-                             isRegistered: true,
-                             isMarkedForDeletion: false,
-                             isMarkedForDownload: false)
+                                             appIdentifier: "com.wire.zclient",
+                                             transportType: "APNS_VOIP",
+                                             isRegistered: true,
+                                             isMarkedForDeletion: false,
+                                             isMarkedForDownload: false)
         
         let pushTokenData = try! JSONEncoder().encode(mockPushToken)
        
