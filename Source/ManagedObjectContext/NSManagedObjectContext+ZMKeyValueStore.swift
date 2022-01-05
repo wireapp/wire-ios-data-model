@@ -31,7 +31,7 @@ public protocol ZMSynchonizableKeyValueStore: KeyValueStore {
     func enqueueDelayedSave()
 }
 
-extension NSManagedObjectContext : ZMSynchonizableKeyValueStore {
+extension NSManagedObjectContext: ZMSynchonizableKeyValueStore {
     
     public func store(value: PersistableInMetadata?, key: String) {
         self.setPersistentStoreMetadata(value, key: key)
