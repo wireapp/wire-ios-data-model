@@ -91,11 +91,11 @@ class EncryptionKeysTests: XCTestCase {
     // @SF.Storage @TSFI.UserInterface @S0.1 @S0.2
     func testThatEncryptionKeysAreSuccessfullyDeleted() throws {
         // given
-//#if targetEnvironment(simulator)
-//        if #available(iOS 15, *) {
-//            XCTExpectFailure("Expect to fail on iOS 15 simulator. ref: https://wearezeta.atlassian.net/browse/SQCORE-1188")
-//        }
-//#endif
+#if targetEnvironment(simulator)
+        if #available(iOS 15, *) && swift(>=5.4) {
+            XCTExpectFailure("Expect to fail on iOS 15 simulator. ref: https://wearezeta.atlassian.net/browse/SQCORE-1188")
+        }
+#endif
         _ = try EncryptionKeys.createKeys(for: account)
 
         // when
