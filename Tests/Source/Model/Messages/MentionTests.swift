@@ -16,92 +16,110 @@
 // along with this program. If not, see http://www.gnu.org/licenses/.
 //
 
-
 import Foundation
 import XCTest
 
 @testable import WireDataModel
 
 class MentionTests: ZMBaseManagedObjectTest {
-    
-    func createMention(start: Int = 0, length: Int = 1, userId: String = UUID().transportString()) -> WireProtos.Mention {
+
+    func createMention(start: Int = 0, length: Int = 1, userId: String = UUID().transportString(), domain: String? = nil) -> WireProtos.Mention {
         // Make user mentioned user exists
         if let remoteIdentifier = UUID(uuidString: userId) {
             let user = ZMUser.insertNewObject(in: uiMOC)
             user.remoteIdentifier = remoteIdentifier
+            user.domain = domain
         }
-        
+
         return WireProtos.Mention.with {
             $0.start = Int32(start)
             $0.length = Int32(length)
             $0.userID = userId
+
+            if let domain = domain {
+                $0.qualifiedUserID = WireProtos.QualifiedUserId.with {
+                    $0.id = userId
+                    $0.domain = domain
+                }
+            }
         }
     }
-    
-    func testConstructionOfValidMention() {
+
+    func testConstructionOfValidMention_WhenTheUserIsNotFederated() {
         // given
         let buffer = createMention()
-        
+
         // when
         let mention = Mention(buffer, context: uiMOC)
-        
+
         // then
         XCTAssertNotNil(mention)
     }
-    
+
+    func testConstructionOfValidMention_WhenTheUserIsFederated() {
+        // given
+        let buffer = createMention(domain: UUID().uuidString)
+
+        // when
+        let mention = Mention(buffer, context: uiMOC)
+
+        // then
+        XCTAssertNotNil(mention)
+    }
+
     func testConstructionOfInvalidMentionRangeCase1() {
         // given
         let buffer = createMention(start: 5, length: 0)
-        
+
         // when
         let mention = Mention(buffer, context: uiMOC)
-        
+
         // then
         XCTAssertNil(mention)
     }
-    
+
     func testConstructionOfInvalidMentionRangeCase2() {
         // given
         let buffer = createMention(start: 1, length: 0)
-        
+
         // when
         let mention = Mention(buffer, context: uiMOC)
-        
+
         // then
         XCTAssertNil(mention)
     }
-    
+
     func testConstructionOfInvalidMentionRangeCase3() {
         // given
         let buffer = createMention(start: -1, length: 1)
-        
+
         // when
         let mention = Mention(buffer, context: uiMOC)
-        
+
         // then
         XCTAssertNil(mention)
     }
-    
+
     func testConstructionOfInvalidMentionRangeCase4() {
         // given
         let buffer = createMention(start: 1, length: -1)
-        
+
         // when
         let mention = Mention(buffer, context: uiMOC)
-        
+
         // then
         XCTAssertNil(mention)
     }
-    
+
     func testConstructionOfInvalidMentionUserId() {
         // given
         let buffer = createMention(userId: "not-a-valid-uuid")
-        
+
         // when
         let mention = Mention(buffer, context: uiMOC)
-        
+
         // then
         XCTAssertNil(mention)
     }
-    
+
 }
