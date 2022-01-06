@@ -24,14 +24,14 @@ public enum UpdateRoleError: Error {
 
 public class UpdateRoleAction: EntityAction {
     public var resultHandler: ResultHandler?
-    
+
     public typealias Result = Void    
     public typealias Failure = UpdateRoleError
-    
+
     public let userID: NSManagedObjectID
     public let conversationID: NSManagedObjectID
     public let roleID: NSManagedObjectID
-    
+
     public required init(user: ZMUser, conversation: ZMConversation, role: Role) {
         userID = user.objectID
         conversationID = conversation.objectID
@@ -49,7 +49,7 @@ extension ZMConversation {
         else {
             return completion(.failure(UpdateRoleError.unknown))
         }
-        
+
         var action = UpdateRoleAction(user: user, conversation: self, role: newRole)
         action.onResult(resultHandler: completion)
         action.send(in: context.notificationContext)
