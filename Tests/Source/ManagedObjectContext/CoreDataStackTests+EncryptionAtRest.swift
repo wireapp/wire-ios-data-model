@@ -26,10 +26,10 @@ class CoreDataStackTests_EncryptionAtRest: DatabaseBaseTest {
         // Given
         let sut = createStorageStackAndWaitForCompletion()
         let account = Account(userName: "", userIdentifier: UUID())
-//#if targetEnvironment(simulator)
-//        if #available(iOS 15, *) {
-//            XCTExpectFailure("Expect to fail on iOS 15 simulator. ref: https://wearezeta.atlassian.net/browse/SQCORE-1188")
-//        }
+#if targetEnvironment(simulator)
+        if #available(iOS 15, *) && swift(>=5.4) {
+            XCTExpectFailure("Expect to fail on iOS 15 simulator. ref: https://wearezeta.atlassian.net/browse/SQCORE-1188")
+        }
 //#endif
         let encryptionKeys = try XCTUnwrap( EncryptionKeys.createKeys(for: account))
 
