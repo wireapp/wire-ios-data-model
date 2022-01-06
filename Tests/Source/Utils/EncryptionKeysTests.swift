@@ -20,7 +20,7 @@ import XCTest
 @testable import WireDataModel
 
 class EncryptionKeysTests: XCTestCase {
-    
+
     var account: Account!
 
     override func setUpWithError() throws {
@@ -31,79 +31,104 @@ class EncryptionKeysTests: XCTestCase {
         try EncryptionKeys.deleteKeys(for: account)
         account = nil
     }
-    
-    // @SF.Storage @TSFI.UserInterface
+
+    // @SF.Storage @TSFI.UserInterface @S0.1 @S0.2
     func testThatEncryptionKeysThrowsIfKeysDontExist() {
         XCTAssertThrowsError(try EncryptionKeys(account: account))
     }
-    
-    // @SF.Storage @TSFI.UserInterface
+
+    // @SF.Storage @TSFI.UserInterface @S0.1 @S0.2
     func testThatPublicAccountKeyThrowsIfItDoesNotExist() throws {
         XCTAssertThrowsError(try EncryptionKeys.publicKey(for: account))
     }
-    
+
     func testThatPublicAccountKeyIsReturnedIfItExists() throws {
         // given
+#if targetEnvironment(simulator)
+        if #available(iOS 15, *) {
+            XCTExpectFailure("Expect to fail on iOS 15 simulator. ref: https://wearezeta.atlassian.net/browse/SQCORE-1188")
+        }
+#endif
         _ = try EncryptionKeys.createKeys(for: account)
-        
+
         // when
         let publicKey = try EncryptionKeys.publicKey(for: account)
-        
+
         // then
         XCTAssertNotNil(publicKey)
     }
 
-    // @SF.Storage @TSFI.UserInterface
+    // @SF.Storage @TSFI.UserInterface @S0.1 @S0.2
     func testThatEncryptionKeysAreSuccessfullyCreated() throws {
         // when
+#if targetEnvironment(simulator)
+        if #available(iOS 15, *) {
+            XCTExpectFailure("Expect to fail on iOS 15 simulator. ref: https://wearezeta.atlassian.net/browse/SQCORE-1188")
+        }
+#endif
         let encryptionkeys = try EncryptionKeys.createKeys(for: account)
-        
+
         // then
         XCTAssertEqual(encryptionkeys.databaseKey._storage.count, 32)
     }
-    
+
     func testThatEncryptionKeysAreSuccessfullyFetched() throws {
         // given
+#if targetEnvironment(simulator)
+        if #available(iOS 15, *) {
+            XCTExpectFailure("Expect to fail on iOS 15 simulator. ref: https://wearezeta.atlassian.net/browse/SQCORE-1188")
+        }
+#endif
         _ = try EncryptionKeys.createKeys(for: account)
-        
+
         // then
         let encryptionKeys = try EncryptionKeys(account: account)
-        
+
         // then
         XCTAssertEqual(encryptionKeys.databaseKey._storage.count, 32)
     }
-    
-    // @SF.Storage @TSFI.UserInterface
+
+    // @SF.Storage @TSFI.UserInterface @S0.1 @S0.2
     func testThatEncryptionKeysAreSuccessfullyDeleted() throws {
         // given
+#if targetEnvironment(simulator)
+        if #available(iOS 15, *) {
+            XCTExpectFailure("Expect to fail on iOS 15 simulator. ref: https://wearezeta.atlassian.net/browse/SQCORE-1188")
+        }
+#endif
         _ = try EncryptionKeys.createKeys(for: account)
-        
+
         // when
         try EncryptionKeys.deleteKeys(for: account)
-        
+
         // then
         XCTAssertThrowsError(try EncryptionKeys(account: account))
     }
-    
-    // @SF.Storage @TSFI.UserInterface
+
+    // @SF.Storage @TSFI.UserInterface @S0.1 @S0.2
     func testThatAsymmetricKeysWorksWithExpectedAlgorithm() throws {
         // given
         let data = "Hello world".data(using: .utf8)!
+#if targetEnvironment(simulator)
+        if #available(iOS 15, *) {
+            XCTExpectFailure("Expect to fail on iOS 15 simulator. ref: https://wearezeta.atlassian.net/browse/SQCORE-1188")
+        }
+#endif
         let encryptionkeys = try EncryptionKeys.createKeys(for: account)
-        
+
         // when
         let encryptedData = SecKeyCreateEncryptedData(encryptionkeys.publicKey,
                                                       .eciesEncryptionCofactorX963SHA256AESGCM,
                                                       data as CFData,
                                                       nil)!
-        
+
         let decryptedData = SecKeyCreateDecryptedData(encryptionkeys.privateKey,
                                                       .eciesEncryptionCofactorX963SHA256AESGCM,
                                                       encryptedData,
                                                       nil)!
-        
+
         // then
         XCTAssertEqual(decryptedData as Data, data)
     }
-    
+
 }

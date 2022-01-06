@@ -21,12 +21,17 @@ import XCTest
 
 class CoreDataStackTests_EncryptionAtRest: DatabaseBaseTest {
 
-    // @SF.Storage @TSFI.UserInterface
-    func testThatItStoresAndClearsDatabaseKeyOnAllContexts() {
+    // @SF.Storage @TSFI.UserInterface @S0.1 @S0.2
+    func testThatItStoresAndClearsDatabaseKeyOnAllContexts() throws {
         // Given
         let sut = createStorageStackAndWaitForCompletion()
         let account = Account(userName: "", userIdentifier: UUID())
-        let encryptionKeys = try! EncryptionKeys.createKeys(for: account)
+#if targetEnvironment(simulator)
+        if #available(iOS 15, *) {
+            XCTExpectFailure("Expect to fail on iOS 15 simulator. ref: https://wearezeta.atlassian.net/browse/SQCORE-1188")
+        }
+#endif
+        let encryptionKeys = try XCTUnwrap( EncryptionKeys.createKeys(for: account))
 
         // When
         sut.storeEncryptionKeysInAllContexts(encryptionKeys: encryptionKeys)
@@ -59,10 +64,9 @@ class CoreDataStackTests_EncryptionAtRest: DatabaseBaseTest {
         sut.searchContext.performGroupedBlockAndWait {
             XCTAssertNil(sut.searchContext.encryptionKeys)
         }
-        
+
         // Clean up
         try! EncryptionKeys.deleteKeys(for: account)
     }
 
 }
-
