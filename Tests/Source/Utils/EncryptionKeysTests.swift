@@ -109,11 +109,11 @@ class EncryptionKeysTests: XCTestCase {
     func testThatAsymmetricKeysWorksWithExpectedAlgorithm() throws {
         // given
         let data = "Hello world".data(using: .utf8)!
-//#if targetEnvironment(simulator)
-//        if #available(iOS 15, *) {
-//            XCTExpectFailure("Expect to fail on iOS 15 simulator. ref: https://wearezeta.atlassian.net/browse/SQCORE-1188")
-//        }
-//#endif
+#if targetEnvironment(simulator)
+        if #available(iOS 15, *) && swift(>=5.4) {
+            XCTExpectFailure("Expect to fail on iOS 15 simulator. ref: https://wearezeta.atlassian.net/browse/SQCORE-1188")
+        }
+#endif
         let encryptionkeys = try EncryptionKeys.createKeys(for: account)
 
         // when
