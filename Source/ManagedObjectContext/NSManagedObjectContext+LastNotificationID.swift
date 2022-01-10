@@ -31,21 +31,21 @@ extension NSManagedObjectContext: ZMLastNotificationIDStore {
 
     public var zm_lastNotificationID: UUID? {
         get {
-            guard 
+            guard
                 let uuidString = self.persistentStoreMetadata(forKey: lastUpdateEventIDKey) as? String,
                 let uuid = UUID(uuidString: uuidString)
-            else { 
+            else {
                 return nil
             }
-            
+
             return uuid
         }
 
         set (newValue) {
-            if 
-                let value = newValue, 
+            if
+                let value = newValue,
                 let previousValue = zm_lastNotificationID,
-                value.isType1UUID && 
+                value.isType1UUID &&
                 previousValue.isType1UUID &&
                 previousValue.compare(withType1: value) != .orderedAscending {
                 return
