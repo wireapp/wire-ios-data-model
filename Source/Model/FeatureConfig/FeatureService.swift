@@ -16,7 +16,6 @@
 // along with this program. If not, see http://www.gnu.org/licenses/.
 //
 
-
 import Foundation
 
 /// This class facilitates storage and retrieval of feature configs to and from
@@ -138,6 +137,29 @@ public class FeatureService {
         }
     }
 
+    public func fetchConversationGuestLinks() -> Feature.ConversationGuestLinks {
+        guard let feature = Feature.fetch(name: .conversationGuestLinks, context: context) else {
+            return .init()
+        }
+        return .init(status: feature.status)
+    }
+
+    public func storeConversationGuestLinks(_ conversationGuestLinks: Feature.ConversationGuestLinks) {
+        Feature.updateOrCreate(havingName: .conversationGuestLinks, in: context) {
+            $0.status = conversationGuestLinks.status
+        }
+
+        guard needsToNotifyUser(for: .conversationGuestLinks) else { return }
+
+        switch conversationGuestLinks.status {
+        case .disabled:
+            notifyChange(.conversationGuestLinksDisabled)
+
+        case .enabled:
+            notifyChange(.conversationGuestLinksEnabled)
+        }
+    }
+
     // MARK: - Helpers
 
     func createDefaultConfigsIfNeeded() {
@@ -148,12 +170,15 @@ public class FeatureService {
 
             case .conferenceCalling:
                 storeConferenceCalling(.init())
-                
+
             case .fileSharing:
                 storeFileSharing(.init())
 
             case .selfDeletingMessages:
                 storeSelfDeletingMessages(.init())
+
+            case .conversationGuestLinks:
+                storeConversationGuestLinks(.init())
             }
         }
     }
@@ -209,6 +234,8 @@ extension FeatureService {
         case selfDeletingMessagesIsEnabled(enforcedTimeout: UInt?)
         case fileSharingEnabled
         case fileSharingDisabled
+        case conversationGuestLinksEnabled
+        case conversationGuestLinksDisabled
 
     }
 
