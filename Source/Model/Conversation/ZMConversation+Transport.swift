@@ -99,6 +99,11 @@ extension ZMConversation {
         accessRoleString = role
     }
 
+    public func updateAccessStatusV2(accessModes: [String], role: [String]) {
+        accessModeStrings = accessModes
+        accessRoleStringsV2 = role
+    }
+
     public func updateReceiptMode(_ receiptMode: Int?) {
         if let receiptMode = receiptMode {
             let enabled = receiptMode > 0
