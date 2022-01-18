@@ -101,128 +101,163 @@ class ZMConversationAccessModeTests: ZMConversationTestsBase {
         XCTAssertFalse(sut.keysThatHaveLocalModifications.contains("accessRoleV2Strings"))
     }
 
-let testSetAccessMode: [(ConversationAccessMode?, [String]?)] = [(nil, nil),
-                                                                 (ConversationAccessMode.teamOnly, []),
-                                                                 (ConversationAccessMode.code, ["code"]),
-                                                                 (ConversationAccessMode.`private`, ["private"]),
-                                                                 (ConversationAccessMode.invite, ["invite"]),
-                                                                 (ConversationAccessMode.legacy, ["invite"]),
-                                                                 (ConversationAccessMode.allowGuests, ["code", "invite"])]
+    let testSetAccessMode: [(ConversationAccessMode?, [String]?)] = [(nil, nil),
+                                                                     (ConversationAccessMode.teamOnly, []),
+                                                                     (ConversationAccessMode.code, ["code"]),
+                                                                     (ConversationAccessMode.`private`, ["private"]),
+                                                                     (ConversationAccessMode.invite, ["invite"]),
+                                                                     (ConversationAccessMode.legacy, ["invite"]),
+                                                                     (ConversationAccessMode.allowGuests, ["code", "invite"])]
 
-func testThatModeSetWithOptionSetReflectedInStrings() {
-    testSetAccessMode.forEach {
-        // when
-        sut.accessMode = $0
-        // then
-        if let strings = $1 {
-            XCTAssertEqual(Set(sut.accessModeStrings!), Set(strings))
-        }
-        else {
-            XCTAssertTrue(sut.accessModeStrings == nil)
-        }
-    }
-}
+    let testSetAccessRoleV2: [(ConversationAccessRoleV2?, [String]?)] = [(nil, nil),
+                                                                         (ConversationAccessRoleV2.allowGuests, ["team_member", "guest"]),
+                                                                         (ConversationAccessRoleV2.allowServices, ["team_member", "service"]),
+                                                                         (ConversationAccessRoleV2.teamMember, ["team_member"]),
+                                                                         (ConversationAccessRoleV2.guest, ["guest"]),
+                                                                         (ConversationAccessRoleV2.service, ["service"])]
 
-func testThatModeSetWithStringsIsReflectedInOptionSet() {
-    testSetAccessMode.forEach {
-        // when
-        sut.accessModeStrings = $1
-        // then
-        if let optionSet = $0 {
-            XCTAssertEqual(sut.accessMode!, optionSet)
-        }
-        else {
-            XCTAssertTrue(sut.accessMode == nil)
+    func testThatModeSetWithOptionSetReflectedInStrings() {
+        testSetAccessMode.forEach {
+            // when
+            sut.accessMode = $0
+            // then
+            if let strings = $1 {
+                XCTAssertEqual(Set(sut.accessModeStrings!), Set(strings))
+            }
+            else {
+                XCTAssertTrue(sut.accessModeStrings == nil)
+            }
         }
     }
-}
 
-func testThatChangingAllowGuestsSetsAccessModeStrings() {
-    [(true, ["code", "invite"], ConversationAccessRole.nonActivated.rawValue),
-     (false, [], ConversationAccessRole.team.rawValue)].forEach {
-        // when
-        sut.allowGuests = $0.0
-        // then
-        XCTAssertEqual(Set(sut.accessModeStrings!), Set($0.1))
-        XCTAssertEqual(Set(sut.accessRoleString!), Set($0.2))
+    func testThatAccessRoleV2SetWithOptionSetReflectedInStrings() {
+        testSetAccessRoleV2.forEach {
+            // when
+            sut.accessRoleV2 = $0
+            // then
+            if let strings = $1 {
+                XCTAssertEqual(Set(sut.accessRoleStringsV2!), Set(strings))
+            }
+            else {
+                XCTAssertTrue(sut.accessRoleStringsV2 == nil)
+            }
+        }
     }
-}
 
-func testThatAccessModeStringsChangingAllowGuestsSets() {
-    let values = [
-        (true, ["code", "invite"], ConversationAccessRole.nonActivated.rawValue),
-        (false, [], ConversationAccessRole.team.rawValue),
-        (true, ["invite"], ConversationAccessRole.nonActivated.rawValue),
-        (true, ["invite"], ConversationAccessRole.activated.rawValue)
-    ]
-
-    for (allowGuests, accessMode, accessRole) in values {
-        // when
-        sut.accessModeStrings = accessMode
-        sut.accessRoleString = accessRole
-        // then
-        XCTAssertEqual(sut.allowGuests, allowGuests)
+    func testThatModeSetWithStringsIsReflectedInOptionSet() {
+        testSetAccessMode.forEach {
+            // when
+            sut.accessModeStrings = $1
+            // then
+            if let optionSet = $0 {
+                XCTAssertEqual(sut.accessMode!, optionSet)
+            }
+            else {
+                XCTAssertTrue(sut.accessMode == nil)
+            }
+        }
     }
-}
 
-func testThatTheConversationIsInsertedWithCorrectAccessModeAccessRole_Default_WithTeam() {
-    // when
-    let conversation = ZMConversation.insertGroupConversation(moc: self.uiMOC,
-                                                              participants: [],
-                                                              name: "Test Conversation",
-                                                              team: team)!
-    // then
-    XCTAssertEqual(Set(conversation.accessModeStrings!), ["code", "invite"])
-    XCTAssertEqual(conversation.accessRoleString!, ConversationAccessRole.nonActivated.rawValue)
-}
+    func testThatAccessRoleV2SetWithStringsIsReflectedInOptionSet() {
+        testSetAccessRoleV2.forEach {
+            // when
+            sut.accessRoleStringsV2 = $1
+            // then
+            if let optionSet = $0 {
+                XCTAssertEqual(sut.accessRoleV2!, optionSet)
+            }
+            else {
+                XCTAssertTrue(sut.accessRoleV2 == nil)
+            }
+        }
+    }
 
-func testThatTheConversationIsInsertedWithCorrectAccessModeAccessRole_Default_NoTeam() {
-    // when
-    let conversation = ZMConversation.insertGroupConversation(moc: self.uiMOC,
-                                                              participants: [],
-                                                              name: "Test Conversation",
-                                                              team: nil)!
-    // then
-    XCTAssertTrue(conversation.accessModeStrings == nil)
-    XCTAssertEqual(conversation.accessRoleString, nil)
-}
+    func testThatChangingAllowGuestsSetsAccessModeStrings() {
+        [(true, ["code", "invite"], ConversationAccessRole.nonActivated.rawValue),
+         (false, [], ConversationAccessRole.team.rawValue)].forEach {
+            // when
+            sut.allowGuests = $0.0
+            // then
+            XCTAssertEqual(Set(sut.accessModeStrings!), Set($0.1))
+            XCTAssertEqual(Set(sut.accessRoleString!), Set($0.2))
+        }
+    }
 
-func testThatTheConversationIsInsertedWithCorrectAccessModeAccessRole() {
-    [(true, ["code", "invite"], ConversationAccessRole.nonActivated.rawValue),
-     (false, [], ConversationAccessRole.team.rawValue)].forEach {
+    func testThatAccessModeStringsChangingAllowGuestsSets() {
+        let values = [
+            (true, ["code", "invite"], ConversationAccessRole.nonActivated.rawValue),
+            (false, [], ConversationAccessRole.team.rawValue),
+            (true, ["invite"], ConversationAccessRole.nonActivated.rawValue),
+            (true, ["invite"], ConversationAccessRole.activated.rawValue)
+        ]
+
+        for (allowGuests, accessMode, accessRole) in values {
+            // when
+            sut.accessModeStrings = accessMode
+            sut.accessRoleString = accessRole
+            // then
+            XCTAssertEqual(sut.allowGuests, allowGuests)
+        }
+    }
+
+    func testThatTheConversationIsInsertedWithCorrectAccessModeAccessRole_Default_WithTeam() {
         // when
         let conversation = ZMConversation.insertGroupConversation(moc: self.uiMOC,
                                                                   participants: [],
                                                                   name: "Test Conversation",
-                                                                  team: team,
-                                                                  allowGuests: $0.0)!
+                                                                  team: team)!
         // then
-        XCTAssertEqual(Set(conversation.accessModeStrings!), Set($0.1))
-        XCTAssertEqual(Set(conversation.accessRoleString!), Set($0.2))
+        XCTAssertEqual(Set(conversation.accessModeStrings!), ["code", "invite"])
+        XCTAssertEqual(conversation.accessRoleString!, ConversationAccessRole.nonActivated.rawValue)
     }
-}
 
-let testSetAccessRole: [(ConversationAccessRole?, String?)] = [(ConversationAccessRole.activated, "activated"),
-                                                               (ConversationAccessRole.nonActivated, "non_activated"),
-                                                               (ConversationAccessRole.team, "team"),
-                                                               (nil, nil)]
-
-
-func testThatAccessRoleSetAccessRoleString() {
-    testSetAccessRole.forEach {
+    func testThatTheConversationIsInsertedWithCorrectAccessModeAccessRole_Default_NoTeam() {
         // when
-        sut.accessRole = $0.0
+        let conversation = ZMConversation.insertGroupConversation(moc: self.uiMOC,
+                                                                  participants: [],
+                                                                  name: "Test Conversation",
+                                                                  team: nil)!
         // then
-        XCTAssertEqual(sut.accessRoleString, $0.1)
+        XCTAssertTrue(conversation.accessModeStrings == nil)
+        XCTAssertEqual(conversation.accessRoleString, nil)
     }
-}
 
-func testThatAccessRoleStringSetAccesseRole() {
-    testSetAccessRole.forEach {
-        // when
-        sut.accessRoleString = $0.1
-        // then
-        XCTAssertEqual(sut.accessRole, $0.0)
+    func testThatTheConversationIsInsertedWithCorrectAccessModeAccessRole() {
+        [(true, ["code", "invite"], ConversationAccessRole.nonActivated.rawValue),
+         (false, [], ConversationAccessRole.team.rawValue)].forEach {
+            // when
+            let conversation = ZMConversation.insertGroupConversation(moc: self.uiMOC,
+                                                                      participants: [],
+                                                                      name: "Test Conversation",
+                                                                      team: team,
+                                                                      allowGuests: $0.0)!
+            // then
+            XCTAssertEqual(Set(conversation.accessModeStrings!), Set($0.1))
+            XCTAssertEqual(Set(conversation.accessRoleString!), Set($0.2))
+        }
     }
-}
+
+    let testSetAccessRole: [(ConversationAccessRole?, String?)] = [(ConversationAccessRole.activated, "activated"),
+                                                                   (ConversationAccessRole.nonActivated, "non_activated"),
+                                                                   (ConversationAccessRole.team, "team"),
+                                                                   (nil, nil)]
+
+
+    func testThatAccessRoleSetAccessRoleString() {
+        testSetAccessRole.forEach {
+            // when
+            sut.accessRole = $0.0
+            // then
+            XCTAssertEqual(sut.accessRoleString, $0.1)
+        }
+    }
+
+    func testThatAccessRoleStringSetAccesseRole() {
+        testSetAccessRole.forEach {
+            // when
+            sut.accessRoleString = $0.1
+            // then
+            XCTAssertEqual(sut.accessRole, $0.0)
+        }
+    }
 }
