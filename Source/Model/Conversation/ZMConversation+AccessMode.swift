@@ -21,7 +21,7 @@ import Foundation
 /// Defines how users can join a conversation.
 public struct ConversationAccessMode: OptionSet {
     public let rawValue: Int
-    
+
     public init(rawValue: Int) {
         self.rawValue = rawValue
     }
@@ -33,10 +33,35 @@ public struct ConversationAccessMode: OptionSet {
     public static let link      = ConversationAccessMode(rawValue: 1 << 2)
     /// Internal value that indicates the conversation that cannot be joined (1-1).
     public static let `private` = ConversationAccessMode(rawValue: 1 << 3)
-    
+
     public static let legacy    = invite
     public static let teamOnly  = ConversationAccessMode()
     public static let allowGuests: ConversationAccessMode = [.invite, .code]
+}
+
+public struct ConversationAccessRoleV2: OptionSet {
+    public let rawValue: Int
+
+    public init(rawValue: Int) {
+        self.rawValue = rawValue
+    }
+
+    /// Users with Wire accounts belonging to the same team owning the conversation.
+    public static let teamMember = ConversationAccessRoleV2(rawValue: 1 << 0)
+    /// Users with Wire accounts that are not part of the team.
+    /// This includes wireless users (i.e users who join with a guest link and temporary account).
+    public static let guest = ConversationAccessRoleV2(rawValue: 1 << 1)
+    /// A service user, aka a non-human bot.
+    public static let service = ConversationAccessRoleV2(rawValue: 1 << 2)
+
+    public static let allowGuests: ConversationAccessRoleV2 = [.teamMember, .guest]
+    public static let allowServices: ConversationAccessRoleV2 = [.teamMember, .service]
+}
+
+extension ConversationAccessRoleV2: Hashable {
+    public var hashValue: Int {
+        return self.rawValue
+    }
 }
 
 extension ConversationAccessMode: Hashable {
@@ -45,16 +70,36 @@ extension ConversationAccessMode: Hashable {
     }
 }
 
+public extension ConversationAccessRoleV2 {
+    internal static let stringValues: [ConversationAccessRoleV2: String] = [.teamMember: "team_member",
+                                                                          .guest: "guest",
+                                                                          .service: "service"]
+
+    var stringValue: [String] {
+        return ConversationAccessRoleV2.stringValues.compactMap { self.contains($0) ? $1 : nil }
+    }
+
+    init(values: [String]) {
+        var result = ConversationAccessRoleV2()
+        ConversationAccessRoleV2.stringValues.forEach {
+            if values.contains($1) {
+                result.formUnion($0)
+            }
+        }
+        self = result
+    }
+}
+
 public extension ConversationAccessMode {
     internal static let stringValues: [ConversationAccessMode: String] = [.invite: "invite",
                                                                           .code: "code",
                                                                           .link: "link",
                                                                           .`private`: "private"]
-    
+
     var stringValue: [String] {
         return ConversationAccessMode.stringValues.compactMap { self.contains($0) ? $1 : nil }
     }
-    
+
     init(values: [String]) {
         var result = ConversationAccessMode()
         ConversationAccessMode.stringValues.forEach {
@@ -72,6 +117,15 @@ public extension ConversationAccessMode {
     }
 }
 
+public extension ConversationAccessRoleV2 {
+    static func value(forAllowGuests allowGuests: Bool) -> ConversationAccessRoleV2 {
+        return allowGuests ? [.teamMember, .guest] : [.teamMember]
+}
+    static func value(forAllowServices allowServices: Bool) -> ConversationAccessRoleV2 {
+        return allowServices ? [.teamMember, .service] : [.teamMember]
+}
+
+}
 /// Defines who can join the conversation.
 public enum ConversationAccessRole: String {
     /// Only the team member can join.
@@ -89,9 +143,10 @@ public extension ConversationAccessRole {
 }
 
 extension ZMConversation: SwiftConversationLike {
-    @NSManaged @objc dynamic internal var accessModeStrings: [String]?
-    @NSManaged @objc dynamic internal var accessRoleString: String?
-    
+    @NSManaged dynamic internal var accessModeStrings: [String]?
+    @NSManaged dynamic internal var accessRoleString: String?
+    @NSManaged dynamic internal var accessRoleStringsV2: [String]?
+
     public var sortedActiveParticipantsUserTypes: [UserType] {
         return sortedActiveParticipants
     }
@@ -110,11 +165,27 @@ extension ZMConversation: SwiftConversationLike {
         set {
             accessMode = ConversationAccessMode.value(forAllowGuests: newValue)
             accessRole = ConversationAccessRole.value(forAllowGuests: newValue)
+            accessRoleV2 = ConversationAccessRoleV2.value(forAllowGuests: newValue)
         }
     }
-    
+
+    /// If set to false, only team member or guest can join the conversation.
+    /// True means that a service could join
+    /// Controls the values of `accessMode` and `accessRoleV2`.
+    @objc public var allowServices: Bool {
+        get {
+            return accessMode != .teamOnly && accessRoleV2 != .teamMember
+        }
+        set {
+            accessMode = ConversationAccessMode.value(forAllowGuests: newValue)
+            accessRoleV2 = ConversationAccessRoleV2.value(forAllowGuests: newValue)
+            accessRoleV2 = ConversationAccessRoleV2.value(forAllowServices: newValue)
+        }
+
+    }
+
     // The conversation access mode is stored as an array of string in CoreData, cf. `acccessModeStrings`.
-    
+
     /// Defines how users can join a conversation.
     public var accessMode: ConversationAccessMode? {
         get {
@@ -132,6 +203,27 @@ extension ZMConversation: SwiftConversationLike {
             accessModeStrings = value.stringValue
         }
     }
+
+    // The conversation access role V2 is stored as an array of string in CoreData, cf. `accessRoleStringsV2`.
+
+    /// Defines who can join the conversation.
+    public var accessRoleV2: ConversationAccessRoleV2? {
+        get {
+        guard let strings = self.accessRoleStringsV2 else {
+            return nil
+        }
+
+        return ConversationAccessRoleV2(values: strings)
+    }
+        set {
+            guard let value = newValue else {
+                accessRoleStringsV2 = nil
+                return
+            }
+            accessRoleStringsV2 = value.stringValue
+        }
+
+    }
     
     /// Defines who can join the conversation.
     public var accessRole: ConversationAccessRole? {
@@ -139,7 +231,7 @@ extension ZMConversation: SwiftConversationLike {
             guard let strings = self.accessRoleString else {
                 return nil
             }
-            
+
             return ConversationAccessRole(rawValue: strings)
         }
         set {
@@ -151,4 +243,3 @@ extension ZMConversation: SwiftConversationLike {
         }
     }
 }
-
