@@ -62,6 +62,7 @@ extern NSString *const ZMConversationLastReadServerTimeStampKey;
 extern NSString *const ZMConversationLastServerTimeStampKey;
 extern NSString *const ZMConversationClearedTimeStampKey;
 extern NSString *const ZMConversationArchivedChangedTimeStampKey;
+extern NSString *const ZMConversationAccessRoleStringsV2;
 extern NSString *const ZMConversationSilencedChangedTimeStampKey;
 
 extern NSString *const ZMNotificationConversationKey;
