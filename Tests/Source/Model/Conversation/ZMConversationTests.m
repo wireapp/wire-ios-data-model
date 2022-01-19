@@ -274,6 +274,7 @@
                           ZMConversationClearedTimeStampKey,
                           ZMConversationSilencedChangedTimeStampKey,
                           ZMConversationArchivedChangedTimeStampKey,
+                          ZMConversationAccessRoleStringsV2,
                           ]];
     
     // when
