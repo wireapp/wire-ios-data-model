@@ -99,7 +99,7 @@ extension ZMConversation {
         accessRoleString = role
     }
 
-    public func updateAccessStatusV2(accessModes: [String], role: [String]) {
+    public func updateAccessStatusV2(accessModes: [String], accessRoles: [String]) {
         accessModeStrings = accessModes
         accessRoleStringsV2 = role
     }
