@@ -101,7 +101,7 @@ extension ZMConversation {
 
     public func updateAccessStatusV2(accessModes: [String], accessRoles: [String]) {
         accessModeStrings = accessModes
-        accessRoleStringsV2 = role
+        accessRoleStringsV2 = accessRoles
     }
 
     public func updateReceiptMode(_ receiptMode: Int?) {
