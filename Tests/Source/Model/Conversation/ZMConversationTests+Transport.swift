@@ -38,21 +38,6 @@ class ZMConversationTests_Transport: ZMConversationTestsBase {
         }
     }
 
-    func testThatItUpdateAccessStatusV2() {
-        syncMOC.performGroupedBlockAndWait {
-            let conversation = ZMConversation.insertNewObject(in: self.syncMOC)
-            let accessRoleV2 = ConversationAccessRoleV2.teamMember
-            let accessMode = ConversationAccessMode.allowGuests
-
-            // when
-            conversation.updateAccessStatusV2(accessModes: accessMode.stringValue, role: accessRoleV2.stringValue)
-
-            // then
-            XCTAssertEqual(conversation.accessMode, accessMode)
-            XCTAssertEqual(conversation.accessRoleV2, accessRoleV2)
-        }
-    }
-    
     // MARK: Receipt Mode
 
     func testThatItUpdateReadReceiptStatusAndInsertsSystemMessage_ForNonEmptyConversations() {
