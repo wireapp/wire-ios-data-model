@@ -155,14 +155,14 @@ extension ZMConversation: SwiftConversationLike {
     }
 
     func payload(allowGuests: Bool) -> [String: [String]] {
-        var newaccessRoles = accessRoles
+        var newAccessRoles = accessRoles
         if allowGuests {
-            newaccessRoles.insert(.guest)
+            newAccessRoles.insert(.guest)
         } else {
-            newaccessRoles.subtract([.guest])
+            newAccessRoles.subtract([.guest])
         }
 
-        let newAccessRoleSet = newaccessRoles.map { $0.rawValue }
+        let newAccessRoleSet = newAccessRoles.map { $0.rawValue }
 
         let payload: [String: [String]] = [
             "access_role_v2": newAccessRoleSet
@@ -173,14 +173,14 @@ extension ZMConversation: SwiftConversationLike {
     }
 
     func payload(allowServices: Bool) -> [String: [String]] {
-        var newaccessRoles = accessRoles
+        var newAccessRoles = accessRoles
         if allowServices {
-            newaccessRoles.insert(.service)
+            newAccessRoles.insert(.service)
         } else {
-            newaccessRoles.subtract([.service])
+            newAccessRoles.subtract([.service])
         }
 
-        let newAccessRoleSet = newaccessRoles.map { $0.rawValue }
+        let newAccessRoleSet = newAccessRoles.map { $0.rawValue }
 
         let payload: [String: [String]] = [
             "access_role_v2": newAccessRoleSet
