@@ -56,7 +56,6 @@ NSString *const ZMConversationParticipantRolesKey = @"participantRoles";
 NSString *const ZMConversationNonTeamRolesKey = @"nonTeamRoles";
 NSString *const ZMConversationHasUnreadKnock = @"hasUnreadKnock";
 NSString *const ZMConversationUserDefinedNameKey = @"userDefinedName";
-NSString *const ZMConversationAccessRoleStringsV2 = @"accessRoleStringsV2";
 NSString *const ZMIsDimmedKey = @"zmIsDimmed";
 NSString *const ZMNormalizedUserDefinedNameKey = @"normalizedUserDefinedName";
 NSString *const ZMConversationListIndicatorKey = @"conversationListIndicator";
@@ -108,6 +107,8 @@ static NSString *const TeamKey = @"team";
 
 static NSString *const AccessModeStringsKey = @"accessModeStrings";
 static NSString *const AccessRoleStringKey = @"accessRoleString";
+static NSString *const AccessRoleStringKeyV2 = @"accessRoleStringsV2";
+
 
 NSTimeInterval ZMConversationDefaultLastReadTimestampSaveDelay = 3.0;
 
@@ -340,6 +341,7 @@ const NSUInteger ZMConversationMaxTextMessageLength = ZMConversationMaxEncodedTe
             TeamRemoteIdentifierDataKey,
             AccessModeStringsKey,
             AccessRoleStringKey,
+            AccessRoleStringKeyV2,
             LanguageKey,
             HasReadReceiptsEnabledKey,
             ZMConversationLegalHoldStatusKey,
