@@ -162,10 +162,10 @@ extension ZMConversation: SwiftConversationLike {
             newaccessRoles.subtract([.guest])
         }
 
-        let string = newaccessRoles.map { $0.rawValue }
+        let newAccessRoleSet = newaccessRoles.map { $0.rawValue }
 
         let payload: [String: [String]] = [
-            "access_role_v2": string
+            "access_role_v2": newAccessRoleSet
             ]
 
         return payload
@@ -180,10 +180,10 @@ extension ZMConversation: SwiftConversationLike {
             newaccessRoles.subtract([.service])
         }
 
-        let string = newaccessRoles.map { $0.rawValue }
+        let newAccessRoleSet = newaccessRoles.map { $0.rawValue }
 
         let payload: [String: [String]] = [
-            "access_role_v2": string
+            "access_role_v2": newAccessRoleSet
             ]
 
         return payload
