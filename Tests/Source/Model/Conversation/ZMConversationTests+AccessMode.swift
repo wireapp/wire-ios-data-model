@@ -225,7 +225,7 @@ class ZMConversationAccessModeTests: ZMConversationTestsBase {
                                                                   team: team)!
         // then
         XCTAssertEqual(Set(conversation.accessModeStrings!), ["code", "invite"])
-        XCTAssertEqual(conversation.accessRoleStringsV2!, ["team_member", "guest", "service"])
+        XCTAssertEqual(conversation.accessRoleStringsV2!, ["guest", "team_member"])
     }
 
     func testThatTheConversationIsInsertedWithCorrectAccessModeAccessRole_Default_NoTeam() {
@@ -258,7 +258,6 @@ class ZMConversationAccessModeTests: ZMConversationTestsBase {
                                                                    (ConversationAccessRole.nonActivated, "non_activated"),
                                                                    (ConversationAccessRole.team, "team"),
                                                                    (nil, nil)]
-
 
     func testThatAccessRoleSetAccessRoleString() {
         testSetAccessRole.forEach {
