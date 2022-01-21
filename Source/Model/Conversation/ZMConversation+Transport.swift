@@ -94,12 +94,7 @@ extension ZMConversation {
         setMessageDestructionTimeoutValue(.init(rawValue: timeout / 1000), for: .groupConversation)
     }
 
-    public func updateAccessStatus(accessModes: [String], role: String) {
-        accessModeStrings = accessModes
-        accessRoleString = role
-    }
-
-    public func updateAccessStatusV2(accessModes: [String], accessRoles: [String]) {
+    public func updateAccessStatus(accessModes: [String], accessRoles: [String]) {
         accessModeStrings = accessModes
         accessRoleStringsV2 = accessRoles
     }
