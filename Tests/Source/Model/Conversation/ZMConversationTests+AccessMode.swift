@@ -145,7 +145,7 @@ class ZMConversationAccessModeTests: ZMConversationTestsBase {
 
     }
 
-    func testThatItIgnoresAccessRoleV2StringsKey() {
+    func testThatItIgnoresAccessRoleStringsKeyV2() {
         // given
         sut.accessModeStrings = ["guest"]
         // when
