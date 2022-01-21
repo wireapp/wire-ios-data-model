@@ -147,7 +147,7 @@ class ZMConversationAccessModeTests: ZMConversationTestsBase {
 
     func testThatItIgnoresAccessRoleStringsKeyV2() {
         // given
-        sut.accessModeStrings = ["guest"]
+        sut.accessRoleStringsV2 = ["guest"]
         // when
         XCTAssertTrue(self.uiMOC.saveOrRollback())
         // then
@@ -193,17 +193,6 @@ class ZMConversationAccessModeTests: ZMConversationTestsBase {
     }
 
 
-    func testThatChangingAllowGuestsSetsAccessModeStrings() {
-        [(true, ["code", "invite"], ConversationAccessRole.nonActivated.rawValue),
-         (false, [], ConversationAccessRole.team.rawValue)].forEach {
-            // when
-            sut.allowGuests = $0.0
-            // then
-            XCTAssertEqual(Set(sut.accessModeStrings!), Set($0.1))
-            XCTAssertEqual(Set(sut.accessRoleString!), Set($0.2))
-        }
-    }
-
     func testThatAccessModeStringsChangingAllowGuestsSets() {
         let values = [
             (true, ["code", "invite"], ConversationAccessRole.nonActivated.rawValue),
@@ -222,6 +211,13 @@ class ZMConversationAccessModeTests: ZMConversationTestsBase {
         }
     }
 
+    func testGuestsAreNotAllowedWhenAccessModeIsTeamOnly() {
+        sut.accessMode = .teamOnly
+        sut.accessRoles = [.teamMember, .guest]
+
+        XCTAssertFalse(sut.allowGuests)
+    }
+
     func testThatTheConversationIsInsertedWithCorrectAccessModeAccessRole_Default_WithTeam() {
         // when
         let conversation = ZMConversation.insertGroupConversation(moc: self.uiMOC,
@@ -230,7 +226,7 @@ class ZMConversationAccessModeTests: ZMConversationTestsBase {
                                                                   team: team)!
         // then
         XCTAssertEqual(Set(conversation.accessModeStrings!), ["code", "invite"])
-        XCTAssertEqual(conversation.accessRoleString!, ConversationAccessRole.nonActivated.rawValue)
+        XCTAssertEqual(conversation.accessRoleStringsV2!, ["team_member", "guest", "service"])
     }
 
     func testThatTheConversationIsInsertedWithCorrectAccessModeAccessRole_Default_NoTeam() {
