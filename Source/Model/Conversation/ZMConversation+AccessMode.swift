@@ -126,7 +126,6 @@ extension ZMConversation: SwiftConversationLike {
         }
         set {
             accessMode = ConversationAccessMode.value(forAllowGuests: newValue)
-            accessRole = ConversationAccessRole.value(forAllowGuests: newValue)
             if newValue {
                 accessRoles.insert(.guest)
             } else {
@@ -144,7 +143,6 @@ extension ZMConversation: SwiftConversationLike {
             return accessMode != .teamOnly && accessRoles.contains(.service)
         }
         set {
-            accessMode = ConversationAccessMode.value(forAllowGuests: newValue)
             if newValue {
                 accessRoles.insert(.service)
             } else {
@@ -187,7 +185,6 @@ extension ZMConversation: SwiftConversationLike {
             ]
 
         return payload
-
     }
 
     // The conversation access mode is stored as an array of string in CoreData, cf. `acccessModeStrings`.

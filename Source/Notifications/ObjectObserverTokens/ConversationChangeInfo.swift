@@ -136,8 +136,7 @@ extension ZMConversation: ObjectInSnapshot {
     }
 
     public var allowServicesChanged: Bool {
-        return changedKeysContain(keys: #keyPath(ZMConversation.accessModeStrings)) ||
-               changedKeysContain(keys: #keyPath(ZMConversation.accessRoleStringsV2))
+        return changedKeysContain(keys: #keyPath(ZMConversation.accessRoleStringsV2))
     }
 
     public var destructionTimeoutChanged: Bool {

@@ -151,7 +151,7 @@ class ZMConversationAccessModeTests: ZMConversationTestsBase {
         // when
         XCTAssertTrue(self.uiMOC.saveOrRollback())
         // then
-        XCTAssertFalse(sut.keysThatHaveLocalModifications.contains("accessRoleV2Strings"))
+        XCTAssertFalse(sut.keysThatHaveLocalModifications.contains("accessRoleStringsV2"))
     }
 
     let testSetAccessMode: [(ConversationAccessMode?, [String]?)] = [(nil, nil),
