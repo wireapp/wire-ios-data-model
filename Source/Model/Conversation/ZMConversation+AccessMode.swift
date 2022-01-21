@@ -152,41 +152,6 @@ extension ZMConversation: SwiftConversationLike {
 
     }
 
-    func payload(allowGuests: Bool) -> [String: [String]] {
-        var newAccessRoles = accessRoles
-        if allowGuests {
-            newAccessRoles.insert(.guest)
-        } else {
-            newAccessRoles.subtract([.guest])
-        }
-
-        let newAccessRoleSet = newAccessRoles.map { $0.rawValue }
-
-        let payload: [String: [String]] = [
-            "access_role_v2": newAccessRoleSet
-            ]
-
-        return payload
-
-    }
-
-    func payload(allowServices: Bool) -> [String: [String]] {
-        var newAccessRoles = accessRoles
-        if allowServices {
-            newAccessRoles.insert(.service)
-        } else {
-            newAccessRoles.subtract([.service])
-        }
-
-        let newAccessRoleSet = newAccessRoles.map { $0.rawValue }
-
-        let payload: [String: [String]] = [
-            "access_role_v2": newAccessRoleSet
-            ]
-
-        return payload
-    }
-
     // The conversation access mode is stored as an array of string in CoreData, cf. `acccessModeStrings`.
 
     /// Defines how users can join a conversation.
