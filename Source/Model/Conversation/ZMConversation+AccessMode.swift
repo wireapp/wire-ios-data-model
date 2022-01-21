@@ -109,7 +109,7 @@ extension ZMConversation: SwiftConversationLike {
 
     public internal(set) var accessRoles: Set<ConversationAccessRoleV2> {
         get {
-            guard let strings = accessRoleStringsV2 else { return [] }
+            guard let strings = accessRoleStringsV2 else { return [.teamMember] }
             return Set(strings.compactMap(ConversationAccessRoleV2.init))
         }
         set {
