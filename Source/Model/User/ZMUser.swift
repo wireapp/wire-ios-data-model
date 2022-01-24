@@ -232,9 +232,7 @@ extension ZMUser {
     public var domain: String? {
         get {
             // Only consider the domain if the app needs to federate.
-            if let context = managedObjectContext, !context.zm_isFederationEnabled {
-                return nil
-            }
+            guard managedObjectContext?.zm_isFederationEnabled == true else { return nil }
 
             willAccessValue(forKey: #keyPath(domain))
             let result = primitiveDomain
