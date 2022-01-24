@@ -191,27 +191,27 @@ class ZMConversationAccessModeTests: ZMConversationTestsBase {
         }
     }
 
-    func testGuestsAreNotAllowedWhenAccessModeIsTeamOnly() {
+    func testThatGuestsAreNotAllowedWhenAccessModeIsTeamOnly() {
         sut.accessMode = .teamOnly
         sut.accessRoles = [.teamMember, .guest]
 
         XCTAssertFalse(sut.allowGuests)
     }
 
-    func testGuestsAreAllowedWhenAccessModeIsAllowGuests() {
+    func testThatGuestsAreAllowedWhenAccessModeIsAllowGuests() {
         sut.accessMode = .allowGuests
         sut.accessRoles = [.teamMember, .guest]
 
         XCTAssertTrue(sut.allowGuests)
     }
 
-    func testServicesAreAllowed() {
+    func testThatServicesAreAllowed() {
         sut.accessRoles = [.teamMember, .service]
 
         XCTAssertTrue(sut.allowServices)
     }
 
-    func testServicesAreNotAllowed() {
+    func testThatServicesAreNotAllowed() {
         sut.accessRoles = [.teamMember]
 
         XCTAssertFalse(sut.allowServices)
