@@ -162,7 +162,6 @@ class ZMConversationAccessModeTests: ZMConversationTestsBase {
                                                                      (ConversationAccessMode.legacy, ["invite"]),
                                                                      (ConversationAccessMode.allowGuests, ["code", "invite"])]
 
-
     func testThatModeSetWithOptionSetReflectedInStrings() {
         testSetAccessMode.forEach {
             // when
@@ -233,7 +232,7 @@ class ZMConversationAccessModeTests: ZMConversationTestsBase {
                                                                   team: team)!
         // then
         XCTAssertEqual(Set(conversation.accessModeStrings!), ["code", "invite"])
-        XCTAssertEqual(conversation.accessRoleStringsV2!, ["guest", "team_member"])
+        XCTAssertEqual(Set(conversation.accessRoleStringsV2!), ["team_member", "guest"])
     }
 
     func testThatTheConversationIsInsertedWithCorrectAccessModeAccessRole_Default_NoTeam() {
