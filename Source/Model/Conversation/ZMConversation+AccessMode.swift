@@ -82,6 +82,12 @@ public enum ConversationAccessRole: String {
     case nonActivated = "non_activated"
 }
 
+/// The problem: The access_role specifies who can be in the conversation. When “guests and services” is allowed,
+/// then the value is non_activated (indicating the anyone can be in the conversation).
+/// When “guests and services” is not allowed, then the value is team, indicating that only team member can be in the conversation.
+/// These values do not distinguish between human guests and non-human services.
+/// For this reason, the access_role property will be deprecated and a new access role property should be used.
+/// The new access role property access_role_v2 will contain a set of values, each of which is used to distinguish a type of user, that describes who can be a participant of the conversation.
 public enum ConversationAccessRoleV2: String {
     /// Users with Wire accounts belonging to the same team owning the conversation.
     case teamMember = "team_member"
