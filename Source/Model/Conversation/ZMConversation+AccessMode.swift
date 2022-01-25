@@ -83,8 +83,13 @@ public enum ConversationAccessRole: String {
 }
 
 public enum ConversationAccessRoleV2: String {
+    /// Users with Wire accounts belonging to the same team owning the conversation.
     case teamMember = "team_member"
+    /// Users with Wire accounts belonging to another team or no team.
+    case nonTeamMember = "non_team_member"
+    /// Users without Wire accounts, or wireless users (i.e users who join with a guest link and temporary account).
     case guest = "guest"
+    /// A service pseudo-user, aka a non-human bot.
     case service = "service"
 }
 
@@ -122,14 +127,16 @@ extension ZMConversation: SwiftConversationLike {
     /// Controls the values of `accessMode` and `accessRoleV2`.
     @objc public var allowGuests: Bool {
         get {
-            return accessMode != .teamOnly && accessRoles.contains(.guest)
+            return accessMode != .teamOnly && accessRoles.contains(.guest) && accessRoles.contains(.nonTeamMember)
         }
         set {
             accessMode = ConversationAccessMode.value(forAllowGuests: newValue)
             if newValue {
                 accessRoles.insert(.guest)
+                accessRoles.insert(.nonTeamMember)
             } else {
                 accessRoles.remove(.guest)
+                accessRoles.remove(.nonTeamMember)
             }
 
         }
