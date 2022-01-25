@@ -193,7 +193,7 @@ class ZMConversationAccessModeTests: ZMConversationTestsBase {
     func testThatGuestsAreNotAllowedWhenAccessModeIsTeamOnly() {
         // WHEN
         sut.accessMode = .teamOnly
-        sut.accessRoles = [.teamMember, .guest]
+        sut.accessRoles = [.teamMember, .guest, .nonTeamMember]
 
         // THEN
         XCTAssertFalse(sut.allowGuests)
@@ -252,7 +252,7 @@ class ZMConversationAccessModeTests: ZMConversationTestsBase {
 
         assertAccessModeAndRoles(allowGuests: false, allowServices: true, expectedAccessModes: [], expectedAccessRoles: [.teamMember, .service])
 
-        assertAccessModeAndRoles(allowGuests: true, allowServices: true, expectedAccessModes: ["code", "invite"], expectedAccessRoles: [.teamMember, .nonTeamMember,.guest, .service])
+        assertAccessModeAndRoles(allowGuests: true, allowServices: true, expectedAccessModes: ["code", "invite"], expectedAccessRoles: [.teamMember, .nonTeamMember, .guest, .service])
 
         assertAccessModeAndRoles(allowGuests: false, allowServices: false, expectedAccessModes: [], expectedAccessRoles: [.teamMember])
 
@@ -273,17 +273,17 @@ class ZMConversationAccessModeTests: ZMConversationTestsBase {
 
     func testThatAccessRoleSetAccessRoleString() {
         // GIVEN
-        sut.accessRoles = [.teamMember, .guest, .service]
+        sut.accessRoles = [.teamMember, .guest, .nonTeamMember, .service]
 
         // THEN
-        XCTAssertEqual(sut.accessRoleStringsV2, ["team_member", "guest", "service"])
+        XCTAssertEqual(Set(sut.accessRoleStringsV2!), Set(["team_member", "guest", "non_team_member", "service"]))
     }
 
     func testThatAccessRoleStringSetAccesseRole() {
         // GIVEN
-        sut.accessRoleStringsV2 = ["team_member", "guest", "service"]
+        sut.accessRoleStringsV2 = ["team_member", "non_team_member", "guest", "service"]
 
         // THEN
-        XCTAssertEqual(sut.accessRoles, [.teamMember, .guest, .service])
+        XCTAssertEqual(sut.accessRoles, [.teamMember, .nonTeamMember, .guest, .service])
     }
 }
