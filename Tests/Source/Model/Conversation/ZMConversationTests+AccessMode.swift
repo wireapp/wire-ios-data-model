@@ -232,7 +232,7 @@ class ZMConversationAccessModeTests: ZMConversationTestsBase {
                                                                   team: team)!
         // then
         XCTAssertEqual(Set(conversation.accessModeStrings!), ["code", "invite"])
-        XCTAssertEqual(Set(conversation.accessRoleStringsV2!), ["team_member", "guest"])
+        XCTAssertEqual(Set(conversation.accessRoleStringsV2!), ["guest", "service", "team_member"])
     }
 
     func testThatTheConversationIsInsertedWithCorrectAccessModeAccessRole_Default_NoTeam() {
@@ -248,23 +248,28 @@ class ZMConversationAccessModeTests: ZMConversationTestsBase {
 
     func testThatConversationIsInsertedWithCorrectAccessModeAndAccessRoles() {
         // THEN
-        assertAccessModeAndRoles(allowGuests: true, expectedAccessModes: ["code",  "invite"], expectedAccessRoles: [.teamMember, .guest])
+        assertAccessModeAndRoles(allowGuests: true, allowServices: false, expectedAccessModes: ["code", "invite"], expectedAccessRoles: [.teamMember, .guest])
 
-        assertAccessModeAndRoles(allowGuests: false, expectedAccessModes: [], expectedAccessRoles: [.teamMember])
+        assertAccessModeAndRoles(allowGuests: false, allowServices: true, expectedAccessModes: [], expectedAccessRoles: [.teamMember, .service])
+
+        assertAccessModeAndRoles(allowGuests: true, allowServices: true, expectedAccessModes: ["code", "invite"], expectedAccessRoles: [.teamMember, .guest, .service])
+
+        assertAccessModeAndRoles(allowGuests: false, allowServices: false, expectedAccessModes: [], expectedAccessRoles: [.teamMember])
+
     }
 
-    func assertAccessModeAndRoles(allowGuests: Bool, expectedAccessModes: Set<String>, expectedAccessRoles: Set<ConversationAccessRoleV2>, file: StaticString = #file, line: UInt = #line) {
+    func assertAccessModeAndRoles(allowGuests: Bool, allowServices: Bool, expectedAccessModes: Set<String>, expectedAccessRoles: Set<ConversationAccessRoleV2>, file: StaticString = #file, line: UInt = #line) {
         // WHEN
         let conversation = ZMConversation.insertGroupConversation(moc: self.uiMOC,
                                                                   participants: [],
                                                                   name: "Test Conversation",
                                                                   team: team,
-                                                                  allowGuests: allowGuests)!
+                                                                  allowGuests: allowGuests,
+                                                                  allowServices: allowServices)!
         // THEN
         XCTAssertEqual(Set(conversation.accessModeStrings!), expectedAccessModes, file: file, line: line)
         XCTAssertEqual(Set(conversation.accessRoleStringsV2!), Set(expectedAccessRoles.map(\.rawValue)), file: file, line: line)
     }
-
 
     func testThatAccessRoleSetAccessRoleString() {
         // GIVEN
@@ -273,7 +278,6 @@ class ZMConversationAccessModeTests: ZMConversationTestsBase {
         // THEN
         XCTAssertEqual(sut.accessRoleStringsV2, ["team_member", "guest", "service"])
     }
-
 
     func testThatAccessRoleStringSetAccesseRole() {
         // GIVEN
