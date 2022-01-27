@@ -32,6 +32,7 @@ public protocol ConversationLike: NSObjectProtocol {
     var displayName: String { get }
     var connectedUserType: UserType? { get }
     var allowGuests: Bool { get }
+    var allowServices: Bool { get }
 
     var isUnderLegalHold: Bool { get }
     var securityLevel: ZMConversationSecurityLevel { get }
