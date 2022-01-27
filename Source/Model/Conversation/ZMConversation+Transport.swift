@@ -66,6 +66,7 @@ extension ZMConversation {
         public static let conversationRoleKey = "conversation_role"
         public static let accessModeKey = "access"
         public static let accessRoleKey = "access_role"
+        public static let accessRoleKeyV2 = "access_role_v2"
         public static let messageTimer = "message_timer"
         public static let receiptMode = "receipt_mode"
 
