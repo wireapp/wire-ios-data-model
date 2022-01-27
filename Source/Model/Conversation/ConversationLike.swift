@@ -52,7 +52,8 @@ public protocol ConversationLike: NSObjectProtocol {
 public protocol SwiftConversationLike {
     var accessMode: ConversationAccessMode? { get }
     var accessRole: ConversationAccessRole? { get }
-
+    var accessRoles: Set<ConversationAccessRoleV2> { get }
+    
     var teamType: TeamType? { get }
 
     var mutedMessageTypes: MutedMessageTypes { get set }
