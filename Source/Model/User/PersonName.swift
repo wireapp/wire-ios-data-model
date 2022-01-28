@@ -18,7 +18,7 @@
 
 @objcMembers public class PersonName: NSObject {
 
-    public static func ==(lhs: PersonName, rhs: PersonName) -> Bool {
+    public static func == (lhs: PersonName, rhs: PersonName) -> Bool {
         return lhs.components == rhs.components
     }
 

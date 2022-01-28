@@ -176,11 +176,11 @@ public extension ZMConversationMessage {
 
 public extension Equatable where Self: ZMConversationMessage { }
 
-public func ==(lhs: ZMConversationMessage, rhs: ZMConversationMessage) -> Bool {
+public func == (lhs: ZMConversationMessage, rhs: ZMConversationMessage) -> Bool {
     return lhs.isEqual(rhs)
 }
 
-public func ==(lhs: ZMConversationMessage?, rhs: ZMConversationMessage?) -> Bool {
+public func == (lhs: ZMConversationMessage?, rhs: ZMConversationMessage?) -> Bool {
     switch (lhs, rhs) {
     case (nil, nil):
         return true
@@ -233,8 +233,8 @@ extension ZMMessage: ZMConversationMessage {
 
     public var canBeMarkedUnread: Bool {
         guard self.isNormal,
-                let _ = self.serverTimestamp,
-                let _ = self.conversation,
+                self.serverTimestamp != nil,
+                self.conversation != nil,
                 let sender = self.sender,
                 !sender.isSelfUser else {
                 return false
@@ -325,10 +325,8 @@ extension ZMMessage {
 
     @objc public var usersReaction: [String: [UserType]] {
         var result = [String: [ZMUser]]()
-        for reaction in reactions {
-            if reaction.users.count > 0 {
+        for reaction in reactions where reaction.users.count > 0 {
                 result[reaction.unicodeValue!] = [ZMUser](reaction.users)
-            }
         }
         return result
     }
