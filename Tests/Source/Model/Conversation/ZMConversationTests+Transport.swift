@@ -28,9 +28,10 @@ class ZMConversationTests_Transport: ZMConversationTestsBase {
             let conversation = ZMConversation.insertNewObject(in: self.syncMOC)
             let accessRoles: Set<ConversationAccessRoleV2> = [.teamMember, .guest, .service]
             let accessMode = ConversationAccessMode.allowGuests
+            let accessRole = ConversationAccessRole.team
 
             // when
-            conversation.updateAccessStatus(accessModes: accessMode.stringValue, accessRoles: accessRoles.map({$0.rawValue}))
+            conversation.updateAccessStatus(accessModes: accessMode.stringValue, accessRole: accessRole.rawValue, accessRoles: accessRoles.map({$0.rawValue}))
 
             // then
             XCTAssertEqual(conversation.accessMode, accessMode)
