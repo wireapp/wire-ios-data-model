@@ -22,7 +22,7 @@ private let zmLog = ZMSLog(tag: "Patches")
 
 /// Patches to apply to migrate some persisted data from a previous
 /// version of the app - database fixes, local files clean up, etc.
-public struct PersistedDataPatch {
+public final class PersistedDataPatch {
     
     /// Max version for which the patch needs to be applied
     let version: FrameworkVersion
@@ -37,31 +37,13 @@ public struct PersistedDataPatch {
 
     /// Apply all patches to the MOC
     public static func applyAll(in moc: NSManagedObjectContext, fromVersion: String? = nil, patches: [PersistedDataPatch]? = nil) {
-        zmLog.safePublic("Beginning patches...")
-
-        guard let bundle = Bundle(identifier: "com.wire.WireDataModel") else {
-            return zmLog.safePublic("Can't retrieve bundle for data model, skipping patches..")
-        }
-
-        guard let currentVersion = bundle.infoDictionary!["CFBundleShortVersionString"] as? String else {
+        guard let currentVersion = Bundle(for: Self.self).infoDictionary!["CFBundleShortVersionString"] as? String else {
             return zmLog.safePublic("Can't retrieve CFBundleShortVersionString for data model, skipping patches..")
         }
 
-        zmLog.safePublic("current version is: \(currentVersion)")
-        
         defer {
-            zmLog.safePublic("Saving last patched version: \(currentVersion)")
-
-            if let storeMetadata = moc.metadata {
-                zmLog.safePublic("Store metadata before update: \(String(describing: storeMetadata))")
-            }
-
             moc.setPersistentStoreMetadata(currentVersion, key: lastDataModelPatchedVersionKey)
             moc.saveOrRollback()
-
-            if let storeMetadata = moc.metadata {
-                zmLog.safePublic("Store metadata after update: \(String(describing: storeMetadata))")
-            }
         }
         
         guard
@@ -70,26 +52,11 @@ public struct PersistedDataPatch {
         else {
             return zmLog.safePublic("No previous patch version stored (expected on fresh installs), skipping patches..")
         }
-
-        zmLog.safePublic("Previous version: \(previousPatchVersion.version)")
+        
+        (patches ?? PersistedDataPatch.allPatchesToApply).filter { $0.version > previousPatchVersion }.forEach {
+            $0.block(moc)
+        }
     }
-}
-
-private extension NSManagedObjectContext {
-
-    var metadata: [String: Any]? {
-        guard let store = persistentStoreCoordinator?.persistentStores.first else { return nil }
-        return persistentStoreCoordinator?.metadata(for: store)
-    }
-
-}
-
-extension String: SafeForLoggingStringConvertible {
-
-    public var safeForLoggingDescription: String {
-        return self
-    }
-
 }
 
 /// Persistent store key for last data model version

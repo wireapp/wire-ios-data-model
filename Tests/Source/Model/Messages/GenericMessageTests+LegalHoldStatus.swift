@@ -23,31 +23,31 @@ import WireTesting
 class GenericMessageTests_LegalHoldStatus: BaseZMClientMessageTests {
 
     func testThatItUpdatesLegalHoldStatusFlagForTextMessage() {
-        
+
         // given
         var genericMessage = GenericMessage(content: Text(content: "foo"), nonce: UUID.create())
-        
+
         // when
         XCTAssertEqual(genericMessage.text.legalHoldStatus, .unknown)
         genericMessage.setLegalHoldStatus(.disabled)
-        
+
         // then
         XCTAssertEqual(genericMessage.text.legalHoldStatus, .disabled)
     }
-    
+
     func testThatItUpdatesLegalHoldStatusFlagForReaction() {
-        
+
         // given
         var genericMessage = GenericMessage(content: WireProtos.Reaction.createReaction(emoji: "🤠", messageID: UUID.create()))
-        
+
         // when
         XCTAssertEqual(genericMessage.reaction.legalHoldStatus, .unknown)
         genericMessage.setLegalHoldStatus(.enabled)
-        
+
         // then
         XCTAssertEqual(genericMessage.reaction.legalHoldStatus, .enabled)
     }
-    
+
     func testThatItUpdatesLegalHoldStatusFlagForKnock() {
 
         // given
@@ -95,7 +95,7 @@ class GenericMessageTests_LegalHoldStatus: BaseZMClientMessageTests {
 
         // given
         let asset = WireProtos.Asset(imageSize: CGSize(width: 42, height: 12), mimeType: "image/jpeg", size: 123)
-        var genericMessage = GenericMessage(content: asset, nonce: UUID.create(), expiresAfter: 15)
+        var genericMessage = GenericMessage(content: asset, nonce: UUID.create(), expiresAfter: .tenSeconds)
 
         // when
         XCTAssertEqual(genericMessage.ephemeral.legalHoldStatus, .unknown)
