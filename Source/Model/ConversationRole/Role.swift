@@ -103,10 +103,10 @@ public final class Role: ZMManagedObject {
         let namePredicate = NSPredicate(format: "%K == %@", Role.nameKey, name)
         let teamOrConvoPredicate: NSPredicate
         switch teamOrConversation {
-            case .team(let team):
-                teamOrConvoPredicate = NSPredicate(format: "%K == %@", Role.teamKey, team)
-            case .conversation(let convo):
-                teamOrConvoPredicate = NSPredicate(format: "%K == %@", Role.conversationKey, convo)
+        case .team(let team):
+            teamOrConvoPredicate = NSPredicate(format: "%K == %@", Role.teamKey, team)
+        case .conversation(let convo):
+            teamOrConvoPredicate = NSPredicate(format: "%K == %@", Role.conversationKey, convo)
         }
         fetchRequest.predicate = NSCompoundPredicate(andPredicateWithSubpredicates: [
             namePredicate,
@@ -129,11 +129,10 @@ public final class Role: ZMManagedObject {
     @discardableResult
     public static func createOrUpdate(with payload: [String: Any],
                                       teamOrConversation: TeamOrConversation,
-                                      context: NSManagedObjectContext
-        ) -> Role? {
+                                      context: NSManagedObjectContext) -> Role? {
         guard let conversationRole = payload["conversation_role"] as? String,
-            let actionNames = payload["actions"] as? [String]
-            else { return nil }
+              let actionNames = payload["actions"] as? [String]
+        else { return nil }
 
         let fetchedRole = fetchExistingRole(with: conversationRole,
                                             teamOrConversation: teamOrConversation,
