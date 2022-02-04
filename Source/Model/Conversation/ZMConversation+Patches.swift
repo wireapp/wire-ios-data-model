@@ -118,12 +118,12 @@ extension ZMConversation {
         // Mark group conversation membership to be refetched
         let selfUser = ZMUser.selfUser(in: moc)
 
-        let groupConversationsFetch = ZMConversation.sortedFetchRequest(
+        let conversationsToFetch = ZMConversation.sortedFetchRequest(
             with: NSPredicate(format: "%K == %d",
                               ZMConversationConversationTypeKey,
                               ZMConversationType.group.rawValue))
 
-        guard let conversations = moc.fetchOrAssert(request: groupConversationsFetch) as? [ZMConversation] else {
+        guard let conversations = moc.fetchOrAssert(request: conversationsToFetch) as? [ZMConversation] else {
                 fatal("fetchOrAssert failed")
         }
 
