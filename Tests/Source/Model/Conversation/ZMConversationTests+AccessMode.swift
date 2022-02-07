@@ -242,8 +242,8 @@ class ZMConversationAccessModeTests: ZMConversationTestsBase {
                                                                   name: "Test Conversation",
                                                                   team: nil)!
         // then
-        XCTAssertTrue(conversation.accessModeStrings == nil)
-        XCTAssertEqual(conversation.accessRoleStringsV2, nil)
+        XCTAssertNil(conversation.accessModeStrings)
+        XCTAssertNil(conversation.accessRoleStringsV2)
     }
 
     func testThatConversationIsInsertedWithCorrectAccessModeAndAccessRoles() {
