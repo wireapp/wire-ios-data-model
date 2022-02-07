@@ -118,12 +118,12 @@ extension ZMConversation {
         // Mark group conversation membership to be refetched
         let selfUser = ZMUser.selfUser(in: moc)
 
-        let conversationsToFetch = ZMConversation.sortedFetchRequest(
+        let groupConversationsFetch = ZMConversation.sortedFetchRequest(
             with: NSPredicate(format: "%K == %d",
                               ZMConversationConversationTypeKey,
                               ZMConversationType.group.rawValue))
 
-        guard let conversations = moc.fetchOrAssert(request: conversationsToFetch) as? [ZMConversation] else {
+        guard let conversations = moc.fetchOrAssert(request: groupConversationsFetch) as? [ZMConversation] else {
                 fatal("fetchOrAssert failed")
         }
 
@@ -162,9 +162,9 @@ extension ZMConversation {
     }
     // Model version add a `accessRoleStringsV2` attribute to the `Conversation` entity. The values from accessRoleString, need to be migrated to the new relationship
     static func forceToFetchConversationAccessRoles(in moc: NSManagedObjectContext) {
-        let groupConversationsFetch = ZMConversation.fetchRequest()
+        let conversationsToFetch = ZMConversation.fetchRequest()
 
-        guard let conversations = moc.fetchOrAssert(request: groupConversationsFetch) as? [ZMConversation] else {
+        guard let conversations = moc.fetchOrAssert(request: conversationsToFetch) as? [ZMConversation] else {
                 fatal("fetchOrAssert failed")
         }
 
