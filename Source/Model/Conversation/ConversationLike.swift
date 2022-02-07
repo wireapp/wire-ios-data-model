@@ -51,9 +51,8 @@ public protocol ConversationLike: NSObjectProtocol {
 // Since ConversationLike must have @objc signature(@objc UserType has a ConversationLike property), create another protocol to abstract Swift only properties
 public protocol SwiftConversationLike {
     var accessMode: ConversationAccessMode? { get }
-    var accessRole: ConversationAccessRole? { get }
     var accessRoles: Set<ConversationAccessRoleV2> { get }
-    
+
     var teamType: TeamType? { get }
 
     var mutedMessageTypes: MutedMessageTypes { get set }
