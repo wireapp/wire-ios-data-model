@@ -122,53 +122,5 @@ class RolesMigrationTests: DiskDatabaseTest {
         XCTAssertEqual(groupConvo.localParticipants, Set([user1, user2]))
         XCTAssertEqual((groupConvo.value(forKey: oldKey) as! NSOrderedSet).count, 0)
     }
-
-    func testForcingToFetchConversationAccessRoles() {
-        // Given
-        let selfUser = ZMUser.selfUser(in: moc)
-        let team = createTeam()
-        team.remoteIdentifier = UUID.create()
-        _ = createMembership(user: selfUser, team: team)
-
-        let groupConvo = createConversation()
-        groupConvo.addParticipantAndUpdateConversationState(user: selfUser, role: nil)
-        groupConvo.userDefinedName = "Group"
-        groupConvo.needsToBeUpdatedFromBackend = false
-
-        let groupConvoInTeam = createConversation()
-        groupConvoInTeam.addParticipantAndUpdateConversationState(user: selfUser, role: nil)
-        groupConvoInTeam.userDefinedName = "Group"
-        groupConvoInTeam.needsToBeUpdatedFromBackend = false
-        groupConvoInTeam.team = team
-
-        let groupConvoInAnotherTeam = createConversation()
-        groupConvoInAnotherTeam.addParticipantAndUpdateConversationState(user: selfUser, role: nil)
-        groupConvoInAnotherTeam.userDefinedName = "Group"
-        groupConvoInAnotherTeam.needsToBeUpdatedFromBackend = false
-        groupConvoInAnotherTeam.teamRemoteIdentifier = UUID.create()
-
-        let oneToOneConvo = createConversation()
-        oneToOneConvo.addParticipantAndUpdateConversationState(user: selfUser, role: nil)
-        oneToOneConvo.conversationType = .oneOnOne
-        oneToOneConvo.userDefinedName = "OneToOne"
-        oneToOneConvo.needsToBeUpdatedFromBackend = false
-
-        let connectionConvo = createConversation()
-        connectionConvo.conversationType = .connection
-        connectionConvo.addParticipantAndUpdateConversationState(user: selfUser, role: nil)
-        connectionConvo.userDefinedName = "Connection"
-        connectionConvo.needsToBeUpdatedFromBackend = false
-
-        self.moc.saveOrRollback()
-
-        // When
-        WireDataModel.ZMConversation.forceToFetchConversationAccessRoles(in: moc)
-
-        // Then
-        XCTAssertTrue(oneToOneConvo.needsToBeUpdatedFromBackend)
-        XCTAssertTrue(connectionConvo.needsToBeUpdatedFromBackend)
-        XCTAssertTrue(groupConvoInTeam.needsToBeUpdatedFromBackend)
-        XCTAssertTrue(groupConvo.needsToBeUpdatedFromBackend)
-        XCTAssertTrue(groupConvoInAnotherTeam.needsToBeUpdatedFromBackend)
-    }
+    
 }
