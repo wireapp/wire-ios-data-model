@@ -40,7 +40,7 @@ class MockAssetCollectionDelegate: NSObject, AssetCollectionDelegate {
 
         didCallDelegate = true
         if !hasMore {
-            finished = finished + messages.keys
+            finished += messages.keys
         }
     }
 
@@ -82,7 +82,7 @@ class AssetColletionTests: ModelObjectsTests {
         var messages = [ZMMessage]()
         (0..<count).forEach { _ in
             let message = try! conversation.appendImage(from: verySmallJPEGData()) as! ZMMessage
-            offset = offset + 5
+            offset += 5
             message.setValue(Date().addingTimeInterval(offset), forKey: "serverTimestamp")
             messages.append(message)
             message.setPrimitiveValue(NSNumber(value: 0), forKey: ZMMessageCachedCategoryKey)
