@@ -353,9 +353,9 @@ class AssetColletionBatchedTests: ModelObjectsTests {
         // then
         let allMessages = sut.assets(for: defaultMatchPair)
         XCTAssertEqual(allMessages.count, 20)
-        XCTAssertTrue(allMessages.reduce(true) { result, element in
+        XCTAssertTrue(allMessages.allSatisfy { element in
             guard let message = element as? ZMMessage else { return false }
-            return result && message.managedObjectContext!.zm_isUserInterfaceContext
+            return message.managedObjectContext!.zm_isUserInterfaceContext
         })
     }
 
