@@ -232,7 +232,7 @@ class ChangedIndexesTests: ZMBaseManagedObjectTest {
                 XCTAssertEqual(from, 4)
                 XCTAssertEqual(to, 3)
             }
-            callCount = += 1
+            callCount += 1
         }
         XCTAssertEqual(callCount, 3)
 
@@ -271,7 +271,7 @@ class ChangedIndexesTests: ZMBaseManagedObjectTest {
                 XCTAssertEqual(from, 2)
                 XCTAssertEqual(to, 1)
             }
-            callCount = += 1
+            callCount += 1
         }
         XCTAssertEqual(callCount, 2)
 
