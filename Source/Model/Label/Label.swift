@@ -110,8 +110,8 @@ public class Label: ZMManagedObject, LabelType {
         }
 
         for managedObject in context.registeredObjects where managedObject.entity == entity && !managedObject.isFault {
-                guard let label = managedObject as? Label, label.kind == .favorite else { continue }
-                return label
+            guard let label = managedObject as? Label, label.kind == .favorite else { continue }
+            return label
 
         }
 
