@@ -160,8 +160,6 @@ public enum ConversationAccessRoleV2: String {
     }
 }
 
-
-
 public extension ConversationAccessRole {
     static func value(forAllowGuests allowGuests: Bool) -> ConversationAccessRole {
         return allowGuests ? ConversationAccessRole.nonActivated : ConversationAccessRole.team

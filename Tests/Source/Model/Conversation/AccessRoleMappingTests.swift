@@ -25,7 +25,7 @@ class AccessRoleMappingTests: XCTestCase {
     // MARK: Test Access Role Mapping from AccessRoleV2 to Access Role
 
     func testAccessRoleMappingFromAccessRoleV2ToAccessRole() {
-        
+
         // WHEN & THEN
         XCTAssertEqual(ConversationAccessRole.fromAccessRoleV2([]), .private)
 
