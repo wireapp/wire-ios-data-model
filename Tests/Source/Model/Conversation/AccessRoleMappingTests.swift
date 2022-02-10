@@ -82,10 +82,10 @@ class AccessRoleMappingTests: XCTestCase {
         XCTAssertEqual(ConversationAccessRoleV2.fromLegacyAccessRole(.team), [.teamMember])
 
         // WHEN & THEN
-        XCTAssertEqual(ConversationAccessRoleV2.fromLegacyAccessRole(.activated), [.teamMember, .nonTeamMember, guest])
+        XCTAssertEqual(ConversationAccessRoleV2.fromLegacyAccessRole(.activated), [.teamMember, .nonTeamMember, .guest])
 
         // WHEN & THEN
-        XCTAssertEqual(ConversationAccessRoleV2.fromLegacyAccessRole(.nonActivated), [.teamMember, .nonTeamMember, guest, .service])
+        XCTAssertEqual(ConversationAccessRoleV2.fromLegacyAccessRole(.nonActivated), [.teamMember, .nonTeamMember, .guest, .service])
 
         // WHEN & THEN
         XCTAssertEqual(ConversationAccessRoleV2.fromLegacyAccessRole(.private), [])
