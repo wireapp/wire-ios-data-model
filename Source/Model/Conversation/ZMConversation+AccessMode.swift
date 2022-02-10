@@ -80,6 +80,46 @@ public enum ConversationAccessRole: String {
     case activated = "activated"
     /// Any user can join.
     case nonActivated = "non_activated"
+    case `private` = "private"
+
+    static func fromAccessRoleV2(_ accessRoles: Set<ConversationAccessRoleV2>) -> ConversationAccessRole {
+        switch accessRoles {
+        case []:
+            return .private
+        case [.teamMember]:
+            return .team
+        case [.teamMember, .nonTeamMember]:
+            return .activated
+        case [.teamMember, .nonTeamMember, .guest]:
+            return .nonActivated
+        case [.teamMember, .nonTeamMember, .guest, .service]:
+            return .nonActivated
+        case [.teamMember, .nonTeamMember, .service]:
+            return activated
+        case [.teamMember, .guest]:
+            return.nonActivated
+        case [.teamMember, .guest, .service]:
+            return .nonActivated
+        case [.teamMember, .service]:
+            return .activated
+        case [.nonTeamMember]:
+            return .activated
+        case [.nonTeamMember, .guest]:
+            return .nonActivated
+        case [.nonTeamMember, .guest, .service]:
+            return nonActivated
+        case [.nonTeamMember, .service]:
+            return activated
+        case [.guest]:
+            return nonActivated
+        case [.guest, .service]:
+            return nonActivated
+        case [.service]:
+            return activated
+        default:
+            return .team
+        }
+    }
 }
 
 /// The issue:
@@ -105,7 +145,22 @@ public enum ConversationAccessRoleV2: String {
     case guest = "guest"
     /// A service pseudo-user, aka a non-human bot.
     case service = "service"
+
+    static func fromLegacyAccessRole(_ accessRole: ConversationAccessRole) -> Set<Self> {
+        switch accessRole {
+        case .team:
+            return [.teamMember]
+        case .activated:
+            return [.teamMember, .nonTeamMember, guest]
+        case .nonActivated:
+            return [.teamMember, .nonTeamMember, guest, .service]
+        case .private:
+            return []
+        }
+    }
 }
+
+
 
 public extension ConversationAccessRole {
     static func value(forAllowGuests allowGuests: Bool) -> ConversationAccessRole {
