@@ -80,6 +80,7 @@ public enum ConversationAccessRole: String {
     case activated = "activated"
     /// Any user can join.
     case nonActivated = "non_activated"
+    // 1:1 conversation
     case `private` = "private"
 
     public static func fromAccessRoleV2(_ accessRoles: Set<ConversationAccessRoleV2>) -> ConversationAccessRole {
