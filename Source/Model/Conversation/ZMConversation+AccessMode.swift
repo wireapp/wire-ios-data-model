@@ -82,7 +82,7 @@ public enum ConversationAccessRole: String {
     case nonActivated = "non_activated"
     case `private` = "private"
 
-    static func fromAccessRoleV2(_ accessRoles: Set<ConversationAccessRoleV2>) -> ConversationAccessRole {
+    public static func fromAccessRoleV2(_ accessRoles: Set<ConversationAccessRoleV2>) -> ConversationAccessRole {
         switch accessRoles {
         case []:
             return .private
@@ -146,7 +146,7 @@ public enum ConversationAccessRoleV2: String {
     /// A service pseudo-user, aka a non-human bot.
     case service = "service"
 
-    static func fromLegacyAccessRole(_ accessRole: ConversationAccessRole) -> Set<Self> {
+    public static func fromLegacyAccessRole(_ accessRole: ConversationAccessRole) -> Set<Self> {
         switch accessRole {
         case .team:
             return [.teamMember]
