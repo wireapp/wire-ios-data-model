@@ -41,7 +41,7 @@ extension PersistedDataPatch {
         PersistedDataPatch(version: "273.2.0", block: InvalidDomainRemoval.removeDuplicatedEntitiesWithInvalidDomain),
         PersistedDataPatch(version: "279.0.4", block: InvalidFeatureRemoval.restoreDefaultConferenceCallingConfig),
         //TODO: [AGIS] Change the version number to the new version BEFORE release
-        PersistedDataPatch(version: "298.0.0", block: ZMConversation.introduceAccessRoleV2)
+        PersistedDataPatch(version: "283.3.5", block: ZMConversation.introduceAccessRoleV2)
     ]
 
 }
