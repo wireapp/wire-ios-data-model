@@ -80,6 +80,21 @@ public enum ConversationAccessRole: String {
     case activated = "activated"
     /// Any user can join.
     case nonActivated = "non_activated"
+    // 1:1 conversation
+    case `private` = "private"
+
+    public static func fromAccessRoleV2(_ accessRoles: Set<ConversationAccessRoleV2>) -> ConversationAccessRole {
+        if accessRoles.contains(.guest) {
+          return .nonActivated
+        } else if accessRoles.contains(.nonTeamMember) || accessRoles.contains(.service) {
+          return .activated
+        } else if accessRoles.contains(.teamMember) {
+          return .team
+        } else {
+          return .private
+        }
+    }
+    
 }
 
 /// The issue:
@@ -105,6 +120,19 @@ public enum ConversationAccessRoleV2: String {
     case guest = "guest"
     /// A service pseudo-user, aka a non-human bot.
     case service = "service"
+
+    public static func fromLegacyAccessRole(_ accessRole: ConversationAccessRole) -> Set<Self> {
+        switch accessRole {
+        case .team:
+            return [.teamMember]
+        case .activated:
+            return [.teamMember, .nonTeamMember, guest]
+        case .nonActivated:
+            return [.teamMember, .nonTeamMember, guest, .service]
+        case .private:
+            return []
+        }
+    }
 }
 
 public extension ConversationAccessRole {
