@@ -84,43 +84,17 @@ public enum ConversationAccessRole: String {
     case `private` = "private"
 
     public static func fromAccessRoleV2(_ accessRoles: Set<ConversationAccessRoleV2>) -> ConversationAccessRole {
-        switch accessRoles {
-        case []:
-            return .private
-        case [.teamMember]:
-            return .team
-        case [.teamMember, .nonTeamMember]:
-            return .activated
-        case [.teamMember, .nonTeamMember, .guest]:
-            return .nonActivated
-        case [.teamMember, .nonTeamMember, .guest, .service]:
-            return .nonActivated
-        case [.teamMember, .nonTeamMember, .service]:
-            return activated
-        case [.teamMember, .guest]:
-            return.nonActivated
-        case [.teamMember, .guest, .service]:
-            return .nonActivated
-        case [.teamMember, .service]:
-            return .activated
-        case [.nonTeamMember]:
-            return .activated
-        case [.nonTeamMember, .guest]:
-            return .nonActivated
-        case [.nonTeamMember, .guest, .service]:
-            return nonActivated
-        case [.nonTeamMember, .service]:
-            return activated
-        case [.guest]:
-            return nonActivated
-        case [.guest, .service]:
-            return nonActivated
-        case [.service]:
-            return activated
-        default:
-            return .team
+        if accessRoles.contains(.guest) {
+          return .nonActivated
+        } else if accessRoles.contains(.nonTeamMember) || accessRoles.contains(.service) {
+          return .activated
+        } else if accessRoles.contains(.teamMember) {
+          return .team
+        } else {
+          return .private
         }
     }
+    
 }
 
 /// The issue:
