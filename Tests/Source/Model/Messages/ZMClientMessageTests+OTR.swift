@@ -157,9 +157,7 @@ extension ClientMessageTests_OTR {
 
             // then
             switch payloadAndStrategy.strategy {
-            case .ignoreAllMissingClientsNotFromUsers:
-                fallthrough
-            case .ignoreAllMissingClients:
+            case .ignoreAllMissingClientsNotFromUsers, .ignoreAllMissingClients:
                 XCTFail()
             default:
                 break
@@ -368,7 +366,7 @@ extension ClientMessageTests_OTR {
             let confirmationMessage = try? conversation.appendClientMessage(with: confirmation, expires: false, hidden: true)
 
             // when
-            guard let _ = confirmationMessage?.encryptForTransport()
+            guard confirmationMessage?.encryptForTransport() != nil
                 else { return XCTFail()}
         }
     }
@@ -400,7 +398,7 @@ extension ClientMessageTests_OTR {
             let confirmationMessage = try? conversation.appendClientMessage(with: confirmation, expires: false, hidden: true)
 
             // when
-            guard let _ = confirmationMessage?.encryptForTransport()
+            guard confirmationMessage?.encryptForTransport() != nil
                 else { return XCTFail()}
         }
     }
@@ -428,7 +426,7 @@ extension ClientMessageTests_OTR {
             let confirmationMessage = try? conversation.appendClientMessage(with: confirmation, expires: false, hidden: true)
 
             // when
-            guard let _ = confirmationMessage?.encryptForTransport()
+            guard confirmationMessage?.encryptForTransport() != nil
                 else { return XCTFail()}
         }
     }
@@ -481,7 +479,7 @@ extension ClientMessageTests_OTR {
     fileprivate func textMessageRequiringExternalMessage(_ numberOfClients: UInt) -> String {
         var string = "Exponential growth!"
         while string.data(using: String.Encoding.utf8)!.count < Int(ZMClientMessage.byteSizeExternalThreshold / numberOfClients) {
-            string = string + string
+            string += string
         }
         return string
     }
