@@ -186,10 +186,10 @@ extension ZMConversation: SwiftConversationLike {
 
     /// If set to false, only team member or guest can join the conversation.
     /// True means that a service could join
-    /// Controls the values of `accessMode` and `accessRoleV2`.
+    /// Controls the value of `accessRoleV2`.
     @objc public var allowServices: Bool {
         get {
-            return accessMode != .teamOnly && accessRoles.contains(.service)
+            return accessRoles.contains(.service)
         }
         set {
             if newValue {
