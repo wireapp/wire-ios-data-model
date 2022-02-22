@@ -76,8 +76,7 @@ extension ZMMessage {
 
         let orPredicate = NSCompoundPredicate(orPredicateWithSubpredicates: categories.map {
             return NSPredicate(format: "(%K & %d) = %d", ZMMessageCachedCategoryKey, $0.rawValue, $0.rawValue)
-        }
-        )
+        })
 
         let excludingPredicate: NSPredicate? = (excluding != .none)
         ? NSPredicate(format: "(%K & %d) = 0", ZMMessageCachedCategoryKey, excluding.rawValue)
@@ -100,8 +99,7 @@ extension ZMMessage {
                                    ZMMessageCachedCategoryKey, $0.excluding.rawValue)
             }
             return NSPredicate(format: "(%K & %d) = %d", ZMMessageCachedCategoryKey, $0.including.rawValue, $0.including.rawValue)
-        }
-        )
+        })
         let conversationPredicate: NSPredicate? = (conversation != nil)
         ? NSPredicate(format: "%K = %@", ZMMessageConversationKey, conversation!)
         : nil
