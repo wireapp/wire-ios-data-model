@@ -145,14 +145,14 @@ final class PushTokenTests: XCTestCase {
         guard let decodedPushToken = try? JSONDecoder().decode(PushToken.self, from: pushTokenData) else {
             return XCTFail("The push token data cannot be decoded.")
         }
-        
+
         // then
         let expectedPushToken = PushToken(deviceToken: Data([0x01, 0x02, 0x03]),
                                           appIdentifier: "com.wire.zclient",
                                           transportType: "APNS",
                                           tokenType: .standard,
                                           isRegistered: true)
-        
+
         XCTAssertEqual(decodedPushToken, expectedPushToken)
     }
 }
