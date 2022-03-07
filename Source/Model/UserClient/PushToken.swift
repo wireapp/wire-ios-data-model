@@ -19,10 +19,10 @@
 import Foundation
 
 public struct PushToken: Equatable, Codable {
-    
+
     public enum TokenType: Int, Codable {
         case standard, voip
-        
+
         public var transportType: String {
             switch self {
             case .standard: return "APNS"
@@ -30,7 +30,7 @@ public struct PushToken: Equatable, Codable {
             }
         }
     }
-    
+
     public let deviceToken: Data
     public let appIdentifier: String
     public let transportType: String
@@ -38,13 +38,13 @@ public struct PushToken: Equatable, Codable {
     public var isRegistered: Bool
     public var isMarkedForDeletion: Bool = false
     public var isMarkedForDownload: Bool = false
-    
+
     public init(from decoder: Decoder) throws {
         let container = try decoder.container(keyedBy: CodingKeys.self)
         deviceToken = try container.decode(Data.self, forKey: .deviceToken)
         appIdentifier = try container.decode(String.self, forKey: .appIdentifier)
         transportType = try container.decode(String.self, forKey: .transportType)
-        
+
         // Property 'tokenType' was added to use two token types: voip (old) and apns (new). All old clients with voip token did not have this property, so we need to set it by default as .voip.
         tokenType = try container.decodeIfPresent(TokenType.self, forKey: .tokenType) ?? .voip
         isRegistered = try container.decode(Bool.self, forKey: .isRegistered)
@@ -58,7 +58,7 @@ public struct PushToken: Equatable, Codable {
 }
 
 extension PushToken {
-    
+
     public init(deviceToken: Data, appIdentifier: String, transportType: String, tokenType: TokenType, isRegistered: Bool) {
         self.deviceToken = deviceToken
         self.appIdentifier = appIdentifier
