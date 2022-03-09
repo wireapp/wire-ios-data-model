@@ -51,13 +51,17 @@ extension APIVersion {
         }
     }
 
-    /// The domain of the backend
+    /// The domain of the backend to which the app is connected to.
+
     public static var domain: String? {
         get { UserDefaults.standard.string(forKey: Keys.domain.rawValue) }
         set { UserDefaults.standard.set(newValue, forKey: Keys.domain.rawValue) }
     }
 
-    /// Wether or not the backend supports federation endpoints
+    /// Whether the connected backend has federation enabled.
+    ///
+    /// If the backend has federation enabled, then it may be federating with other backends.
+
     public static var isFederationEnabled: Bool {
         get { UserDefaults.standard.bool(forKey: Keys.federation.rawValue) }
         set { UserDefaults.standard.set(newValue, forKey: Keys.federation.rawValue) }
