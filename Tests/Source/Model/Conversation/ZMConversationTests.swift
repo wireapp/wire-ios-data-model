@@ -94,7 +94,7 @@ extension ZMConversationTests {
 
     func testThatItTreatsEmptyDomainAsNil() {
         // given
-        let uuid = UUID()
+        let uuid = UUID.create()
 
         syncMOC.performGroupedBlockAndWait {
             // when
@@ -108,7 +108,7 @@ extension ZMConversationTests {
 
     func testThatItIgnoresDomainWhenFederationIsDisabled() {
         // given
-        let uuid = UUID()
+        let uuid = UUID.create()
 
         syncMOC.performGroupedBlockAndWait {
             // when
@@ -124,7 +124,7 @@ extension ZMConversationTests {
 
     func testThatItAssignsDomainWhenFederationIsEnabled() {
         // given
-        let uuid = UUID()
+        let uuid = UUID.create()
         let domain = "a.com"
 
         syncMOC.performGroupedBlockAndWait {
