@@ -95,7 +95,7 @@ public enum ConversationAccessRole: String {
           return .private
         }
     }
-    
+
 }
 
 /// The issue:
