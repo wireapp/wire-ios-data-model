@@ -41,6 +41,14 @@ extension PersistedDataPatch {
         PersistedDataPatch(version: "273.2.0", block: InvalidDomainRemoval.removeDuplicatedEntitiesWithInvalidDomain),
         PersistedDataPatch(version: "279.0.4", block: InvalidFeatureRemoval.restoreDefaultConferenceCallingConfig),
         PersistedDataPatch(version: "285.0.0", block: ZMConversation.introduceAccessRoleV2)
+
+        // How to add a new patch:
+        // 1. Create the patch and set the version equal to the framework version that the patch
+        //    will be released in.
+        // 2. Append the patch here.
+        // 3. Update `currentVersion` below to equal that same version in step 1.
     ]
+
+    static var currentVersion = "287.1.1"
 
 }
