@@ -368,6 +368,6 @@
         <element name="Team" positionX="9" positionY="153" width="128" height="224"/>
         <element name="TextMessage" positionX="-153" positionY="-117" width="128" height="60"/>
         <element name="User" positionX="-434" positionY="-72" width="128" height="704"/>
-        <element name="UserClient" positionX="9" positionY="153" width="128" height="554"/>
+        <element name="UserClient" positionX="9" positionY="153" width="128" height="14"/>
     </elements>
 </model>

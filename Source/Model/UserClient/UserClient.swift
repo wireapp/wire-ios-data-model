@@ -119,12 +119,12 @@ public class UserClient: ZMManagedObject, UserClientType {
 
     }
 
-    @NSManaged private var legacyPrimitivePushToken: Data?
+    @NSManaged private var primitiveLegacyPushToken: Data?
     public var legacyPushToken: PushToken? {
         get {
             self.willAccessValue(forKey: Keys.LegacyPushToken)
             let token: PushToken?
-            if let data = legacyPrimitivePushToken {
+            if let data = primitiveLegacyPushToken {
                 token = try? JSONDecoder().decode(PushToken.self, from: data)
             } else {
                 token = nil
@@ -136,7 +136,7 @@ public class UserClient: ZMManagedObject, UserClientType {
             precondition(managedObjectContext!.zm_isSyncContext, "Push token should be set only on sync context")
             if newValue != legacyPushToken {
                 self.willChangeValue(forKey: Keys.LegacyPushToken)
-                legacyPrimitivePushToken = try? JSONEncoder().encode(newValue)
+                primitiveLegacyPushToken = try? JSONEncoder().encode(newValue)
                 self.didChangeValue(forKey: Keys.LegacyPushToken)
                 setLocallyModifiedKeys([Keys.LegacyPushToken])
             }
@@ -194,7 +194,8 @@ public class UserClient: ZMManagedObject, UserClientType {
                 ZMUserClientMissingKey,
                 ZMUserClientNeedsToUpdateSignalingKeysKey,
                 ZMUserClientNeedsToUpdateCapabilitiesKey,
-                Keys.PushToken]
+                Keys.PushToken,
+                Keys.LegacyPushToken]
     }
 
     public override static func sortKey() -> String {
