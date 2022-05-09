@@ -32,6 +32,7 @@ class ZMManagedObjectFetchingTests: DatabaseBaseTest {
 
     public override func tearDown() {
         self.mocs = nil
+        APIVersion.isFederationEnabled = false
         super.tearDown()
     }
 
