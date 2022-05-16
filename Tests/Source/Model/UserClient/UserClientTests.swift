@@ -849,7 +849,7 @@ extension UserClientTests {
         syncMOC.performGroupedAndWait { _ in
             // given
             let client = UserClient.insertNewObject(in: self.syncMOC)
-            let token = PushToken(deviceToken: Data(), appIdentifier: "one", transportType: "two", tokenType: .standard, isRegistered: false)
+            let token = PushToken(deviceToken: Data(), appIdentifier: "one", transportType: "two", tokenType: .standard)
 
             // when
             client.pushToken = token
@@ -862,7 +862,7 @@ extension UserClientTests {
     func testThatWeCanAccessPushTokenFromAnotherContext() throws {
         // given
         let client = UserClient.insertNewObject(in: self.uiMOC)
-        let token = PushToken(deviceToken: Data(), appIdentifier: "one", transportType: "two", tokenType: .standard, isRegistered: false)
+        let token = PushToken(deviceToken: Data(), appIdentifier: "one", transportType: "two", tokenType: .standard)
         self.uiMOC.saveOrRollback()
 
         self.syncMOC.performGroupedBlockAndWait {
