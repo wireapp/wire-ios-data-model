@@ -90,7 +90,6 @@ public class UserClient: ZMManagedObject, UserClientType {
 
     private enum Keys {
         static let PushToken = "pushToken"
-        static let LegacyPushToken = "legacyPushToken"
         static let DeviceClass = "deviceClass"
     }
 
@@ -117,30 +116,6 @@ public class UserClient: ZMManagedObject, UserClientType {
             }
         }
 
-    }
-
-    @NSManaged private var primitiveLegacyPushToken: Data?
-    public var legacyPushToken: PushToken? {
-        get {
-            self.willAccessValue(forKey: Keys.LegacyPushToken)
-            let token: PushToken?
-            if let data = primitiveLegacyPushToken {
-                token = try? JSONDecoder().decode(PushToken.self, from: data)
-            } else {
-                token = nil
-            }
-            self.didAccessValue(forKey: Keys.LegacyPushToken)
-            return token
-        }
-        set {
-            precondition(managedObjectContext!.zm_isSyncContext, "Push token should be set only on sync context")
-            if newValue != legacyPushToken {
-                self.willChangeValue(forKey: Keys.LegacyPushToken)
-                primitiveLegacyPushToken = try? JSONEncoder().encode(newValue)
-                self.didChangeValue(forKey: Keys.LegacyPushToken)
-                setLocallyModifiedKeys([Keys.LegacyPushToken])
-            }
-        }
     }
 
     /// Clients that are trusted by self client.
@@ -189,13 +164,14 @@ public class UserClient: ZMManagedObject, UserClientType {
     }
 
     public override func keysTrackedForLocalModifications() -> Set<String> {
-        return [ZMUserClientMarkedToDeleteKey,
-                ZMUserClientNumberOfKeysRemainingKey,
-                ZMUserClientMissingKey,
-                ZMUserClientNeedsToUpdateSignalingKeysKey,
-                ZMUserClientNeedsToUpdateCapabilitiesKey,
-                Keys.PushToken,
-                Keys.LegacyPushToken]
+        return [
+            ZMUserClientMarkedToDeleteKey,
+            ZMUserClientNumberOfKeysRemainingKey,
+            ZMUserClientMissingKey,
+            ZMUserClientNeedsToUpdateSignalingKeysKey,
+            ZMUserClientNeedsToUpdateCapabilitiesKey,
+            Keys.PushToken
+        ]
     }
 
     public override static func sortKey() -> String {
