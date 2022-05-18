@@ -93,8 +93,18 @@ public class UserClient: ZMManagedObject, UserClientType {
         static let DeviceClass = "deviceClass"
     }
 
+
+
+    // DO NOT USE THIS PROPERTY.
+    //
+    // Storing the push token on the self user client is now deprecated.
+    // From now on, we store the push token in the user defaults and is
+    // no longer the responsibility of the data model project. We keep
+    // it here so that it can still be fetched when migrating the token
+    // to user defaults, it can be deleted after some time.
+
     @NSManaged private var primitivePushToken: Data?
-    public var pushToken: PushToken? {
+    private var pushToken: PushToken? {
         get {
             self.willAccessValue(forKey: Keys.PushToken)
             let token: PushToken?
@@ -116,6 +126,16 @@ public class UserClient: ZMManagedObject, UserClientType {
             }
         }
 
+    }
+
+    /// Fetches and removes the old push token from the self client.
+    ///
+    /// - returns: the legacy push token if it exists.
+
+    public func retrieveLegacyPushToken() -> PushToken? {
+        guard let token = pushToken else { return nil }
+        pushToken = nil
+        return token
     }
 
     /// Clients that are trusted by self client.
@@ -169,8 +189,7 @@ public class UserClient: ZMManagedObject, UserClientType {
             ZMUserClientNumberOfKeysRemainingKey,
             ZMUserClientMissingKey,
             ZMUserClientNeedsToUpdateSignalingKeysKey,
-            ZMUserClientNeedsToUpdateCapabilitiesKey,
-            Keys.PushToken
+            ZMUserClientNeedsToUpdateCapabilitiesKey
         ]
     }
 
