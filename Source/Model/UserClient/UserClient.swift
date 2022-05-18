@@ -93,8 +93,6 @@ public class UserClient: ZMManagedObject, UserClientType {
         static let DeviceClass = "deviceClass"
     }
 
-
-
     // DO NOT USE THIS PROPERTY.
     //
     // Storing the push token on the self user client is now deprecated.
