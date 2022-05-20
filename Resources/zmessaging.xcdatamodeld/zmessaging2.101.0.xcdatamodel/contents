@@ -106,7 +106,6 @@
         <attribute name="hasInitialDefault" attributeType="Boolean" defaultValueString="NO" usesScalarValueType="NO" syncable="YES"/>
         <attribute name="modifiedKeys" optional="YES" attributeType="Transformable" valueTransformerName="ExtendedSecureUnarchiveFromData" syncable="YES"/>
         <attribute name="nameValue" attributeType="String" syncable="YES"/>
-        <attribute name="needsToBeUpdatedFromBackend" attributeType="Boolean" defaultValueString="NO" usesScalarValueType="NO" syncable="YES"/>
         <attribute name="needsToNotifyUser" optional="YES" attributeType="Boolean" defaultValueString="NO" usesScalarValueType="NO" syncable="YES"/>
         <attribute name="statusValue" attributeType="String" syncable="YES"/>
     </entity>
@@ -342,7 +341,7 @@
         <element name="ClientMessage" positionX="9" positionY="153" width="128" height="90"/>
         <element name="Connection" positionX="0" positionY="0" width="128" height="163"/>
         <element name="Conversation" positionX="0" positionY="0" width="128" height="764"/>
-        <element name="Feature" positionX="-286.9609375" positionY="-65" width="128" height="148"/>
+        <element name="Feature" positionX="-286.9609375" positionY="-65" width="128" height="119"/>
         <element name="GenericMessageData" positionX="18" positionY="162" width="128" height="103"/>
         <element name="ImageMessage" positionX="0" positionY="0" width="128" height="165"/>
         <element name="KnockMessage" positionX="0" positionY="0" width="128" height="45"/>

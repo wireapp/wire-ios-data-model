@@ -480,7 +480,7 @@
 		EEAAD75E252C711800E6A44E /* ZMManagedObject+ClassIdentifier.swift in Sources */ = {isa = PBXBuildFile; fileRef = EEAAD75D252C711800E6A44E /* ZMManagedObject+ClassIdentifier.swift */; };
 		EEAAD760252C713E00E6A44E /* ClassIdentifier.swift in Sources */ = {isa = PBXBuildFile; fileRef = EEAAD75F252C713E00E6A44E /* ClassIdentifier.swift */; };
 		EEB5DE0A283784F9009B4741 /* Feature+DigitalSignature.swift in Sources */ = {isa = PBXBuildFile; fileRef = EEB5DE09283784F9009B4741 /* Feature+DigitalSignature.swift */; };
-		EEB5DE0D283788DA009B4741 /* store2-101-0.wiredatabase in Resources */ = {isa = PBXBuildFile; fileRef = EEB5DE0C283788DA009B4741 /* store2-101-0.wiredatabase */; };
+		EEB5DE112837BD52009B4741 /* store2-101-0.wiredatabase in Resources */ = {isa = PBXBuildFile; fileRef = EEB5DE102837BD52009B4741 /* store2-101-0.wiredatabase */; };
 		EEBACDA525B9C243000210AC /* LAContextProtocol.swift in Sources */ = {isa = PBXBuildFile; fileRef = EEBACDA425B9C243000210AC /* LAContextProtocol.swift */; };
 		EEBACDA725B9C2C6000210AC /* AppLockType.swift in Sources */ = {isa = PBXBuildFile; fileRef = EEBACDA625B9C2C6000210AC /* AppLockType.swift */; };
 		EEBACDA925B9C47E000210AC /* AppLockController.Config.swift in Sources */ = {isa = PBXBuildFile; fileRef = EEBACDA825B9C47E000210AC /* AppLockController.Config.swift */; };
@@ -1258,7 +1258,7 @@
 		EEAAD75F252C713E00E6A44E /* ClassIdentifier.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ClassIdentifier.swift; sourceTree = "<group>"; };
 		EEB5DE09283784F9009B4741 /* Feature+DigitalSignature.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Feature+DigitalSignature.swift"; sourceTree = "<group>"; };
 		EEB5DE0B2837877A009B4741 /* zmessaging2.101.0.xcdatamodel */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcdatamodel; path = zmessaging2.101.0.xcdatamodel; sourceTree = "<group>"; };
-		EEB5DE0C283788DA009B4741 /* store2-101-0.wiredatabase */ = {isa = PBXFileReference; lastKnownFileType = file; path = "store2-101-0.wiredatabase"; sourceTree = "<group>"; };
+		EEB5DE102837BD52009B4741 /* store2-101-0.wiredatabase */ = {isa = PBXFileReference; lastKnownFileType = file; path = "store2-101-0.wiredatabase"; sourceTree = "<group>"; };
 		EEBACDA425B9C243000210AC /* LAContextProtocol.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LAContextProtocol.swift; sourceTree = "<group>"; };
 		EEBACDA625B9C2C6000210AC /* AppLockType.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppLockType.swift; sourceTree = "<group>"; };
 		EEBACDA825B9C47E000210AC /* AppLockController.Config.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppLockController.Config.swift; sourceTree = "<group>"; };
@@ -2832,7 +2832,7 @@
 		F9C9A83D1CAEDBC40039E10C /* Resources */ = {
 			isa = PBXGroup;
 			children = (
-				EEB5DE0C283788DA009B4741 /* store2-101-0.wiredatabase */,
+				EEB5DE102837BD52009B4741 /* store2-101-0.wiredatabase */,
 				EE980FB12834EB3A00CC6B9F /* store2-100-0.wiredatabase */,
 				06A0E60A281AE65D00E5F822 /* store2-99-0.wiredatabase */,
 				E90AAE33279719D8003C7DB0 /* store2-98-0.wiredatabase */,
@@ -3116,7 +3116,7 @@
 				55C40BDD22B24AA600EFD8BD /* store2-73-0.wiredatabase in Resources */,
 				54BAB40B24A4FA0800EBC400 /* store2-82-0.wiredatabase in Resources */,
 				06392CF923BF9DA9003186E6 /* store2-79-0.wiredatabase in Resources */,
-				EEB5DE0D283788DA009B4741 /* store2-101-0.wiredatabase in Resources */,
+				EEB5DE112837BD52009B4741 /* store2-101-0.wiredatabase in Resources */,
 				06A0E60B281AE65D00E5F822 /* store2-99-0.wiredatabase in Resources */,
 				0604F8002651CAFE0016A71E /* store2-91-0.wiredatabase in Resources */,
 				BF5AF287215156EE00449D43 /* store2-52-0.wiredatabase in Resources */,

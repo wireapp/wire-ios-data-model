@@ -237,19 +237,6 @@ public class FeatureService {
         }
     }
 
-    /// Marks the feature as needing to be updated from the backend, which will be
-    /// picked up by the sync strategy.
-    ///
-    /// - Parameters:
-    ///     - featureName: the feature to refresh.
-
-    public func enqueueBackendRefresh(for featureName: Feature.Name) {
-        context.perform {
-            let feature = Feature.fetch(name: featureName, context: self.context)
-            feature?.needsToBeUpdatedFromBackend = true
-        }
-    }
-
     func needsToNotifyUser(for featureName: Feature.Name) -> Bool {
         var result = false
 
