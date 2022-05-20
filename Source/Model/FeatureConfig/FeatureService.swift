@@ -203,7 +203,7 @@ public class FeatureService {
 
     public func storeDigitalSignature(_ digitalSignature: Feature.DigitalSignature) {
         Feature.updateOrCreate(havingName: .digitalSignature, in: context) {
-            $0.status = fileSharing.status
+            $0.status = digitalSignature.status
         }
     }
 
