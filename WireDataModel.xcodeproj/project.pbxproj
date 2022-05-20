@@ -480,6 +480,7 @@
 		EEAAD75C252C6DAE00E6A44E /* ModifiedObjects.swift in Sources */ = {isa = PBXBuildFile; fileRef = EEAAD75B252C6DAE00E6A44E /* ModifiedObjects.swift */; };
 		EEAAD75E252C711800E6A44E /* ZMManagedObject+ClassIdentifier.swift in Sources */ = {isa = PBXBuildFile; fileRef = EEAAD75D252C711800E6A44E /* ZMManagedObject+ClassIdentifier.swift */; };
 		EEAAD760252C713E00E6A44E /* ClassIdentifier.swift in Sources */ = {isa = PBXBuildFile; fileRef = EEAAD75F252C713E00E6A44E /* ClassIdentifier.swift */; };
+		EEB5DE0A283784F9009B4741 /* Feature+DigitalSignature.swift in Sources */ = {isa = PBXBuildFile; fileRef = EEB5DE09283784F9009B4741 /* Feature+DigitalSignature.swift */; };
 		EEBACDA525B9C243000210AC /* LAContextProtocol.swift in Sources */ = {isa = PBXBuildFile; fileRef = EEBACDA425B9C243000210AC /* LAContextProtocol.swift */; };
 		EEBACDA725B9C2C6000210AC /* AppLockType.swift in Sources */ = {isa = PBXBuildFile; fileRef = EEBACDA625B9C2C6000210AC /* AppLockType.swift */; };
 		EEBACDA925B9C47E000210AC /* AppLockController.Config.swift in Sources */ = {isa = PBXBuildFile; fileRef = EEBACDA825B9C47E000210AC /* AppLockController.Config.swift */; };
@@ -1256,6 +1257,7 @@
 		EEAAD75B252C6DAE00E6A44E /* ModifiedObjects.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ModifiedObjects.swift; sourceTree = "<group>"; };
 		EEAAD75D252C711800E6A44E /* ZMManagedObject+ClassIdentifier.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "ZMManagedObject+ClassIdentifier.swift"; sourceTree = "<group>"; };
 		EEAAD75F252C713E00E6A44E /* ClassIdentifier.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ClassIdentifier.swift; sourceTree = "<group>"; };
+		EEB5DE09283784F9009B4741 /* Feature+DigitalSignature.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Feature+DigitalSignature.swift"; sourceTree = "<group>"; };
 		EEBACDA425B9C243000210AC /* LAContextProtocol.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LAContextProtocol.swift; sourceTree = "<group>"; };
 		EEBACDA625B9C2C6000210AC /* AppLockType.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppLockType.swift; sourceTree = "<group>"; };
 		EEBACDA825B9C47E000210AC /* AppLockController.Config.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppLockController.Config.swift; sourceTree = "<group>"; };
@@ -1720,6 +1722,7 @@
 				EE28991C26B4420A00E7BAF0 /* ConferenceCalling */,
 				EECA830126EF34FB0087ECB0 /* SelfDeletingMessages */,
 				EEC47ED427A81ED70020B599 /* ClassifiedDomains */,
+				EEB5DE08283784DF009B4741 /* DigitalSignature */,
 				EE9AD9152696F01700DD5F51 /* FeatureService.swift */,
 				54CB3FE924A3994400BA86DD /* FeatureFlag.swift */,
 				064F8E07255E04800040371D /* Feature.swift */,
@@ -1906,6 +1909,14 @@
 				EEAAD759252C6D2700E6A44E /* UnreadMessages.swift */,
 			);
 			path = "Change detection";
+			sourceTree = "<group>";
+		};
+		EEB5DE08283784DF009B4741 /* DigitalSignature */ = {
+			isa = PBXGroup;
+			children = (
+				EEB5DE09283784F9009B4741 /* Feature+DigitalSignature.swift */,
+			);
+			path = DigitalSignature;
 			sourceTree = "<group>";
 		};
 		EEC47ED427A81ED70020B599 /* ClassifiedDomains */ = {
@@ -3472,6 +3483,7 @@
 				EEE186B2259CC7CD008707CA /* AppLockDelegate.swift in Sources */,
 				16E0FBC923326B72000E3235 /* ConversationDirectory.swift in Sources */,
 				F99C5B8A1ED460E20049CCD7 /* TeamChangeInfo.swift in Sources */,
+				EEB5DE0A283784F9009B4741 /* Feature+DigitalSignature.swift in Sources */,
 				165124D221886EDB006A3C75 /* ZMOTRMessage+Quotes.swift in Sources */,
 				87D9CCE91F27606200AA4388 /* NSManagedObjectContext+TearDown.swift in Sources */,
 				F963E9711D9ADD5A00098AD3 /* ZMImageAssetEncryptionKeys.m in Sources */,
