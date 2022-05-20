@@ -61,22 +61,6 @@ public extension EntityAction {
                               userInfo: [Self.userInfoKey: self]).post()
     }
 
-    /// Notify a success result.
-    ///
-    /// - Parameter result: The successful result.
-
-    mutating func succeed(with result: Result) {
-        notifyResult(.success(result))
-    }
-
-    /// Notify a failed result.
-    ///
-    /// - Parameter failure: The reason the action failured.
-
-    mutating func fail(with failure: Failure) {
-        notifyResult(.failure(failure))
-    }
-
     /// Called by an `EntityActionHandler` when the action has been performed.
     mutating func notifyResult(_ result: Swift.Result<Result, Failure>) {
         let resultHandler = self.resultHandler
@@ -112,6 +96,36 @@ public extension EntityAction {
 
             handler.performAction(action)
         }
+    }
+
+}
+
+public extension EntityAction {
+
+    /// Notify a success result.
+    ///
+    /// - Parameter result: The successful result.
+
+    mutating func succeed(with result: Result) {
+        notifyResult(.success(result))
+    }
+
+    /// Notify a failed result.
+    ///
+    /// - Parameter failure: The reason the action failured.
+
+    mutating func fail(with failure: Failure) {
+        notifyResult(.failure(failure))
+    }
+
+}
+
+public extension EntityAction where Result == Void {
+
+    /// Notify a success result.
+
+    mutating func succeed() {
+        notifyResult(.success(()))
     }
 
 }
