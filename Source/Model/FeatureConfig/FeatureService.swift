@@ -201,7 +201,7 @@ public class FeatureService {
         return .init(status: feature.status)
     }
 
-    public func storeDigitalSignature(_ fileSharing: Feature.DigitalSignature) {
+    public func storeDigitalSignature(_ digitalSignature: Feature.DigitalSignature) {
         Feature.updateOrCreate(havingName: .digitalSignature, in: context) {
             $0.status = fileSharing.status
         }
