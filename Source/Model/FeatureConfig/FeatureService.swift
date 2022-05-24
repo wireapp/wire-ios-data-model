@@ -207,7 +207,6 @@ public class FeatureService {
         }
     }
 
-
     // MARK: - Methods
 
     func createDefaultConfigsIfNeeded() {
