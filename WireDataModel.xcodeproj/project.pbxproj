@@ -1717,13 +1717,13 @@
 		54CB3FE824A3993400BA86DD /* FeatureConfig */ = {
 			isa = PBXGroup;
 			children = (
-				062FD8832756051000B9DE39 /* ConversationGuestLinks */,
-				06034B6B26A8D31F003624B4 /* FileSharing */,
 				0686649D256FB087001C8747 /* AppLock */,
-				EE28991C26B4420A00E7BAF0 /* ConferenceCalling */,
-				EECA830126EF34FB0087ECB0 /* SelfDeletingMessages */,
 				EEC47ED427A81ED70020B599 /* ClassifiedDomains */,
+				EE28991C26B4420A00E7BAF0 /* ConferenceCalling */,
+				062FD8832756051000B9DE39 /* ConversationGuestLinks */,
 				EEB5DE08283784DF009B4741 /* DigitalSignature */,
+				06034B6B26A8D31F003624B4 /* FileSharing */,
+				EECA830126EF34FB0087ECB0 /* SelfDeletingMessages */,
 				EE9AD9152696F01700DD5F51 /* FeatureService.swift */,
 				064F8E07255E04800040371D /* Feature.swift */,
 			);
