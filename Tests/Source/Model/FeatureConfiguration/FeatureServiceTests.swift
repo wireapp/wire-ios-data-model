@@ -23,8 +23,17 @@ class FeatureServiceTests: ZMBaseManagedObjectTest {
 
     override func setUp() {
         super.setUp()
+        deleteFeatureIfNeeded(name: .appLock)
+        deleteFeatureIfNeeded(name: .classifiedDomains)
+        deleteFeatureIfNeeded(name: .conferenceCalling)
+        deleteFeatureIfNeeded(name: .conversationGuestLinks)
+        deleteFeatureIfNeeded(name: .digitalSignature)
+        deleteFeatureIfNeeded(name: .fileSharing)
         deleteFeatureIfNeeded(name: .mls)
+        deleteFeatureIfNeeded(name: .selfDeletingMessages)
     }
+
+    // MARK: - Helpers
 
     func deleteFeatureIfNeeded(name: Feature.Name) {
         syncMOC.performAndWait {
@@ -32,6 +41,466 @@ class FeatureServiceTests: ZMBaseManagedObjectTest {
                 self.syncMOC.delete(feature)
             }
         }
+    }
+
+    func assertFeatureExists(name: Feature.Name) {
+        XCTAssertNotNil(Feature.fetch(name: name, context: self.syncMOC))
+    }
+
+    func assertFeatureDoesNotExist(name: Feature.Name) {
+        XCTAssertNil(Feature.fetch(name: name, context: self.syncMOC))
+    }
+
+    // MARK: - App lock
+
+    func testThatItFetchesAppLock() {
+        syncMOC.performGroupedBlock {
+            // Given
+            let sut = FeatureService(context: self.syncMOC)
+
+            let config = Feature.AppLock.Config(
+                enforceAppLock: true,
+                inactivityTimeoutSecs: 123
+            )
+
+            Feature.updateOrCreate(havingName: .appLock, in: self.syncMOC) { feature in
+                feature.status = .enabled
+                feature.config = try! JSONEncoder().encode(config)
+            }
+
+            // When
+            let result = sut.fetchAppLock()
+
+            // Then
+            XCTAssertEqual(result.status, .enabled)
+            XCTAssertEqual(result.config, config)
+        }
+
+        XCTAssertTrue(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
+    }
+
+    func testThatItFetchesAppLock_ItReturnsADefaultConfigWhenConfigDoesNotExist() {
+        syncMOC.performGroupedBlock {
+            // Given
+            let sut = FeatureService(context: self.syncMOC)
+
+            Feature.updateOrCreate(havingName: .appLock, in: self.syncMOC) { feature in
+                feature.status = .enabled
+                feature.config = nil
+            }
+
+            // When
+            let result = sut.fetchAppLock()
+
+            // Then
+            XCTAssertEqual(result.status, .enabled)
+            XCTAssertEqual(result.config, .init())
+        }
+
+        XCTAssertTrue(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
+    }
+
+    func testThatItFetchesAppLock_ItReturnsADefaultConfigWhenObjectDoesNotExist() {
+        syncMOC.performGroupedBlock {
+            // Given
+            let sut = FeatureService(context: self.syncMOC)
+            self.assertFeatureDoesNotExist(name: .appLock)
+
+            // When
+            let result = sut.fetchAppLock()
+
+            // Then
+            XCTAssertEqual(result.status, .enabled)
+            XCTAssertEqual(result.config, .init())
+        }
+
+        XCTAssertTrue(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
+    }
+
+    func testThatItStoresAppLock() {
+        syncMOC.performGroupedBlock {
+            // Given
+            let sut = FeatureService(context: self.syncMOC)
+
+            let config = Feature.AppLock.Config(
+                enforceAppLock: true,
+                inactivityTimeoutSecs: 123
+            )
+
+            let appLock = Feature.AppLock(
+                status: .enabled,
+                config: config
+            )
+
+            self.assertFeatureDoesNotExist(name: .appLock)
+
+            // When
+            sut.storeAppLock(appLock)
+
+            // Then
+            guard let feature = Feature.fetch(name: .appLock, context: self.syncMOC) else {
+                XCTFail("feature not found")
+                return
+            }
+
+            guard let configData = feature.config else {
+                XCTFail("expected config data")
+                return
+            }
+
+            guard let featureConfig = configData.decode(as: Feature.AppLock.Config.self) else {
+                XCTFail("failed to decode config data")
+                return
+            }
+
+            XCTAssertEqual(feature.status, .enabled)
+            XCTAssertEqual(featureConfig, config)
+        }
+
+        XCTAssertTrue(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
+    }
+
+    // MARK: - Classified domains
+
+    func testThatItFetchesClassifiedDomains() {
+        syncMOC.performGroupedBlock {
+            // Given
+            let sut = FeatureService(context: self.syncMOC)
+
+            let config = Feature.ClassifiedDomains.Config(
+                domains: ["foo"]
+            )
+
+            Feature.updateOrCreate(havingName: .classifiedDomains, in: self.syncMOC) { feature in
+                feature.status = .enabled
+                feature.config = try! JSONEncoder().encode(config)
+            }
+
+            // When
+            let result = sut.fetchClassifiedDomains()
+
+            // Then
+            XCTAssertEqual(result.status, .enabled)
+            XCTAssertEqual(result.config, config)
+        }
+
+        XCTAssertTrue(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
+    }
+
+    func testThatItFetchesClassifiedDomains_ItReturnsADefaultConfigWhenConfigDoesNotExist() {
+        syncMOC.performGroupedBlock {
+            // Given
+            let sut = FeatureService(context: self.syncMOC)
+
+            Feature.updateOrCreate(havingName: .classifiedDomains, in: self.syncMOC) { feature in
+                feature.status = .enabled
+                feature.config = nil
+            }
+
+            // When
+            let result = sut.fetchClassifiedDomains()
+
+            // Then
+            XCTAssertEqual(result.status, .disabled)
+            XCTAssertEqual(result.config, .init())
+        }
+
+        XCTAssertTrue(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
+    }
+
+    func testThatItFetchesClassifiedDomains_ItReturnsADefaultConfigWhenObjectDoesNotExist() {
+        syncMOC.performGroupedBlock {
+            // Given
+            let sut = FeatureService(context: self.syncMOC)
+            self.assertFeatureDoesNotExist(name: .classifiedDomains)
+
+            // When
+            let result = sut.fetchClassifiedDomains()
+
+            // Then
+            XCTAssertEqual(result.status, .disabled)
+            XCTAssertEqual(result.config, .init())
+        }
+
+        XCTAssertTrue(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
+    }
+
+    func testThatItStoresClassifiedDomains() {
+        syncMOC.performGroupedBlock {
+            // Given
+            let sut = FeatureService(context: self.syncMOC)
+
+            let config = Feature.ClassifiedDomains.Config(
+                domains: ["foo"]
+            )
+
+            let classifiedDomains = Feature.ClassifiedDomains(
+                status: .enabled,
+                config: config
+            )
+
+            self.assertFeatureDoesNotExist(name: .classifiedDomains)
+
+            // When
+            sut.storeClassifiedDomains(classifiedDomains)
+
+            // Then
+            guard let feature = Feature.fetch(name: .classifiedDomains, context: self.syncMOC) else {
+                XCTFail("feature not found")
+                return
+            }
+
+            guard let configData = feature.config else {
+                XCTFail("expected config data")
+                return
+            }
+
+            guard let featureConfig = configData.decode(as: Feature.ClassifiedDomains.Config.self) else {
+                XCTFail("failed to decode config data")
+                return
+            }
+
+            XCTAssertEqual(feature.status, .enabled)
+            XCTAssertEqual(featureConfig, config)
+        }
+
+        XCTAssertTrue(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
+    }
+
+    // MARK: - Conference calling
+
+    func testThatItFetchesConferenceCalling() {
+        syncMOC.performGroupedBlock {
+            // Given
+            let sut = FeatureService(context: self.syncMOC)
+
+            Feature.updateOrCreate(havingName: .conferenceCalling, in: self.syncMOC) { feature in
+                feature.status = .disabled
+            }
+
+            // When
+            let result = sut.fetchConferenceCalling()
+
+            // Then
+            XCTAssertEqual(result.status, .disabled)
+        }
+
+        XCTAssertTrue(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
+    }
+
+    func testThatItFetchesConferenceCalling_ItReturnsADefaultConfigWhenObjectDoesNotExist() {
+        syncMOC.performGroupedBlock {
+            // Given
+            let sut = FeatureService(context: self.syncMOC)
+            self.assertFeatureDoesNotExist(name: .conferenceCalling)
+
+            // When
+            let result = sut.fetchConferenceCalling()
+
+            // Then
+            XCTAssertEqual(result.status, .enabled)
+        }
+
+        XCTAssertTrue(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
+    }
+
+    func testThatItStoresConferenceCalling() {
+        syncMOC.performGroupedBlock {
+            // Given
+            let sut = FeatureService(context: self.syncMOC)
+            let conferenceCalling = Feature.ConferenceCalling(status: .disabled)
+            self.assertFeatureDoesNotExist(name: .conferenceCalling)
+
+            // When
+            sut.storeConferenceCalling(conferenceCalling)
+
+            // Then
+            guard let feature = Feature.fetch(name: .conferenceCalling, context: self.syncMOC) else {
+                XCTFail("feature not found")
+                return
+            }
+
+            XCTAssertEqual(feature.status, .disabled)
+        }
+
+        XCTAssertTrue(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
+    }
+
+    // MARK: - Conversation guest links
+
+    func testThatItFetchesConversationGuestLinks() {
+        syncMOC.performGroupedBlock {
+            // Given
+            let sut = FeatureService(context: self.syncMOC)
+
+            Feature.updateOrCreate(havingName: .conversationGuestLinks, in: self.syncMOC) { feature in
+                feature.status = .disabled
+            }
+
+            // When
+            let result = sut.fetchConversationGuestLinks()
+
+            // Then
+            XCTAssertEqual(result.status, .disabled)
+        }
+
+        XCTAssertTrue(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
+    }
+
+    func testThatItFetchesConversationGuestLinks_ItReturnsADefaultConfigWhenObjectDoesNotExist() {
+        syncMOC.performGroupedBlock {
+            // Given
+            let sut = FeatureService(context: self.syncMOC)
+            self.assertFeatureDoesNotExist(name: .conversationGuestLinks)
+
+            // When
+            let result = sut.fetchConferenceCalling()
+
+            // Then
+            XCTAssertEqual(result.status, .enabled)
+        }
+
+        XCTAssertTrue(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
+    }
+
+    func testThatItStoresConversationGuestLinks() {
+        syncMOC.performGroupedBlock {
+            // Given
+            let sut = FeatureService(context: self.syncMOC)
+            let conversationGuestLinks = Feature.ConversationGuestLinks(status: .disabled)
+            self.assertFeatureDoesNotExist(name: .conversationGuestLinks)
+
+            // When
+            sut.storeConversationGuestLinks(conversationGuestLinks)
+
+            // Then
+            guard let feature = Feature.fetch(name: .conversationGuestLinks, context: self.syncMOC) else {
+                XCTFail("feature not found")
+                return
+            }
+
+            XCTAssertEqual(feature.status, .disabled)
+        }
+
+        XCTAssertTrue(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
+    }
+
+    // MARK: - Digital signature
+
+    func testThatItFetchesDigitalSignature() {
+        syncMOC.performGroupedBlock {
+            // Given
+            let sut = FeatureService(context: self.syncMOC)
+
+            Feature.updateOrCreate(havingName: .digitalSignature, in: self.syncMOC) { feature in
+                feature.status = .enabled
+            }
+
+            // When
+            let result = sut.fetchDigitalSignature()
+
+            // Then
+            XCTAssertEqual(result.status, .enabled)
+        }
+
+        XCTAssertTrue(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
+    }
+
+    func testThatItFetchesDigitalSignature_ItReturnsADefaultConfigWhenObjectDoesNotExist() {
+        syncMOC.performGroupedBlock {
+            // Given
+            let sut = FeatureService(context: self.syncMOC)
+            self.assertFeatureDoesNotExist(name: .digitalSignature)
+
+            // When
+            let result = sut.fetchDigitalSignature()
+
+            // Then
+            XCTAssertEqual(result.status, .disabled)
+        }
+
+        XCTAssertTrue(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
+    }
+
+    func testThatItStoresDigitalSignature() {
+        syncMOC.performGroupedBlock {
+            // Given
+            let sut = FeatureService(context: self.syncMOC)
+            let digitalSignature = Feature.DigitalSignature(status: .enabled)
+            self.assertFeatureDoesNotExist(name: .digitalSignature)
+
+            // When
+            sut.storeDigitalSignature(digitalSignature)
+
+            // Then
+            guard let feature = Feature.fetch(name: .digitalSignature, context: self.syncMOC) else {
+                XCTFail("feature not found")
+                return
+            }
+
+            XCTAssertEqual(feature.status, .enabled)
+        }
+
+        XCTAssertTrue(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
+    }
+
+    // MARK: - File sharing
+
+    func testThatItFetchesFileSharing() {
+        syncMOC.performGroupedBlock {
+            // Given
+            let sut = FeatureService(context: self.syncMOC)
+
+            Feature.updateOrCreate(havingName: .fileSharing, in: self.syncMOC) { feature in
+                feature.status = .disabled
+            }
+
+            // When
+            let result = sut.fetchFileSharing()
+
+            // Then
+            XCTAssertEqual(result.status, .disabled)
+        }
+
+        XCTAssertTrue(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
+    }
+
+    func testThatItFetchesFileSharing_ItReturnsADefaultConfigWhenObjectDoesNotExist() {
+        syncMOC.performGroupedBlock {
+            // Given
+            let sut = FeatureService(context: self.syncMOC)
+            self.assertFeatureDoesNotExist(name: .fileSharing)
+
+            // When
+            let result = sut.fetchFileSharing()
+
+            // Then
+            XCTAssertEqual(result.status, .enabled)
+        }
+
+        XCTAssertTrue(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
+    }
+
+    func testThatItStoresFilesharing() {
+        syncMOC.performGroupedBlock {
+            // Given
+            let sut = FeatureService(context: self.syncMOC)
+            let fileSharing = Feature.FileSharing(status: .disabled)
+            self.assertFeatureDoesNotExist(name: .fileSharing)
+
+            // When
+            sut.storeFileSharing(fileSharing)
+
+            // Then
+            guard let feature = Feature.fetch(name: .fileSharing, context: self.syncMOC) else {
+                XCTFail("feature not found")
+                return
+            }
+
+            XCTAssertEqual(feature.status, .disabled)
+        }
+
+        XCTAssertTrue(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
     }
 
     // MARK: - MLS
@@ -89,7 +558,7 @@ class FeatureServiceTests: ZMBaseManagedObjectTest {
         syncMOC.performGroupedBlock {
             // Given
             let sut = FeatureService(context: self.syncMOC)
-            XCTAssertNil(Feature.fetch(name: .mls, context: self.syncMOC))
+            self.assertFeatureDoesNotExist(name: .mls)
 
             // When
             let result = sut.fetchMLS()
@@ -119,7 +588,7 @@ class FeatureServiceTests: ZMBaseManagedObjectTest {
                 config: config
             )
 
-            XCTAssertNil(Feature.fetch(name: .mls, context: self.syncMOC))
+            self.assertFeatureDoesNotExist(name: .mls)
 
             // When
             sut.storeMLS(mls)
@@ -147,59 +616,141 @@ class FeatureServiceTests: ZMBaseManagedObjectTest {
         XCTAssertTrue(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
     }
 
-    func testThatItStoresAppLockFeature() {
-        // Given
-        let sut = FeatureService(context: syncMOC)
-        let appLock = Feature.AppLock(status: .disabled, config: .init(enforceAppLock: true, inactivityTimeoutSecs: 10))
+    // MARK: - SelfDeletingMessages
 
-        syncMOC.performGroupedAndWait { context -> Void in
-            guard let existing = Feature.fetch(name: .appLock, context: context) else { return XCTFail() }
-            XCTAssertNotEqual(existing.status, appLock.status)
-            XCTAssertNotEqual(existing.config, appLock.configData)
-        }
+    func testThatItFetchesSelfDeletingMessages() {
+        syncMOC.performGroupedBlock {
+            // Given
+            let sut = FeatureService(context: self.syncMOC)
+            let config = Feature.SelfDeletingMessages.Config(enforcedTimeoutSeconds: 123)
 
-        // When
-        syncMOC.performGroupedAndWait { _ in
-            sut.storeAppLock(appLock)
-        }
-
-        // Then
-        syncMOC.performGroupedAndWait { context -> Void in
-            guard let result = Feature.fetch(name: .appLock, context: context) else { return XCTFail() }
-            XCTAssertEqual(result.status, appLock.status)
-            XCTAssertEqual(result.config, appLock.configData)
-        }
-    }
-
-    func testItCreatesADefaultInstance() throws {
-        // Given
-        let sut = FeatureService(context: syncMOC)
-
-        syncMOC.performGroupedAndWait { context in
-            if let existingDefault = Feature.fetch(name: .appLock, context: context) {
-                context.delete(existingDefault)
+            Feature.updateOrCreate(havingName: .selfDeletingMessages, in: self.syncMOC) { feature in
+                feature.status = .disabled
+                feature.config = try! JSONEncoder().encode(config)
             }
 
-            XCTAssertNil(Feature.fetch(name: .appLock, context: context))
+            // When
+            let result = sut.fetchSelfDeletingMesssages()
+
+            // Then
+            XCTAssertEqual(result.status, .disabled)
+            XCTAssertEqual(result.config, config)
         }
 
-        // When
-        syncMOC.performGroupedAndWait { _ in
-            sut.createDefaultConfigsIfNeeded()
-        }
-
-        // Then
-        syncMOC.performGroupedAndWait { context in
-            XCTAssertNotNil(Feature.fetch(name: .appLock, context: context))
-        }
+        XCTAssertTrue(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
     }
 
-}
+    func testThatItFetchesSelfDeletingMessages_ItReturnsADefaultConfigWhenConfigDoesNotExist() {
+        syncMOC.performGroupedBlock {
+            // Given
+            let sut = FeatureService(context: self.syncMOC)
 
-private extension Feature.AppLock {
+            Feature.updateOrCreate(havingName: .selfDeletingMessages, in: self.syncMOC) { feature in
+                feature.status = .disabled
+                feature.config = nil
+            }
 
-    var configData: Data {
-        return try! JSONEncoder().encode(config)
+            // When
+            let result = sut.fetchSelfDeletingMesssages()
+
+            // Then
+            XCTAssertEqual(result.status, .enabled)
+            XCTAssertEqual(result.config, .init())
+        }
+
+        XCTAssertTrue(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
+    }
+
+    func testThatItFetchesSelfDeletingMessages_ItReturnsADefaultConfigWhenObjectDoesNotExist() {
+        syncMOC.performGroupedBlock {
+            // Given
+            let sut = FeatureService(context: self.syncMOC)
+            self.assertFeatureDoesNotExist(name: .selfDeletingMessages)
+
+            // When
+            let result = sut.fetchSelfDeletingMesssages()
+
+            // Then
+            XCTAssertEqual(result.status, .enabled)
+            XCTAssertEqual(result.config, .init())
+        }
+
+        XCTAssertTrue(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
+    }
+
+    func testThatItStoresSelfDeletingMessages() {
+        syncMOC.performGroupedBlock {
+            // Given
+            let sut = FeatureService(context: self.syncMOC)
+            let config = Feature.SelfDeletingMessages.Config(enforcedTimeoutSeconds: 123)
+
+            let selfDeletingMessages = Feature.SelfDeletingMessages(
+                status: .disabled,
+                config: config
+            )
+
+            self.assertFeatureDoesNotExist(name: .selfDeletingMessages)
+
+            // When
+            sut.storeSelfDeletingMessages(selfDeletingMessages)
+
+            // Then
+            guard let feature = Feature.fetch(name: .selfDeletingMessages, context: self.syncMOC) else {
+                XCTFail("feature not found")
+                return
+            }
+
+            guard let configData = feature.config else {
+                XCTFail("expected config data")
+                return
+            }
+
+            guard let featureConfig = configData.decode(as: Feature.SelfDeletingMessages.Config.self) else {
+                XCTFail("failed to decode config data")
+                return
+            }
+
+            XCTAssertEqual(feature.status, .disabled)
+            XCTAssertEqual(featureConfig, config)
+        }
+
+        XCTAssertTrue(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
+    }
+
+    // MARK: - Other
+
+    func testItCreatesDefaultInstances() throws {
+        syncMOC.performGroupedBlock {
+            // Given
+            let sut = FeatureService(context: self.syncMOC)
+            self.assertFeatureDoesNotExist(name: .appLock)
+            self.assertFeatureDoesNotExist(name: .appLock)
+            self.assertFeatureDoesNotExist(name: .classifiedDomains)
+            self.assertFeatureDoesNotExist(name: .conferenceCalling)
+            self.assertFeatureDoesNotExist(name: .conversationGuestLinks)
+            self.assertFeatureDoesNotExist(name: .digitalSignature)
+            self.assertFeatureDoesNotExist(name: .fileSharing)
+            self.assertFeatureDoesNotExist(name: .mls)
+            self.assertFeatureDoesNotExist(name: .selfDeletingMessages)
+
+
+            // When
+            sut.createDefaultConfigsIfNeeded()
+
+            // Then
+            self.assertFeatureExists(name: .appLock)
+            self.assertFeatureExists(name: .appLock)
+            self.assertFeatureExists(name: .classifiedDomains)
+            self.assertFeatureExists(name: .conferenceCalling)
+            self.assertFeatureExists(name: .conversationGuestLinks)
+            self.assertFeatureExists(name: .digitalSignature)
+            self.assertFeatureExists(name: .fileSharing)
+            self.assertFeatureExists(name: .mls)
+            self.assertFeatureExists(name: .selfDeletingMessages)
+
+        }
+
+        XCTAssertTrue(waitForAllGroupsToBeEmpty(withTimeout: 0.5))
     }
 
 }
