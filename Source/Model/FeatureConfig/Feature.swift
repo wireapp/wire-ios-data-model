@@ -216,8 +216,8 @@ public class Feature: ZMManagedObject {
 
             needsToNotifyUser = oldConfig.enforcedTimeoutSeconds != newConfig.enforcedTimeoutSeconds
 
-        default:
-            return
+        case .conferenceCalling, .fileSharing, .conversationGuestLinks, .classifiedDomains, .digitalSignature, .mls:
+            break
         }
     }
 }
