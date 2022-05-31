@@ -264,7 +264,7 @@ static NSString *const ImageSmallProfileDataKey = @"imageSmallProfileData";
     ZMUser *user = [ZMUser insertNewObjectInManagedObjectContext:self.uiMOC];
 
     NSMutableDictionary *payload = [self samplePayloadForUserID:uuid];
-    payload[@"sso_id"] = @{@"tenant": @"some-xml"};
+    payload[@"sso_id"] = @{@"tenant": @"some-xml", @"subject": @"hekki"};
     
     // when
     [user updateWithTransportData:payload authoritative:NO];
@@ -280,7 +280,7 @@ static NSString *const ImageSmallProfileDataKey = @"imageSmallProfileData";
     ZMUser *user = [ZMUser insertNewObjectInManagedObjectContext:self.uiMOC];
     
     NSMutableDictionary *payload = [self samplePayloadForUserID:uuid];
-    payload[@"sso_id"] = @{@"tenant": @"some-xml"};
+    payload[@"sso_id"] = @{@"tenant": @"some-xml", @"subject": @"hekki"};
     
     // when
     [user updateWithTransportData:payload authoritative:NO];
