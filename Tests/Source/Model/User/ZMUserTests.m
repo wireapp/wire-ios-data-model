@@ -273,6 +273,22 @@ static NSString *const ImageSmallProfileDataKey = @"imageSmallProfileData";
     XCTAssert(user.usesCompanyLogin);
 }
 
+- (void)testThatItDoesntUpdateSSODataOnAnExistingUser_WhenSubjectIsEmpty
+{
+    // given
+    NSUUID *uuid = [NSUUID createUUID];
+    ZMUser *user = [ZMUser insertNewObjectInManagedObjectContext:self.uiMOC];
+
+    NSMutableDictionary *payload = [self samplePayloadForUserID:uuid];
+    payload[@"sso_id"] = @{@"tenant": @"some-xml", @"subject": @""};
+
+    // when
+    [user updateWithTransportData:payload authoritative:NO];
+
+    // then
+    XCTAssertFalse(user.usesCompanyLogin);
+}
+
 - (void)testThatItUpdatesSSODataOnAnExistingUserWhenRefetchingUser
 {
     // given
