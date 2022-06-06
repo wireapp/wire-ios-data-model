@@ -25,20 +25,20 @@ import Foundation
 
 public protocol CoreCryptoProtocol {
 
-    func wire_setCallbacks(callbacks: CoreCryptoCallbacks) throws
-    func wire_clientPublicKey() throws -> [UInt8]
-    func wire_clientKeypackages(amountRequested: UInt32) throws -> [[UInt8]]
-    func wire_createConversation(conversationId: [UInt8], config: ConversationConfiguration) throws -> MemberAddedMessages?
-    func wire_conversationExists(conversationId: [UInt8]) -> Bool
-    func wire_processWelcomeMessage(welcomeMessage: [UInt8]) throws -> [UInt8]
-    func wire_addClientsToConversation(conversationId: [UInt8], clients: [Invitee]) throws -> MemberAddedMessages?
-    func wire_removeClientsFromConversation(conversationId: [UInt8], clients: [[UInt8]]) throws -> [UInt8]?
-    func wire_leaveConversation(conversationId: [UInt8], otherClients: [[UInt8]]) throws -> ConversationLeaveMessages
-    func wire_decryptMessage(conversationId: [UInt8], payload: [UInt8]) throws -> [UInt8]?
-    func wire_encryptMessage(conversationId: [UInt8], message: [UInt8]) throws -> [UInt8]
-    func wire_newAddProposal(conversationId: [UInt8], keyPackage: [UInt8]) throws -> [UInt8]
-    func wire_newUpdateProposal(conversationId: [UInt8]) throws -> [UInt8]
-    func wire_newRemoveProposal(conversationId: [UInt8], clientId: [UInt8]) throws -> [UInt8]
+    func setCallbacks(callbacks: CoreCryptoCallbacks) throws
+    func clientPublicKey() throws -> [UInt8]
+    func clientKeypackages(amountRequested: UInt32) throws -> [[UInt8]]
+    func createConversation(conversationId: [UInt8], config: ConversationConfiguration) throws -> MemberAddedMessages?
+    func conversationExists(conversationId: [UInt8]) -> Bool
+    func processWelcomeMessage(welcomeMessage: [UInt8]) throws -> [UInt8]
+    func addClientsToConversation(conversationId: [UInt8], clients: [Invitee]) throws -> MemberAddedMessages?
+    func removeClientsFromConversation(conversationId: [UInt8], clients: [[UInt8]]) throws -> [UInt8]?
+    func leaveConversation(conversationId: [UInt8], otherClients: [[UInt8]]) throws -> ConversationLeaveMessages
+    func decryptMessage(conversationId: [UInt8], payload: [UInt8]) throws -> [UInt8]?
+    func encryptMessage(conversationId: [UInt8], message: [UInt8]) throws -> [UInt8]
+    func newAddProposal(conversationId: [UInt8], keyPackage: [UInt8]) throws -> [UInt8]
+    func newUpdateProposal(conversationId: [UInt8]) throws -> [UInt8]
+    func newRemoveProposal(conversationId: [UInt8], clientId: [UInt8]) throws -> [UInt8]
 
 }
 
