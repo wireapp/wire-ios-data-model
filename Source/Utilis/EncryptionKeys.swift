@@ -206,10 +206,8 @@ public struct EncryptionKeys {
     private static func generateAccountKey(identifier: KeychainItem) throws -> (SecKey, SecKey) {
         do {
             return try KeychainManager.generatePublicPrivateKeyPair(identifier: identifier.uniqueIdentifier)
-            
         } catch KeychainManager.Error.failedToGeneratePublicPrivateKey(let error) {
             throw EncryptionKeysError.failedToGenerateAccountKey(underlyingError: error)
-            
         } catch KeychainManager.Error.failedToCopyPublicKey {
             throw EncryptionKeysError.failedToCopyPublicAccountKey
         }
