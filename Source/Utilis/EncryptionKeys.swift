@@ -19,7 +19,6 @@
 import Foundation
 import Security
 import LocalAuthentication
-import AVFoundation
 
 /// EncryptionKeys is responsible for creating / deleting the encryptions keys
 /// which are used for supporting encryption at rest

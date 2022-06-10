@@ -23,7 +23,7 @@ protocol KeychainItemProtocol {
     func setQuery<T>(value: T) -> [CFString: Any]
 }
 
-enum KeychainManager {
+public enum KeychainManager {
     public enum Error: Swift.Error {
         case failedToStoreItemInKeychain(OSStatus)
         case failedToFetchItemFromKeychain(OSStatus)
@@ -53,7 +53,7 @@ enum KeychainManager {
             throw Error.failedToDeleteItemFromKeychain(status)
         }
     }
-    // MARK: - Database key
+    // MARK: - Key generation
     static func generateKey(numberOfBytes: UInt = 32) throws -> Data {
         var key = [UInt8](repeating: 0, count: Int(numberOfBytes))
         let status = SecRandomCopyBytes(kSecRandomDefault, key.count, &key)
