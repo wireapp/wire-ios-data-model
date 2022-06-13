@@ -25,7 +25,7 @@ import LocalAuthentication
 ///
 public struct EncryptionKeys {
 
-    enum KeychainItem: KeychainItemProtocol {
+    enum KeychainItem: KeychainItemProtocol, Equatable {
         case privateKey(_ account: Account, _ context: LAContext?, _ prompt: String?)
         case publicKey(Account)
         case databaseKey(Account)
