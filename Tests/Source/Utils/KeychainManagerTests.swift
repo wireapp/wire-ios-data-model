@@ -56,11 +56,8 @@ class KeychainManagerTests: XCTestCase {
         let item = EncryptionKeys.KeychainItem.databaseKey(account)
         let identifier = item.uniqueIdentifier
 
-        // When
-        let result = try KeychainManager.generatePublicPrivateKeyPair(identifier: identifier)
-
         // Then
-        XCTAssertNoThrow(result, "Public Private KeyPair should be created successfully.")
+        XCTAssertNoThrow(try KeychainManager.generatePublicPrivateKeyPair(identifier: identifier), "Public Private KeyPair should be created successfully.")
     }
 
     func testKeychainItemsStoreSuccessfully() throws {
@@ -70,7 +67,7 @@ class KeychainManagerTests: XCTestCase {
         }
         #endif
 
-        // When
+        // Given
         let item = EncryptionKeys.KeychainItem.databaseKey(account)
         let value = try KeychainManager.generateKey()
 
@@ -86,14 +83,17 @@ class KeychainManagerTests: XCTestCase {
         }
         #endif
 
-        // When
+        // Given
         let item = EncryptionKeys.KeychainItem.databaseKey(account)
 
-        // When
-        let result: Data = try KeychainManager.fetchItem(item)
-
         // Then
-        XCTAssertNoThrow(result, "Item should be fetch successfully.")
+        do {
+            let item: Data = try KeychainManager.fetchItem(item)
+            XCTAssertNotNil(item, "Item should be fetch successfully.")
+
+        } catch {
+            XCTFail("Failed to fetch the fetch item.")
+        }
     }
 
     func testKeychainItemsDeleteSuccessfully() throws {
@@ -103,7 +103,7 @@ class KeychainManagerTests: XCTestCase {
         }
         #endif
 
-        // When
+        // Given
         let item = EncryptionKeys.KeychainItem.databaseKey(account)
         let value = try KeychainManager.generateKey()
 
@@ -113,5 +113,7 @@ class KeychainManagerTests: XCTestCase {
 
         // Then
         XCTAssertNoThrow(try KeychainManager.deleteItem(item))
+        let fetchItem: Data = try KeychainManager.fetchItem(item)
+        XCTAssertNil(fetchItem, "Deleted item should not supposed to fetch again.")
     }
 }
