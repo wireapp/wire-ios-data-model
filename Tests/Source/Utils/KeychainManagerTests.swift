@@ -113,7 +113,7 @@ class KeychainManagerTests: XCTestCase {
             // When I fetch the key
             let fetchItem: EncryptionKeys.KeychainItem = try KeychainManager.fetchItem(item)
 
-            //Then the key is not nil and equal to the one I stored.
+            // Then the key is not nil and equal to the one I stored.
             XCTAssertNotNil(key, "Failed to generate the key.")
             XCTAssertEqual(fetchItem, item)
 
