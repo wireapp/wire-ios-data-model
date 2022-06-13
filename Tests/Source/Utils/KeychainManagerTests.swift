@@ -90,7 +90,7 @@ class KeychainManagerTests: XCTestCase {
             let fetchItem: Data = try KeychainManager.fetchItem(item)
             XCTAssertNotNil(fetchItem, "Item should be fetch successfully.")
 
-        } catch (let error) {
+        } catch let error {
             XCTFail("Failed to store item with error: \(error).")
         }
     }
@@ -117,7 +117,7 @@ class KeychainManagerTests: XCTestCase {
             let fetchItem: EncryptionKeys.KeychainItem = try KeychainManager.fetchItem(item)
             XCTAssertEqual(fetchItem, item)
 
-        } catch (let error) {
+        } catch let error {
             XCTFail("Failed to fetch the item with error: \(error).")
         }
     }
@@ -143,7 +143,7 @@ class KeychainManagerTests: XCTestCase {
             // delete the stored item
             try KeychainManager.deleteItem(item)
 
-        } catch (let error) {
+        } catch let error {
             XCTFail("Failed to Delete item with error: \(error).")
         }
 
