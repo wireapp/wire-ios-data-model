@@ -90,7 +90,7 @@ class KeychainManagerTests: XCTestCase {
             let fetchItem: Data = try KeychainManager.fetchItem(item)
             XCTAssertNotNil(fetchItem, "Item should be fetch successfully.")
 
-        } catch (let error){
+        } catch (let error) {
             XCTFail("Failed to store item with error: \(error).")
         }
     }
