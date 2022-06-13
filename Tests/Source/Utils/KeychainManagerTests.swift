@@ -37,10 +37,12 @@ class KeychainManagerTests: XCTestCase {
         // Given
         let numberOfBytes: UInt = 32
 
-        // Then
         do {
-            let result = try KeychainManager.generateKey(numberOfBytes: numberOfBytes)
-            XCTAssertNotNil(result, "Result must have some data bytes.")
+            // When I have generated a key
+            let key = try KeychainManager.generateKey(numberOfBytes: numberOfBytes)
+
+            // Then key should not be nil
+            XCTAssertNotNil(key, "Result must have some data bytes.")
 
         } catch {
             XCTFail("Failed to generate the key successfully.")
@@ -58,10 +60,12 @@ class KeychainManagerTests: XCTestCase {
         // Given
         let item = EncryptionKeys.KeychainItem.databaseKey(account)
 
-        // Then
         do {
-            let result = try KeychainManager.generatePublicPrivateKeyPair(identifier: item.uniqueIdentifier)
-            XCTAssertNotNil(result, "Public Private KeyPair should be created successfully.")
+            // When I have generated Public Private KeyPair
+            let KeyPair = try KeychainManager.generatePublicPrivateKeyPair(identifier: item.uniqueIdentifier)
+
+            // Then KeyPair should not be nil
+            XCTAssertNotNil(KeyPair, "Public Private KeyPair should be created successfully.")
 
         } catch {
             XCTFail("Failed to create Public Private KeyPair.")
@@ -75,18 +79,16 @@ class KeychainManagerTests: XCTestCase {
         }
         #endif
 
-        // Given
-        let item = EncryptionKeys.KeychainItem.databaseKey(account)
-
-        // Then
         do {
+            // Given I have generated a key
+            let item = EncryptionKeys.KeychainItem.databaseKey(account)
             let key = try KeychainManager.generateKey()
             XCTAssertNotNil(key, "Failed to generate the key.")
 
-            // Store new item
+            // When I store the key
             try KeychainManager.storeItem(item, value: key)
 
-            // Fetching the stored item to ensure its stored successfully
+            // Then when I fetch the key it's not nil
             let fetchItem: Data = try KeychainManager.fetchItem(item)
             XCTAssertNotNil(fetchItem, "Item should be fetch successfully.")
 
@@ -102,19 +104,17 @@ class KeychainManagerTests: XCTestCase {
         }
         #endif
 
-        // Given
-        let item = EncryptionKeys.KeychainItem.databaseKey(account)
-
-        // Then
         do {
+            // Given I have generated a key and successfully stored it
+            let item = EncryptionKeys.KeychainItem.databaseKey(account)
             let key = try KeychainManager.generateKey()
-            XCTAssertNotNil(key, "Failed to generate the key.")
-
-            // Store new item
             try KeychainManager.storeItem(item, value: key)
 
-            // Fetching and comparing the stored and fetchItem
+            // When I fetch the key
             let fetchItem: EncryptionKeys.KeychainItem = try KeychainManager.fetchItem(item)
+
+            //Then the key is not nil and equal to the one I stored.
+            XCTAssertNotNil(key, "Failed to generate the key.")
             XCTAssertEqual(fetchItem, item)
 
         } catch let error {
@@ -129,25 +129,22 @@ class KeychainManagerTests: XCTestCase {
         }
         #endif
 
-        // Given
+        // Given I have generated a key and successfully stored it.
         let item = EncryptionKeys.KeychainItem.databaseKey(account)
 
-        // Then
         do {
             let key = try KeychainManager.generateKey()
             XCTAssertNotNil(key, "Failed to generate the key.")
-
-            // Store new item
             try KeychainManager.storeItem(item, value: key)
 
-            // delete the stored item
+            // When I delete the key
             try KeychainManager.deleteItem(item)
 
         } catch let error {
             XCTFail("Failed to Delete item with error: \(error).")
         }
 
-        // Check to ensure the item can't be fetched after deletion.
+        // Then fetching the key throws Error
         XCTAssertThrowsError(try KeychainManager.fetchItem(item) as Data, "Deleted item should not supposed to fetch again.")
     }
 }
