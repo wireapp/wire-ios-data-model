@@ -39,6 +39,7 @@ public enum KeychainManager {
             throw Error.failedToStoreItemInKeychain(status)
         }
     }
+
     static func fetchItem<T>(_ item: KeychainItemProtocol) throws -> T {
         var value: CFTypeRef?
         let status = SecItemCopyMatching(item.getQuery as CFDictionary, &value)
