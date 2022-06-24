@@ -97,7 +97,7 @@ static NSString *const ImageSmallProfileDataKey = @"imageSmallProfileData";
 
 - (void)testThatWeCanSetAttributesOnUser
 {
-    [self checkUserAttributeForKey:@"accentColorValue" value:@(ZMAccentColorVividRed)];
+    [self checkUserAttributeForKey:@"accentColorValue" value:@(ZMAccentColorRed)];
     [self checkUserAttributeForKey:@"emailAddress" value:@"foo@example.com"];
     [self checkUserAttributeForKey:@"name" value:@"Foo Bar"];
     [self checkUserAttributeForKey:@"handle" value:@"foo_bar"];
@@ -498,7 +498,7 @@ static NSString *const ImageSmallProfileDataKey = @"imageSmallProfileData";
     XCTAssertEqualObjects(user.handle, payload[@"handle"]);
     XCTAssertEqual([self managedByString:user], payload[@"managed_by"]);
     XCTAssertNil(user.expiresAt);
-    XCTAssertEqual(user.accentColorValue, ZMAccentColorBrightYellow);
+    XCTAssertEqual(user.accentColorValue, ZMAccentColorYellow);
 }
 
 - (void)testThatItUpdatesAccountDeletionStatusOnAnExistingUser
@@ -1222,7 +1222,7 @@ static NSString *const ImageSmallProfileDataKey = @"imageSmallProfileData";
     // given
     ZMUser<ZMEditableUser> *user = [ZMUser selfUserInContext:self.uiMOC];
     user.name = @"Test";
-    user.accentColorValue = ZMAccentColorBrightOrange;
+    user.accentColorValue = ZMAccentColorAmber;
     
     // when
     XCTAssertTrue([self.uiMOC saveOrRollback]);
@@ -1612,9 +1612,9 @@ static NSString *const ImageSmallProfileDataKey = @"imageSmallProfileData";
 {
     // given
     ZMUser *user = [ZMUser insertNewObjectInManagedObjectContext:self.uiMOC];
-    user.accentColorValue = ZMAccentColorBrightYellow;
+    user.accentColorValue = ZMAccentColorYellow;
     [self.uiMOC saveOrRollback];
-    XCTAssertEqual(user.accentColorValue, ZMAccentColorBrightYellow);
+    XCTAssertEqual(user.accentColorValue, ZMAccentColorYellow);
     
     // when
     user.accentColorValue = ZMAccentColorUndefined;
@@ -1638,9 +1638,9 @@ static NSString *const ImageSmallProfileDataKey = @"imageSmallProfileData";
     [self.syncMOC performGroupedBlockAndWait:^{
         // given
         ZMUser *user = [ZMUser insertNewObjectInManagedObjectContext:self.syncMOC];
-        user.accentColorValue = ZMAccentColorBrightYellow;
+        user.accentColorValue = ZMAccentColorYellow;
         [self.syncMOC saveOrRollback];
-        XCTAssertEqual(user.accentColorValue, ZMAccentColorBrightYellow);
+        XCTAssertEqual(user.accentColorValue, ZMAccentColorYellow);
         
         // when
         user.accentColorValue = ZMAccentColorUndefined;
