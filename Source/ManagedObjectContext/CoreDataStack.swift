@@ -70,10 +70,6 @@ extension URL {
         let supportFile = ".\(storeName)_SUPPORT"
         return storeDirectory.appendingPathComponent(supportFile)
     }
-
-    func appendingMLSFolder() -> URL {
-        return appendingPathComponent("mls")
-    }
 }
 
 public extension NSURL {

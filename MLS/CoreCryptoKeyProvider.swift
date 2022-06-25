@@ -17,32 +17,9 @@
 //
 
 import Foundation
-import WireCoreCrypto
 
-extension NSManagedObjectContext {
-
-    public func setupCoreCrypto(applicationContainer: URL) {
-        let user = ZMUser.selfUser(in: self)
-        guard let clientId = user.selfClient()?.remoteIdentifier else { return }
-
-        let accountDirectory = CoreDataStack.accountDataFolder(accountIdentifier: user.remoteIdentifier, applicationContainer: applicationContainer)
-        FileManager.default.createAndProtectDirectory(at: accountDirectory)
-        let mlsDirectory = accountDirectory.appendingMLSFolder()
-
-        do {
-            let key = try coreCryptoKey()
-            let coreCrypto = try CoreCrypto(
-                path: mlsDirectory.path,
-                key: key.base64EncodedString(),
-                clientId: clientId
-            )
-            self.coreCrypto = coreCrypto
-        } catch {
-            fatalError(String(describing: error))
-        }
-    }
-
-    private func coreCryptoKey() throws -> Data  {
+public class CoreCryptoKeyProvider {
+    public static func coreCryptoKey() throws -> Data  {
         let item = CoreCryptoKeychainItem()
         if let key: Data = try KeychainManager.fetchItem(item) {
             return key
@@ -50,19 +27,6 @@ extension NSManagedObjectContext {
             let key = try KeychainManager.generateKey(numberOfBytes: 32)
             try KeychainManager.storeItem(item, value: key)
             return key
-        }
-    }
-}
-
-extension NSManagedObjectContext {
-    private static let coreCrytpoUserInfoKey = "CoreCryptoKey"
-
-    public var coreCrypto: CoreCrypto? {
-        get {
-            userInfo[Self.coreCrytpoUserInfoKey] as? CoreCrypto
-        }
-        set {
-            userInfo[Self.coreCrytpoUserInfoKey] = newValue
         }
     }
 }
@@ -86,5 +50,4 @@ struct CoreCryptoKeychainItem: KeychainItemProtocol {
             kSecValueData: value
         ]
     }
-
 }
