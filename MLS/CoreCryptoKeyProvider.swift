@@ -21,7 +21,7 @@ import Foundation
 public class CoreCryptoKeyProvider {
     public static func coreCryptoKey() throws -> Data  {
         let item = CoreCryptoKeychainItem()
-        if let key: Data = try KeychainManager.fetchItem(item) {
+        if let key: Data = try? KeychainManager.fetchItem(item) {
             return key
         } else {
             let key = try KeychainManager.generateKey(numberOfBytes: 32)
