@@ -64,6 +64,10 @@ extension UserClient {
 
         var ed25519: String?
 
+        public init(ed25519: String? = nil) {
+            self.ed25519 = ed25519
+        }
+
     }
 
 }
