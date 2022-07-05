@@ -53,6 +53,7 @@ extension UserClient {
             primitiveMlsPublicKeys = newValue.encodeToJSON()
             didChangeValue(forKey: Self.mlsPublicKeysKey)
             needsToUploadMLSPublicKeys = true
+            setLocallyModifiedKeys(Set([UserClient.needsToUploadMLSPublicKeysKey]))
         }
     }
 
@@ -62,7 +63,7 @@ extension UserClient {
 
     public struct MLSPublicKeys: Codable, Equatable {
 
-        var ed25519: String?
+        public internal(set) var ed25519: String?
 
         public init(ed25519: String? = nil) {
             self.ed25519 = ed25519
