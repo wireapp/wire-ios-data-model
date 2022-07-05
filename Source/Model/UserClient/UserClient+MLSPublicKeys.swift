@@ -32,7 +32,6 @@ extension UserClient {
 
     @NSManaged public var needsToUploadMLSPublicKeys: Bool
 
-
     // Private storage of `mlsPublicKeys`.
 
     @NSManaged private var primitiveMlsPublicKeys: Data?
