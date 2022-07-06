@@ -17,11 +17,13 @@
 
 import Foundation
 
+private let log = ZMSLog(tag: "bytes-conversion")
+
 public typealias Bytes = [UInt8]
 
 public protocol BytesConvertible {
     var bytes: Bytes { get }
-    static func from(bytes: Bytes) -> Self
+    init?(bytes: Bytes)
 }
 
 extension BytesConvertible {
@@ -29,16 +31,42 @@ extension BytesConvertible {
         return Data(from: self).bytes
     }
 
-    public static func from(bytes: Bytes) -> Self {
-        return bytes.data.object()
+    public init?(bytes: Bytes) {
+        guard let object: Self = bytes.data.object() else {
+            return nil
+        }
+        self = object
     }
 }
 
 extension Data {
+
+    enum ByteConversionError: LocalizedError {
+        case invalidBufferSize
+
+        var errorDescription: String? {
+            switch self {
+            case .invalidBufferSize:
+                return "raw buffer byte count doesn't match the type's memory layout"
+            }
+        }
+    }
+
     var bytes: Bytes { Bytes(self) }
 
-    func object<T: BytesConvertible>() -> T {
-        self.withUnsafeBytes { $0.load(as: T.self) }
+    func object<T: BytesConvertible>() -> T? {
+        do {
+            return try self.withUnsafeBytes {
+                guard $0.count == MemoryLayout<T>.size else {
+                    throw ByteConversionError.invalidBufferSize
+                }
+
+                return $0.load(as: T.self)
+            }
+        } catch {
+            log.error("Failed to load object from raw data: \(error.localizedDescription)")
+            return nil
+        }
     }
 
     init<T: BytesConvertible>(from object: T) {
