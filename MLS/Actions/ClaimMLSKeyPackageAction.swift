@@ -60,7 +60,7 @@ public class ClaimMLSKeyPackageAction: EntityAction {
     public let userId: UUID
     public var resultHandler: ResultHandler?
 
-    init(domain: String?, userId: UUID, excludedSelfClientId: String? = nil, resultHandler: ResultHandler? = nil) {
+    public init(domain: String?, userId: UUID, excludedSelfClientId: String? = nil, resultHandler: ResultHandler? = nil) {
         self.domain = domain
         self.userId = userId
         self.excludedSelfClientId = excludedSelfClientId
@@ -82,5 +82,18 @@ public struct KeyPackage: Codable, Equatable {
         case keyPackage = "key_package"
         case keyPackageRef = "key_package_ref"
         case userID = "user"
+    }
+
+    public init(client: String,
+                  domain: String,
+                  keyPackage: String,
+                  keyPackageRef: String,
+                  userID: UUID
+    ) {
+        self.client = client
+        self.domain = domain
+        self.keyPackage = keyPackage
+        self.keyPackageRef = keyPackageRef
+        self.userID = userID
     }
 }
