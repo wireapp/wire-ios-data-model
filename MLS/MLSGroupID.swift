@@ -31,4 +31,18 @@ public struct MLSGroupID: Equatable {
         return data.base64EncodedString()
     }
 
+    /// The byte array representing the id.
+
+    public var bytes: [UInt8] {
+        return data.bytes
+    }
+
+}
+
+extension Data {
+
+    var bytes: [UInt8] {
+        return .init(self)
+    }
+
 }
