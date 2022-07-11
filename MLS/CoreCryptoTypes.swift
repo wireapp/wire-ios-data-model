@@ -55,7 +55,7 @@ public struct ConversationConfiguration {
     public var ciphersuite: CiphersuiteName?
     public var keyRotationSpan: TimeInterval?
 
-    public init(extraMembers: [Invitee], admins: [[UInt8]], ciphersuite: CiphersuiteName?, keyRotationSpan: TimeInterval? ) {
+    public init(extraMembers: [Invitee] = [], admins: [[UInt8]] = [], ciphersuite: CiphersuiteName?, keyRotationSpan: TimeInterval? = nil) {
         self.extraMembers = extraMembers
         self.admins = admins
         self.ciphersuite = ciphersuite

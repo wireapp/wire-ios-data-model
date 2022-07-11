@@ -42,7 +42,7 @@ public final class MLSController {
         }
     }
 
-    // MARK: - Methods
+    // MARK: - Public key
 
     private func generatePublicKeysIfNeeded() throws {
         guard
@@ -64,63 +64,65 @@ public final class MLSController {
         context.saveOrRollback()
     }
 
+    // MARK: - Group creation
+
+    enum MLSGroupCreationError: Error {
+
+        case noGroupID
+        case notAnMLSConversation
+        case failedToClaimKeyPackages
+        case failedToCreateGroup
+        case failedToAddMembers
+        case noMessagesToSend
+        case failedToSendHandshakeMessage
+        case failedToSendWelcomeMessage
+
+    }
+
+    /// Create an MLS group with the given conversation.
+    ///
+    /// - Parameters:
+    ///   - conversation the conversation representing the MLS group.
+    ///
+    /// - Throws:
+    ///   -
+
     @available(iOS 13, *)
-    func createGroup(for conversation: ZMConversation) {
+    func createGroup(for conversation: ZMConversation) throws {
         Task {
-            guard let context = context else { return }
-            guard let groupID = conversation.mlsGroupID else { return }
-
-            let allKeyPackages = claimKeyPackages(
-                for: Array(conversation.localParticipants),
-                in: context
-            )
-
-            // Collect all the key packages.
-            var buffer = [KeyPackage]()
-
-            do {
-                for try await keyPackages in allKeyPackages {
-                    buffer.append(contentsOf: keyPackages)
-                }
-            } catch let error {
-                fatalError("Failed to claim key packages: \(String(describing: error))")
+            guard let groupID = conversation.mlsGroupID else {
+                throw MLSGroupCreationError.noGroupID
             }
 
-            // Deafult config for the group.
-            let config = ConversationConfiguration(
-                extraMembers: [],
-                admins: [],
-                ciphersuite: .mls128Dhkemx25519Aes128gcmSha256Ed25519,
-                keyRotationSpan: nil
-            )
-
-            var messagesToPost: MemberAddedMessages?
-
-            do {
-                messagesToPost = try coreCrypto.wire_createConversation(
-                    conversationId: groupID.bytes,
-                    config: config
-                )
-
-                // TODO: check if messagesToPost is nil after creating the conversation.
-
-            } catch let error {
-                fatalError("Failed to create mls group: \(String(describing: error))")
+            guard conversation.messageProtocol == .mls else {
+                throw MLSGroupCreationError.notAnMLSConversation
             }
 
-            do {
-                messagesToPost = try coreCrypto.wire_addClientsToConversation(
-                    conversationId: groupID.bytes,
-                    clients: buffer.map(Invitee.init(from:))
-                )
-
-                // TODO: post messagesToPost.message
-                // TODO: post messagesToPost.welcom
-
-            } catch let error {
-                fatalError("Failed to add clients to the conversation: \(String(describing: error))")
-            }
+            let keyPackages = try await claimKeyPackages(for: Array(conversation.localParticipants))
+            let invitees = keyPackages.map(Invitee.init(from:))
+            let messagesToSend = try createGroup(id: groupID, invitees: invitees)
+            try await sendMessage(messagesToSend.message)
+            try await sendWelcomeMessage(messagesToSend.welcome)
         }
+    }
+
+    @available(iOS 13, *)
+    private func claimKeyPackages(for users: [ZMUser]) async throws -> [KeyPackage] {
+        do {
+            guard let context = context else { return [] }
+
+            var result = [KeyPackage]()
+
+            for try await keyPackages in claimKeyPackages(for: users, in: context) {
+                result.append(contentsOf: keyPackages)
+            }
+
+            return result
+        } catch let error {
+            logger.error("failed to claim key packages: \(String(describing: error))")
+            throw MLSGroupCreationError.failedToClaimKeyPackages
+        }
+
     }
 
     @available(iOS 13, *)
@@ -145,32 +147,88 @@ public final class MLSController {
         }
     }
 
-}
+    private func createGroup(
+        id: MLSGroupID,
+        invitees: [Invitee]
+    ) throws -> MemberAddedMessages {
+        var messagesToSend: MemberAddedMessages?
+        let config = ConversationConfiguration(ciphersuite: .mls128Dhkemx25519Aes128gcmSha256Ed25519)
 
-private extension EntityAction {
+        do {
+            messagesToSend = try coreCrypto.wire_createConversation(
+                conversationId: id.bytes,
+                config: config
+            )
 
-    @available(*, renamed: "perform(in:)")
-    mutating func perform(
-        in context: NotificationContext,
-        resultHandler: @escaping ResultHandler
-    ) {
-        self.resultHandler = resultHandler
-        send(in: context)
+            // TODO: check if messagesToPost is nil after creating the conversation.
+
+        } catch let error {
+            logger.error("failed to create mls group: \(String(describing: error))")
+            throw MLSGroupCreationError.failedToCreateGroup
+        }
+
+        do {
+            messagesToSend = try coreCrypto.wire_addClientsToConversation(
+                conversationId: id.bytes,
+                clients: invitees
+            )
+        } catch let error {
+            logger.error("failed to add members: \(String(describing: error))")
+            throw MLSGroupCreationError.failedToAddMembers
+        }
+
+        guard let messagesToSend = messagesToSend else {
+            logger.error("added participants, but no messages to send")
+            throw MLSGroupCreationError.noMessagesToSend
+        }
+
+        return messagesToSend
     }
 
     @available(iOS 13, *)
-    mutating func perform(in context: NotificationContext) async throws -> Result {
-        return try await withCheckedThrowingContinuation { continuation in
-            perform(in: context, resultHandler: continuation.resume(with:))
+    private func sendMessage(_ bytes: [UInt8]) async throws {
+        do {
+            guard let context = context else { return }
+            var action = SendMLSMessageAction(mlsMessage: bytes.base64EncodedString)
+            try await action.perform(in: context.notificationContext)
+        } catch let error {
+            logger.error("failed to send mls message: \(String(describing: error))")
+            throw MLSGroupCreationError.failedToSendHandshakeMessage
+        }
+    }
+
+    @available(iOS 13, *)
+    private func sendWelcomeMessage(_ bytes: [UInt8]) async throws {
+        do {
+            guard let context = context else { return }
+            var action = SendMLSWelcomeAction(body: bytes.base64EncodedString)
+            try await action.perform(in: context.notificationContext)
+        } catch let error {
+            logger.error("failed to send welcome message: \(String(describing: error))")
+            throw MLSGroupCreationError.failedToSendWelcomeMessage
         }
     }
 
 }
 
-extension ZMUser {
+// MARK: - Helper Extensions
 
-    var mlsClientID: String {
-        return ""
+private extension Array where Element == UInt8 {
+
+    var base64EncodedString: String {
+        return Data(self).base64EncodedString()
+    }
+
+}
+
+private extension String {
+
+    var utf8Data: Data? {
+        return data(using: .utf8)
+    }
+
+    var base64DecodedData: Data? {
+        return Data(base64Encoded: self)
     }
 
 }
@@ -195,56 +253,6 @@ extension Invitee {
             id: idData.bytes,
             kp: keyPackageData.bytes
         )
-    }
-
-}
-
-private extension String {
-
-    var utf8Data: Data? {
-        return data(using: .utf8)
-    }
-
-    var base64DecodedData: Data? {
-        return Data(base64Encoded: self)
-    }
-
-
-}
-
-struct MLSClientID: Equatable {
-
-    private let userID: String
-    private let clientID: String
-    private let domain: String
-
-    let string: String
-
-    init?(userClient: UserClient) {
-        guard
-            let userID = userClient.user?.remoteIdentifier.uuidString,
-            let clientID = userClient.remoteIdentifier,
-            let domain = userClient.user?.domain ?? APIVersion.domain
-        else {
-            return nil
-        }
-
-        self.init(
-            userID: userID,
-            clientID: clientID,
-            domain: domain
-        )
-    }
-
-    init(
-        userID: String,
-        clientID: String,
-        domain: String
-    ) {
-        self.userID = userID.lowercased()
-        self.clientID = clientID.lowercased()
-        self.domain = domain.lowercased()
-        self.string = "\(self.userID):\(self.clientID)@\(self.domain)"
     }
 
 }
