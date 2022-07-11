@@ -22,7 +22,10 @@ extension ZMConversation {
 
     // MARK: - Keys
 
+    @objc
     static let messageProtocolKey = "messageProtocol"
+
+    @objc
     static let mlsGroupID = "mlsGroupID"
 
     // MARK: - Properties
