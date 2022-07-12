@@ -22,7 +22,22 @@ import Foundation
 
 public struct MLSGroupID: Equatable {
 
+    // MARK: - Properties
+
     let data: Data
+
+    // MARK: - Life cycle
+
+    public init?(base64Encoded string: String) {
+        guard let data = Data(base64Encoded: string) else { return nil }
+        self.init(data)
+    }
+
+    public init(_ data: Data) {
+        self.data = data
+    }
+
+    // MARK: - API
 
     /// Base 64 encoded representation, used when sending the
     /// id over the network.
