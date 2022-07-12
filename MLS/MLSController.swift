@@ -65,3 +65,89 @@ public final class MLSController {
     }
 
 }
+
+// Uploading new key packages
+extension MLSController {
+
+    public func uploadKeyPackagesIfNeeded() {
+
+        guard let context = context else { return }
+
+        let user = ZMUser.selfUser(in: context)
+
+        guard
+            let clientId = user.selfClient()?.remoteIdentifier,
+            let mlsQualifiedClientId = MLSQualifiedClientID(user: user).mlsQualifiedClientId
+        else {
+            return
+        }
+
+        fetchMLSKeyPackagesCount(clientId: clientId) { count in
+
+        // TODO: Here goes the logic to determine if new key packages needs to be uploaded and re filling the new key packages after calculating number of welcome messages it receives by the client.
+        // For now we generate and upload new key packages if its less then 100
+            if count <= 100 {
+                /// Generate and upload new key packages
+                self.generateAndUploadKeyPackages(clientId: mlsQualifiedClientId)
+            }
+        }
+    }
+
+    private func fetchMLSKeyPackagesCount(clientId: String, completion: @escaping (Int) -> Void) {
+
+        /// Count MLS key packages
+        CountSelfMLSKeyPackagesAction(clientID: clientId) { result in
+
+            switch result {
+
+            case .success(let count):
+                print("a---> = \(count)")
+                completion(count)
+
+            case .failure(let error):
+                fatalError("failed to fetch MLS key packages count with error: \(error)")
+            }
+        }
+        .send(in: context!.notificationContext)
+    }
+
+    private func generateAndUploadKeyPackages(clientId: String, amountRequested: UInt32 = 100) {
+
+        /// Generate new key packages
+        do {
+            let keyPackages = try coreCrypto.wire_clientKeypackages(amountRequested: amountRequested)
+
+            if !keyPackages.isEmpty {
+                fatalError("coreCrypto failed to generate client key packages")
+            }
+
+            /// Convert received key packages into base64 encoded string
+            let keyPackagesEncodedStrings = convertKeyPackagesToBase64EncodedString(keyPackages: keyPackages)
+
+            /// Upload  MLS key packages
+            UploadSelfMLSKeyPackagesAction(clientID: clientId, keyPackages: keyPackagesEncodedStrings) { result in
+
+                switch result {
+
+                case .success(let value):
+                    print(value)
+                    print(value)
+                    /// key packages uploaded successfully
+                    break
+
+                case .failure(let error):
+                    fatalError("failed to upload MLS key packages with error: \(error)")
+                }
+
+            }
+            .send(in: context!.notificationContext)
+
+        } catch {
+            logger.error("failed to generate new key packages: \(String(describing: error))")
+        }
+    }
+
+    func convertKeyPackagesToBase64EncodedString(keyPackages: [[UInt8]]) -> [String] {
+        keyPackages.map { Data($0).base64EncodedString() }
+    }
+}
