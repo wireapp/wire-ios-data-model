@@ -18,6 +18,8 @@
 
 import Foundation
 
+public typealias Bytes = [UInt8]
+
 /// Represents the identifer for an MLS group.
 
 public struct MLSGroupID: Equatable {
@@ -33,15 +35,31 @@ public struct MLSGroupID: Equatable {
 
     /// The byte array representing the id.
 
-    public var bytes: [UInt8] {
+    public var bytes: Bytes {
         return data.bytes
+    }
+
+    public init(data: Data) {
+        self.data = data
+    }
+
+    public init(bytes: Bytes) {
+        data = bytes.data
+    }
+
+}
+
+extension Bytes {
+
+    var data: Data {
+        return .init(self)
     }
 
 }
 
 extension Data {
 
-    var bytes: [UInt8] {
+    var bytes: Bytes {
         return .init(self)
     }
 
