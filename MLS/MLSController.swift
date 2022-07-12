@@ -88,7 +88,7 @@ public final class MLSController {
     ///   -
 
     @available(iOS 13, *)
-    func createGroup(for conversation: ZMConversation) throws {
+    public func createGroup(for conversation: ZMConversation) throws {
         Task {
             guard let groupID = conversation.mlsGroupID else {
                 throw MLSGroupCreationError.noGroupID
