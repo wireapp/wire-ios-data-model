@@ -18,7 +18,12 @@
 
 import Foundation
 
-public final class MLSController {
+public protocol MLSControllerProtocol {
+    func conversationExists(groupID: MLSGroupID) -> Bool
+    func processWelcomeMessage(welcomeMessage: String) -> MLSGroupID?
+}
+
+public final class MLSController: MLSControllerProtocol {
 
     // MARK: - Properties
 
@@ -42,7 +47,28 @@ public final class MLSController {
         }
     }
 
-    // MARK: - Methods
+    // MARK: - Public Methods
+
+    public func conversationExists(groupID: MLSGroupID) -> Bool {
+        return coreCrypto.wire_conversationExists(conversationId: groupID.bytes)
+    }
+
+    public func processWelcomeMessage(welcomeMessage: String) -> MLSGroupID? {
+        guard let messageBytes = welcomeMessage.bytes else {
+            logger.error("failed to convert welcome message to bytes")
+            return nil
+        }
+
+        do {
+            let groupID = try coreCrypto.wire_processWelcomeMessage(welcomeMessage: messageBytes)
+            return MLSGroupID(bytes: groupID)
+        } catch {
+            logger.error("failed to process welcome message: \(String(describing: error))")
+            return nil
+        }
+    }
+
+    // MARK: - Private Methods
 
     private func generatePublicKeysIfNeeded() throws {
         guard
