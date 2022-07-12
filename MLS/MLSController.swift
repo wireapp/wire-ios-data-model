@@ -18,7 +18,14 @@
 
 import Foundation
 
-public final class MLSController {
+public protocol MLSControllerProtocol {
+
+    @available(iOS 13, *)
+    func createGroup(for conversation: ZMConversation) throws
+
+}
+
+public final class MLSController: MLSControllerProtocol {
 
     // MARK: - Properties
 
@@ -85,7 +92,7 @@ public final class MLSController {
     ///   - conversation the conversation representing the MLS group.
     ///
     /// - Throws:
-    ///   -
+    ///   - MLSGroupCreationError if the group could not be created.
 
     @available(iOS 13, *)
     public func createGroup(for conversation: ZMConversation) throws {
