@@ -179,7 +179,7 @@ public enum CoreCryptoLifecycle {
 }
 
 public typealias ConversationId = [UInt8]
-public typealias ClientId = [UInt]
+public typealias ClientId = [UInt8]
 public typealias MemberId = [UInt8]
 
 public struct CommitBundle {
