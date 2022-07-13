@@ -38,7 +38,7 @@ public protocol CoreCryptoProtocol {
     func wire_encryptMessage(conversationId: ConversationId, message: [UInt8]) throws -> [UInt8]
     func wire_newAddProposal(conversationId: ConversationId, keyPackage: [UInt8]) throws -> [UInt8]
     func wire_newUpdateProposal(conversationId: ConversationId) throws -> [UInt8]
-    func wire_newRemoveProposal(conversationId: Conversation, clientId: ClientId) throws -> [UInt8]
+    func wire_newRemoveProposal(conversationId: ConversationId, clientId: ClientId) throws -> [UInt8]
     func wire_newExternalAddProposal(conversationId: ConversationId, epoch: UInt64, keyPackage: [UInt8]) throws -> [UInt8]
     func wire_newExternalRemoveProposal(conversationId: ConversationId, epoch: UInt64, keyPackageRef: [UInt8]) throws -> [UInt8]
     func wire_updateKeyingMaterial(conversationId: ConversationId) throws -> CommitBundle
