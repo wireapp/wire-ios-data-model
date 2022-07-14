@@ -83,17 +83,16 @@ extension MLSController {
 
         // TODO: Here goes the logic to determine how check to remaining key packages and re filling the new key packages after calculating number of welcome messages it receives by the client.
 
-        /// For now temporarily  we generate and upload 100 new key packages if is count is less then 50
+        /// For now temporarily we generate and upload at most 100 new key packages
 
         fetchMLSKeyPackagesCount(clientId: clientId) { count in
 
-            if count <= 50 {
+            if count < 100 {
 
                 do {
-                    /// Generate new key packages
-                    let keyPackages = try self.generateKeyPackages(amountRequested: 100)
+                    let amount = UInt32(100 - count)
+                    let keyPackages = try self.generateKeyPackages(amountRequested: amount)
 
-                    /// Upload  MLS key packages
                     try self.uploadKeyPackages(clientId: clientId, keyPackages: keyPackages, context: context.notificationContext)
 
                 }
@@ -123,23 +122,26 @@ extension MLSController {
 
     private func generateKeyPackages(amountRequested: UInt32) throws -> [String] {
 
+        var keyPackages = [[UInt8]]()
+
         do {
             /// Generate newly  key packages
-            let keyPackages = try coreCrypto.wire_clientKeypackages(amountRequested: amountRequested)
-
-            /// Check newly generated packages are non empty
-            if keyPackages.isEmpty {
-                logger.error("CoreCrypto generated empty key packages array")
-                throw MLSKeyPackagesError.emptyKeyPackages
-            }
-
-            /// Convert received key packages into base64 encoded string
-            return getBase64Encoded(keyPackages: keyPackages)
+            keyPackages = try coreCrypto.wire_clientKeypackages(amountRequested: amountRequested)
 
         } catch let error {
             logger.error("failed to generate new key packages: \(String(describing: error))")
             throw MLSKeyPackagesError.failedToGenerateKeyPackages
         }
+
+        /// Check newly generated packages are non empty
+        if keyPackages.isEmpty {
+            logger.error("CoreCrypto generated empty key packages array")
+            throw MLSKeyPackagesError.emptyKeyPackages
+        }
+
+        /// Convert received key packages into base64 encoded string
+        return getBase64Encoded(keyPackages: keyPackages)
+
     }
 
     private func getBase64Encoded(keyPackages: [[UInt8]]) -> [String] {
