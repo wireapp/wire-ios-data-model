@@ -53,10 +53,10 @@ public final class MLSController: MLSControllerProtocol {
         return coreCrypto.wire_conversationExists(conversationId: groupID.bytes)
     }
 
-    public func processWelcomeMessage(welcomeMessage: String) -> MLSGroupID? {
-        guard let messageBytes = welcomeMessage.bytes else {
+    public func processWelcomeMessage(welcomeMessage: String) throws -> MLSGroupID {
+        guard let messageBytes = welcomeMessage.base64EncodedBytes else {
             logger.error("failed to convert welcome message to bytes")
-            return nil
+            throw MLSWelcomeMessageProcessingError.failedToConvertMessageToBytes
         }
 
         do {
@@ -64,7 +64,7 @@ public final class MLSController: MLSControllerProtocol {
             return MLSGroupID(bytes: groupID)
         } catch {
             logger.error("failed to process welcome message: \(String(describing: error))")
-            return nil
+            throw MLSWelcomeMessageProcessingError.failedToProcessMessage
         }
     }
 
@@ -90,4 +90,9 @@ public final class MLSController: MLSControllerProtocol {
         context.saveOrRollback()
     }
 
+}
+
+enum MLSWelcomeMessageProcessingError: Error {
+    case failedToConvertMessageToBytes
+    case failedToProcessMessage
 }

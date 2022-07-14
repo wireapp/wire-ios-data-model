@@ -18,10 +18,27 @@
 
 import Foundation
 
-extension String {
+public typealias Bytes = [UInt8]
 
-    public var base64EncodedBytes: Bytes? {
-        return Bytes(base64Encoded: self)
+extension Bytes {
+
+    var data: Data {
+        return .init(self)
+    }
+
+    var base64String: String {
+        return data.base64EncodedString()
+    }
+
+    init?(base64Encoded: String) {
+        self = Data(base64Encoded: base64Encoded)?.bytes
+    }
+}
+
+extension Data {
+
+    var bytes: Bytes {
+        return .init(self)
     }
 
 }
