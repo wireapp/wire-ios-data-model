@@ -112,7 +112,6 @@ extension MLSController {
             switch result {
 
             case .success(let count):
-                print("mmmm count: \(count)")
                 completion(count)
 
             case .failure(let error):
@@ -155,7 +154,6 @@ extension MLSController {
             switch result {
 
             case .success(_):
-                print("mmmm sss")
                 break
 
             case .failure(let error):
