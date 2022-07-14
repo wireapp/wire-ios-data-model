@@ -47,27 +47,6 @@ public final class MLSController: MLSControllerProtocol {
         }
     }
 
-    // MARK: - Public Methods
-
-    public func conversationExists(groupID: MLSGroupID) -> Bool {
-        return coreCrypto.wire_conversationExists(conversationId: groupID.bytes)
-    }
-
-    public func processWelcomeMessage(welcomeMessage: String) throws -> MLSGroupID {
-        guard let messageBytes = welcomeMessage.base64EncodedBytes else {
-            logger.error("failed to convert welcome message to bytes")
-            throw MLSWelcomeMessageProcessingError.failedToConvertMessageToBytes
-        }
-
-        do {
-            let groupID = try coreCrypto.wire_processWelcomeMessage(welcomeMessage: messageBytes)
-            return MLSGroupID(bytes: groupID)
-        } catch {
-            logger.error("failed to process welcome message: \(String(describing: error))")
-            throw MLSWelcomeMessageProcessingError.failedToProcessMessage
-        }
-    }
-
     // MARK: - Private Methods
 
     private func generatePublicKeysIfNeeded() throws {
@@ -88,6 +67,31 @@ public final class MLSController: MLSControllerProtocol {
 
         selfClient.mlsPublicKeys = keys
         context.saveOrRollback()
+    }
+
+}
+
+// MARK: - Process Welcome Message
+
+extension MLSController {
+
+    public func conversationExists(groupID: MLSGroupID) -> Bool {
+        return coreCrypto.wire_conversationExists(conversationId: groupID.bytes)
+    }
+
+    public func processWelcomeMessage(welcomeMessage: String) throws -> MLSGroupID {
+        guard let messageBytes = welcomeMessage.base64EncodedBytes else {
+            logger.error("failed to convert welcome message to bytes")
+            throw MLSWelcomeMessageProcessingError.failedToConvertMessageToBytes
+        }
+
+        do {
+            let groupID = try coreCrypto.wire_processWelcomeMessage(welcomeMessage: messageBytes)
+            return MLSGroupID(bytes: groupID)
+        } catch {
+            logger.error("failed to process welcome message: \(String(describing: error))")
+            throw MLSWelcomeMessageProcessingError.failedToProcessMessage
+        }
     }
 
 }
