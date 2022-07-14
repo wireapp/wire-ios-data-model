@@ -96,7 +96,7 @@ extension MLSController {
 
 }
 
-enum MLSWelcomeMessageProcessingError: Error {
+public enum MLSWelcomeMessageProcessingError: Error {
     case failedToConvertMessageToBytes
     case failedToProcessMessage
 }
