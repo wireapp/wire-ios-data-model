@@ -20,7 +20,7 @@ import Foundation
 
 public protocol MLSControllerProtocol {
     func conversationExists(groupID: MLSGroupID) -> Bool
-    func processWelcomeMessage(welcomeMessage: String) -> MLSGroupID?
+    func processWelcomeMessage(welcomeMessage: String) throws -> MLSGroupID
 }
 
 public final class MLSController: MLSControllerProtocol {
