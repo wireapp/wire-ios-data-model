@@ -26,7 +26,7 @@ extension Bytes {
         return .init(self)
     }
 
-    var base64String: String {
+    var base64EncodedString: String {
         return data.base64EncodedString()
     }
 
