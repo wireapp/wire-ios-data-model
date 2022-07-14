@@ -125,7 +125,7 @@ extension MLSController {
 
         do {
             /// Generate newly  key packages
-            let keyPackages = try coreCrypto.wire_clientKeyPackages(amountRequested: amountRequested)
+            let keyPackages = try coreCrypto.wire_clientKeypackages(amountRequested: amountRequested)
 
             /// Check newly generated packages are non empty
             if keyPackages.isEmpty {
