@@ -20,7 +20,8 @@ import Foundation
 
 public protocol MLSControllerProtocol {
     func conversationExists(groupID: MLSGroupID) -> Bool
-    func processWelcomeMessage(welcomeMessage: String) throws -> MLSGroupID
+    @discardableResult func processWelcomeMessage(welcomeMessage: String) throws -> MLSGroupID
+    func decryptMessage(from event: ZMUpdateEvent) -> GenericMessage?
 }
 
 public final class MLSController: MLSControllerProtocol {
@@ -79,6 +80,7 @@ extension MLSController {
         return coreCrypto.wire_conversationExists(conversationId: groupID.bytes)
     }
 
+    @discardableResult
     public func processWelcomeMessage(welcomeMessage: String) throws -> MLSGroupID {
         guard let messageBytes = welcomeMessage.base64EncodedBytes else {
             logger.error("failed to convert welcome message to bytes")
