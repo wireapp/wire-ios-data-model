@@ -17,7 +17,7 @@
 //
 import Foundation
 
-/// MLS client identifier for initialising and uploading key packages.
+/// MLS qualified client identifier for initialising Corecrypto
 public struct MLSQualifiedClientID {
 
     // MARK: - Properties

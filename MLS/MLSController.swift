@@ -76,19 +76,30 @@ extension MLSController {
         let user = ZMUser.selfUser(in: context)
 
         guard
-            let clientId = user.selfClient()?.remoteIdentifier,
-            let mlsQualifiedClientId = MLSQualifiedClientID(user: user).mlsQualifiedClientId
+            let clientId = user.selfClient()?.remoteIdentifier
         else {
             return
         }
 
+        // TODO: Here goes the logic to determine how check to remaining key packages and re filling the new key packages after calculating number of welcome messages it receives by the client.
+
+        /// For now temporarily  we generate and upload 100 new key packages if is count is less then 50
+
         fetchMLSKeyPackagesCount(clientId: clientId) { count in
 
-        // TODO: Here goes the logic to determine if new key packages needs to be uploaded and re filling the new key packages after calculating number of welcome messages it receives by the client.
-        // For now we generate and upload new key packages if its less then 100
-            if count <= 100 {
-                /// Generate and upload new key packages
-                self.generateAndUploadKeyPackages(clientId: mlsQualifiedClientId)
+            if count <= 50 {
+
+                do {
+                    /// Generate new key packages
+                    let keyPackages = try self.generateKeyPackages(amountRequested: 100)
+
+                    /// Upload  MLS key packages
+                    try self.uploadKeyPackages(clientId: clientId, keyPackages: keyPackages, context: context.notificationContext)
+
+                }
+                catch {
+                    self.logger.error("failed to generate new key packages: \(String(describing: error))")
+                }
             }
         }
     }
@@ -101,7 +112,7 @@ extension MLSController {
             switch result {
 
             case .success(let count):
-                print("a---> = \(count)")
+                print("mmmm count: \(count)")
                 completion(count)
 
             case .failure(let error):
@@ -111,43 +122,52 @@ extension MLSController {
         .send(in: context!.notificationContext)
     }
 
-    private func generateAndUploadKeyPackages(clientId: String, amountRequested: UInt32 = 100) {
+    private func generateKeyPackages(amountRequested: UInt32) throws -> [String] {
 
-        /// Generate new key packages
         do {
-            let keyPackages = try coreCrypto.wire_clientKeypackages(amountRequested: amountRequested)
+            /// Generate newly  key packages
+            let keyPackages = try coreCrypto.wire_clientKeyPackages(amountRequested: amountRequested)
 
-            if !keyPackages.isEmpty {
-                fatalError("coreCrypto failed to generate client key packages")
+            /// Check newly generated packages are non empty
+            if keyPackages.isEmpty {
+                logger.error("CoreCrypto generated empty key packages array")
+                throw MLSKeyPackagesError.emptyKeyPackages
             }
 
             /// Convert received key packages into base64 encoded string
-            let keyPackagesEncodedStrings = convertKeyPackagesToBase64EncodedString(keyPackages: keyPackages)
+            return getBase64Encoded(keyPackages: keyPackages)
 
-            /// Upload  MLS key packages
-            UploadSelfMLSKeyPackagesAction(clientID: clientId, keyPackages: keyPackagesEncodedStrings) { result in
-
-                switch result {
-
-                case .success(let value):
-                    print(value)
-                    print(value)
-                    /// key packages uploaded successfully
-                    break
-
-                case .failure(let error):
-                    fatalError("failed to upload MLS key packages with error: \(error)")
-                }
-
-            }
-            .send(in: context!.notificationContext)
-
-        } catch {
+        } catch let error {
             logger.error("failed to generate new key packages: \(String(describing: error))")
+            throw MLSKeyPackagesError.failedToGenerateKeyPackages
         }
     }
 
-    func convertKeyPackagesToBase64EncodedString(keyPackages: [[UInt8]]) -> [String] {
+    private func getBase64Encoded(keyPackages: [[UInt8]]) -> [String] {
         keyPackages.map { Data($0).base64EncodedString() }
     }
+
+    private func uploadKeyPackages(clientId: String, keyPackages: [String], context: NotificationContext) throws {
+
+        /// Upload  MLS key packages
+        UploadSelfMLSKeyPackagesAction(clientID: clientId, keyPackages: keyPackages) { result in
+
+            switch result {
+
+            case .success(_):
+                print("mmmm sss")
+                break
+
+            case .failure(let error):
+                self.logger.error("failed to generate new key packages: \(String(describing: error))")
+
+            }
+        }
+        .send(in: context)
+    }
+}
+
+enum MLSKeyPackagesError: Error {
+    case failedToGenerateKeyPackages
+    case emptyKeyPackages
 }

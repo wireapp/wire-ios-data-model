@@ -27,7 +27,7 @@ public protocol CoreCryptoProtocol {
 
     func wire_setCallbacks(callbacks: CoreCryptoCallbacks) throws
     func wire_clientPublicKey() throws -> [UInt8]
-    func wire_clientKeypackages(amountRequested: UInt32) throws -> [[UInt8]]
+    func wire_clientKeyPackages(amountRequested: UInt32) throws -> [[UInt8]]
     func wire_createConversation(conversationId: [UInt8], config: ConversationConfiguration) throws -> MemberAddedMessages?
     func wire_conversationExists(conversationId: [UInt8]) -> Bool
     func wire_processWelcomeMessage(welcomeMessage: [UInt8]) throws -> [UInt8]
