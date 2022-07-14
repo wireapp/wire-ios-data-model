@@ -31,8 +31,12 @@ extension Bytes {
     }
 
     init?(base64Encoded: String) {
-        self = Data(base64Encoded: base64Encoded)?.bytes
+        guard let bytes = Data(base64Encoded: base64Encoded)?.bytes else {
+            return nil
+        }
+        self = bytes
     }
+
 }
 
 extension Data {
