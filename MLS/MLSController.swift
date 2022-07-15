@@ -26,14 +26,20 @@ public final class MLSController {
     private let coreCrypto: CoreCryptoProtocol
     private let logger = ZMSLog(tag: "core-crypto")
 
+    let targetUnclaimedKeyPackageCount = 100
+
+    let actionProvider: MLSActionsProviderProtocol
+
     // MARK: - Life cycle
 
     init(
         context: NSManagedObjectContext,
-        coreCrypto: CoreCryptoProtocol
+        coreCrypto: CoreCryptoProtocol,
+        actionProvider: MLSActionsProviderProtocol = MLSActionsProvider()
     ) {
         self.context = context
         self.coreCrypto = coreCrypto
+        self.actionProvider = actionProvider
 
         do {
             try generatePublicKeysIfNeeded()
@@ -42,7 +48,7 @@ public final class MLSController {
         }
     }
 
-    // MARK: - Methods
+    // MARK: - Public keys
 
     private func generatePublicKeysIfNeeded() throws {
         guard
@@ -64,60 +70,57 @@ public final class MLSController {
         context.saveOrRollback()
     }
 
-}
+    // MARK: - Key packages
 
-// Uploading new key packages
-extension MLSController {
+    enum MLSKeyPackagesError: Error {
+
+        case failedToGenerateKeyPackages
+
+    }
+
+    /// Uploads new key packages if needed.
+    ///
+    /// Checks how many key packages are available on the backend and
+    /// generates new ones if there are less than 50% of the target unclaimed key package count..
 
     public func uploadKeyPackagesIfNeeded() {
-
         guard let context = context else { return }
-
         let user = ZMUser.selfUser(in: context)
-
-        guard
-            let clientId = user.selfClient()?.remoteIdentifier
-        else {
-            return
-        }
+        guard let clientID = user.selfClient()?.remoteIdentifier else { return }
 
         // TODO: Here goes the logic to determine how check to remaining key packages and re filling the new key packages after calculating number of welcome messages it receives by the client.
 
         /// For now temporarily we generate and upload at most 100 new key packages
 
-        fetchMLSKeyPackagesCount(clientId: clientId) { count in
+         countUnclaimedKeyPackages(clientID: clientID, context: context.notificationContext) { unclaimedKeyPackageCount in
+            guard unclaimedKeyPackageCount <= self.targetUnclaimedKeyPackageCount / 2 else { return }
 
-            if count < 100 {
+            do {
+                let amount = UInt32(self.targetUnclaimedKeyPackageCount - unclaimedKeyPackageCount)
+                let keyPackages = try self.generateKeyPackages(amountRequested: amount)
 
-                do {
-                    let amount = UInt32(100 - count)
-                    let keyPackages = try self.generateKeyPackages(amountRequested: amount)
+                try self.uploadKeyPackages(
+                    clientID: clientID,
+                    keyPackages: keyPackages,
+                    context: context.notificationContext
+                )
 
-                    try self.uploadKeyPackages(clientId: clientId, keyPackages: keyPackages, context: context.notificationContext)
-
-                }
-                catch {
-                    self.logger.error("failed to generate new key packages: \(String(describing: error))")
-                }
+            } catch {
+                self.logger.error("failed to generate new key packages: \(String(describing: error))")
             }
         }
     }
 
-    private func fetchMLSKeyPackagesCount(clientId: String, completion: @escaping (Int) -> Void) {
-
-        /// Count MLS key packages
-        CountSelfMLSKeyPackagesAction(clientID: clientId) { result in
-
+    private func countUnclaimedKeyPackages(clientID: String, context: NotificationContext, completion: @escaping (Int) -> Void) {
+        actionProvider.countUnclaimedKeyPackages(clientID: clientID, context: context) { result in
             switch result {
-
             case .success(let count):
                 completion(count)
 
             case .failure(let error):
-                fatalError("failed to fetch MLS key packages count with error: \(error)")
+                self.logger.error("failed to fetch MLS key packages count with error: \(String(describing: error))")
             }
         }
-        .send(in: context!.notificationContext)
     }
 
     private func generateKeyPackages(amountRequested: UInt32) throws -> [String] {
@@ -133,41 +136,55 @@ extension MLSController {
             throw MLSKeyPackagesError.failedToGenerateKeyPackages
         }
 
-        /// Check newly generated packages are non empty
         if keyPackages.isEmpty {
             logger.error("CoreCrypto generated empty key packages array")
-            throw MLSKeyPackagesError.emptyKeyPackages
+            throw MLSKeyPackagesError.failedToGenerateKeyPackages
         }
 
-        /// Convert received key packages into base64 encoded string
-        return getBase64Encoded(keyPackages: keyPackages)
-
+        return keyPackages.map {
+            Data($0).base64EncodedString()
+        }
     }
 
-    private func getBase64Encoded(keyPackages: [[UInt8]]) -> [String] {
-        keyPackages.map { Data($0).base64EncodedString() }
-    }
-
-    private func uploadKeyPackages(clientId: String, keyPackages: [String], context: NotificationContext) throws {
-
-        /// Upload  MLS key packages
-        UploadSelfMLSKeyPackagesAction(clientID: clientId, keyPackages: keyPackages) { result in
-
+    private func uploadKeyPackages(clientID: String, keyPackages: [String], context: NotificationContext) throws {
+        actionProvider.uploadKeyPackages(clientID: clientID, keyPackages: keyPackages, context: context) { result in
             switch result {
-
-            case .success(_):
+            case .success:
                 break
 
             case .failure(let error):
                 self.logger.error("failed to generate new key packages: \(String(describing: error))")
-
             }
         }
-        .send(in: context)
     }
 }
 
-enum MLSKeyPackagesError: Error {
-    case failedToGenerateKeyPackages
-    case emptyKeyPackages
+protocol MLSActionsProviderProtocol {
+
+    func countUnclaimedKeyPackages(
+        clientID: String,
+        context: NotificationContext,
+        resultHandler: @escaping CountSelfMLSKeyPackagesAction.ResultHandler
+    )
+
+    func uploadKeyPackages(
+        clientID: String,
+        keyPackages: [String],
+        context: NotificationContext,
+        resultHandler: @escaping UploadSelfMLSKeyPackagesAction.ResultHandler
+    )
+
+}
+
+private class MLSActionsProvider: MLSActionsProviderProtocol {
+
+    func countUnclaimedKeyPackages(clientID: String, context: NotificationContext, resultHandler: @escaping CountSelfMLSKeyPackagesAction.ResultHandler) {
+        let action = CountSelfMLSKeyPackagesAction(clientID: clientID, resultHandler: resultHandler)
+        action.send(in: context)
+    }
+
+    func uploadKeyPackages(clientID: String, keyPackages: [String], context: NotificationContext, resultHandler: @escaping UploadSelfMLSKeyPackagesAction.ResultHandler) {
+        let action = UploadSelfMLSKeyPackagesAction(clientID: clientID, keyPackages: keyPackages, resultHandler: resultHandler)
+        action.send(in: context)
+    }
 }
