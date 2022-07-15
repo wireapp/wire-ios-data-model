@@ -24,11 +24,11 @@ public struct MLSQualifiedClientID {
 
     private let user: ZMUser
 
-    public var mlsQualifiedClientId: String? {
+    public var qualifiedClientId: String? {
         guard
             let clientId = user.selfClient()?.remoteIdentifier,
             let userId = user.remoteIdentifier,
-            let domain = user.domain ?? APIVersion.domain
+            let domain = user.domain?.selfOrNilIfEmpty ?? APIVersion.domain
         else {
             return nil
         }

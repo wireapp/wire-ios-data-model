@@ -99,7 +99,7 @@ public final class MLSController {
                 let amount = UInt32(self.targetUnclaimedKeyPackageCount - unclaimedKeyPackageCount)
                 let keyPackages = try self.generateKeyPackages(amountRequested: amount)
 
-                try self.uploadKeyPackages(
+                self.uploadKeyPackages(
                     clientID: clientID,
                     keyPackages: keyPackages,
                     context: context.notificationContext
@@ -128,7 +128,7 @@ public final class MLSController {
         var keyPackages = [[UInt8]]()
 
         do {
-            /// Generate newly  key packages
+
             keyPackages = try coreCrypto.wire_clientKeypackages(amountRequested: amountRequested)
 
         } catch let error {
@@ -146,14 +146,14 @@ public final class MLSController {
         }
     }
 
-    private func uploadKeyPackages(clientID: String, keyPackages: [String], context: NotificationContext) throws {
+    private func uploadKeyPackages(clientID: String, keyPackages: [String], context: NotificationContext) {
         actionProvider.uploadKeyPackages(clientID: clientID, keyPackages: keyPackages, context: context) { result in
             switch result {
             case .success:
                 break
 
             case .failure(let error):
-                self.logger.error("failed to generate new key packages: \(String(describing: error))")
+                self.logger.error("failed to upload key packages: \(String(describing: error))")
             }
         }
     }
