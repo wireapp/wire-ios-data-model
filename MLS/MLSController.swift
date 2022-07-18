@@ -181,17 +181,14 @@ public final class MLSController: MLSControllerProtocol {
         id: MLSGroupID,
         invitees: [Invitee]
     ) throws -> MemberAddedMessages {
-        var messagesToSend: MemberAddedMessages?
+        let messagesToSend: MemberAddedMessages?
         let config = ConversationConfiguration(ciphersuite: .mls128Dhkemx25519Aes128gcmSha256Ed25519)
 
         do {
-            messagesToSend = try coreCrypto.wire_createConversation(
+            try coreCrypto.wire_createConversation(
                 conversationId: id.bytes,
                 config: config
             )
-
-            // TODO: check if messagesToPost is nil after creating the conversation.
-
         } catch let error {
             logger.error("failed to create mls group: \(String(describing: error))")
             throw MLSGroupCreationError.failedToCreateGroup

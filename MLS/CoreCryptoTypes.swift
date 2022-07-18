@@ -62,7 +62,12 @@ public struct ConversationConfiguration {
 
     // Default memberwise initializers are never public by default, so we
     // declare one manually.
-    public init(admins: [MemberId], ciphersuite: CiphersuiteName?, keyRotationSpan: TimeInterval?, externalSenders: [[UInt8]]) {
+    public init(
+        admins: [MemberId] = [],
+        ciphersuite: CiphersuiteName? = nil,
+        keyRotationSpan: TimeInterval? = nil,
+        externalSenders: [[UInt8]] = []
+    ) {
         self.admins = admins
         self.ciphersuite = ciphersuite
         self.keyRotationSpan = keyRotationSpan
