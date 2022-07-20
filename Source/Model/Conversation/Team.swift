@@ -28,6 +28,7 @@ public protocol TeamType: AnyObject {
     var pictureAssetKey: String? { get }
     var remoteIdentifier: UUID? { get }
     var imageData: Data? { get set }
+    var splashscreenAssetId: String? { get }
 
     func requestImage()
     func refreshMetadata()
@@ -43,6 +44,7 @@ public class Team: ZMManagedObject, TeamType {
     @NSManaged public var pictureAssetId: String?
     @NSManaged public var pictureAssetKey: String?
     @NSManaged public var creator: ZMUser?
+    @NSManaged public var splashscreenAssetId: String?
 
     @NSManaged public var needsToRedownloadMembers: Bool
     @NSManaged public var needsToDownloadRoles: Bool
