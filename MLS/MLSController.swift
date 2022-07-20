@@ -23,6 +23,8 @@ public protocol MLSControllerProtocol {
     @available(iOS 13, *)
     func createGroup(for conversation: ZMConversation) throws
 
+    func uploadKeyPackagesIfNeeded()
+
 }
 
 public final class MLSController: MLSControllerProtocol {
