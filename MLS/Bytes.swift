@@ -18,47 +18,31 @@
 
 import Foundation
 
-/// Represents the identifer for an MLS group.
+public typealias Bytes = [UInt8]
 
-public struct MLSGroupID: Equatable {
+extension Bytes {
 
-    // MARK: - Properties
-
-    let data: Data
-
-    // MARK: - Life cycle
-
-    public init?(base64Encoded string: String) {
-        guard let data = Data(base64Encoded: string) else { return nil }
-        self.init(data)
+    var data: Data {
+        return .init(self)
     }
 
-    public init(_ data: Data) {
-        self.data = data
-    }
-
-    // MARK: - API
-
-    /// Base 64 encoded representation, used when sending the
-    /// id over the network.
-
-    public var base64EncodedString: String {
+    var base64EncodedString: String {
         return data.base64EncodedString()
     }
 
-    /// The byte array representing the id.
-
-    public var bytes: Bytes {
-        return data.bytes
-    }
-
-    public init(data: Data) {
-        self.data = data
-    }
-
-    public init(bytes: Bytes) {
-        data = bytes.data
+    init?(base64Encoded: String) {
+        guard let bytes = Data(base64Encoded: base64Encoded)?.bytes else {
+            return nil
+        }
+        self = bytes
     }
 
 }
 
+extension Data {
+
+    var bytes: Bytes {
+        return .init(self)
+    }
+
+}

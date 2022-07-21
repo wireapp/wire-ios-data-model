@@ -20,10 +20,15 @@ import Foundation
 
 public protocol MLSControllerProtocol {
 
+    func uploadKeyPackagesIfNeeded()
+
     @available(iOS 13, *)
     func createGroup(for conversation: ZMConversation) async throws
 
-    func uploadKeyPackagesIfNeeded()
+    func conversationExists(groupID: MLSGroupID) -> Bool
+
+    @discardableResult
+    func processWelcomeMessage(welcomeMessage: String) throws -> MLSGroupID
 
 }
 
@@ -473,4 +478,35 @@ private class MLSActionsProvider: MLSActionsProviderProtocol {
         try await action.perform(in: context)
     }
 
+}
+
+// MARK: - Process Welcome Message
+
+extension MLSController {
+
+    public func conversationExists(groupID: MLSGroupID) -> Bool {
+        return coreCrypto.wire_conversationExists(conversationId: groupID.bytes)
+    }
+
+    @discardableResult
+    public func processWelcomeMessage(welcomeMessage: String) throws -> MLSGroupID {
+        guard let messageBytes = welcomeMessage.base64EncodedBytes else {
+            logger.error("failed to convert welcome message to bytes")
+            throw MLSWelcomeMessageProcessingError.failedToConvertMessageToBytes
+        }
+
+        do {
+            let groupID = try coreCrypto.wire_processWelcomeMessage(welcomeMessage: messageBytes)
+            return MLSGroupID(bytes: groupID)
+        } catch {
+            logger.error("failed to process welcome message: \(String(describing: error))")
+            throw MLSWelcomeMessageProcessingError.failedToProcessMessage
+        }
+    }
+
+}
+
+public enum MLSWelcomeMessageProcessingError: Error {
+    case failedToConvertMessageToBytes
+    case failedToProcessMessage
 }
