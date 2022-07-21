@@ -224,4 +224,76 @@ class MLSControllerTests: ZMConversationTestsBase {
         XCTAssertTrue(actualInvitees.contains(invitee2))
     }
 
+    @available(iOS 15, *)
+    func test_AddParticipantsToConversations_IsSuccessful() async {
+        // Given
+        let domain = "example.com"
+        let mlsGroupID = MLSGroupID(Data([1, 2, 3]))
+        var conversation: ZMConversation!
+        var mlsUser = [ZMUser]()
+
+        uiMOC.performAndWait {
+            let user = createUser(in: uiMOC)
+            user.remoteIdentifier = UUID.create()
+            user.domain = domain
+
+            conversation = createConversation(in: uiMOC, with: [user])
+            conversation.mlsGroupID = mlsGroupID
+            conversation.messageProtocol = .mls
+
+            let user2 = createUser(in: uiMOC)
+            user2.remoteIdentifier = UUID.create()
+            user2.domain = domain
+            mlsUser.append(user)
+        }
+
+        // Mock first key package.
+        var keyPackage: KeyPackage!
+
+        mockActionsProvider.claimKeyPackagesMocks.append({ userID, _, _ in
+            keyPackage = KeyPackage(
+                client: "client1",
+                domain: domain,
+                keyPackage: Data([1, 2, 3]).base64EncodedString(),
+                keyPackageRef: "keyPackageRef1",
+                userID: userID
+            )
+
+            return [keyPackage]
+        })
+
+        // Mock return value for adding clients to conversation.
+        mockCoreCrypto.mockAddClientsToConversation = MemberAddedMessages(
+            message: [0, 0, 0, 0],
+            welcome: [1, 1, 1, 1]
+        )
+
+        // Mock sending message.
+        mockActionsProvider.sendMessageMocks.append({ message in
+            XCTAssertEqual(message, Data([0, 0, 0, 0]).base64EncodedString())
+        })
+
+        // Mock sending welcome message.
+        mockActionsProvider.sendWelcomeMessageMocks.append({ message in
+            XCTAssertEqual(message, Data([1, 1, 1, 1]).base64EncodedString())
+        })
+
+        do {
+            // When
+            try await sut.addParticipants(users: mlsUser, conversation: conversation)
+
+        } catch let error {
+            XCTFail("Unexpected error: \(String(describing: error))")
+        }
+
+        let addClientsToConversationCalls = mockCoreCrypto.calls.addClientsToConversation
+        XCTAssertEqual(addClientsToConversationCalls.count, 1)
+        XCTAssertEqual(addClientsToConversationCalls[0].0, mlsGroupID.bytes)
+
+        let invitee1 = Invitee(from: keyPackage)
+        let actualInvitees = addClientsToConversationCalls[0].1
+        XCTAssertEqual(actualInvitees.count, 1)
+        XCTAssertTrue(actualInvitees.contains(invitee1))
+    }
+
 }

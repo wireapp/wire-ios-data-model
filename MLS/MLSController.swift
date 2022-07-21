@@ -237,6 +237,61 @@ public final class MLSController: MLSControllerProtocol {
         }
     }
 
+    // MARK: - Add participants to mls group
+
+    @available(iOS 15, *)
+    public func addParticipants(users: [ZMUser], conversation: ZMConversation) async throws {
+
+            guard let context = context else { return }
+
+            var mlsUsers = [User]()
+            var groupID: MLSGroupID?
+            var messageProtocol: MessageProtocol?
+
+            context.performGroupedAndWait { _ in
+                messageProtocol = conversation.messageProtocol
+                groupID = conversation.mlsGroupID
+                mlsUsers = users.map(User.init)
+            }
+
+            guard let groupID = groupID else {
+                throw MLSGroupCreationError.noGroupID
+            }
+
+            guard messageProtocol == .mls else {
+                throw MLSGroupCreationError.notAnMLSConversation
+            }
+
+            guard !users.isEmpty else {
+                throw MLSGroupCreationError.noParticipantsToAdd
+            }
+
+            let keyPackages = try await claimKeyPackages(for: mlsUsers)
+            let invitees = keyPackages.map(Invitee.init(from:))
+            let messagesToSend = try addParticipant(id: groupID, invitees: invitees)
+
+            guard let messagesToSend = messagesToSend else { return }
+            try await sendMessage(messagesToSend.message)
+            try await sendWelcomeMessage(messagesToSend.welcome)
+
+    }
+
+    private func addParticipant(
+        id: MLSGroupID,
+        invitees: [Invitee]
+    ) throws -> MemberAddedMessages? {
+
+        do {
+            return try coreCrypto.wire_addClientsToConversation(
+                conversationId: id.bytes,
+                clients: invitees
+            )
+        } catch let error {
+            logger.error("failed to add members: \(String(describing: error))")
+            throw MLSGroupCreationError.failedToAddMembers
+        }
+    }
+
     // MARK: - Key packages
 
     enum MLSKeyPackagesError: Error {
