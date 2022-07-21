@@ -325,6 +325,36 @@ public final class MLSController: MLSControllerProtocol {
         }
     }
 
+    // MARK: - Process welcome message
+
+    public enum MLSWelcomeMessageProcessingError: Error {
+
+        case failedToConvertMessageToBytes
+        case failedToProcessMessage
+        
+    }
+
+
+    public func conversationExists(groupID: MLSGroupID) -> Bool {
+        return coreCrypto.wire_conversationExists(conversationId: groupID.bytes)
+    }
+
+    @discardableResult
+    public func processWelcomeMessage(welcomeMessage: String) throws -> MLSGroupID {
+        guard let messageBytes = welcomeMessage.base64EncodedBytes else {
+            logger.error("failed to convert welcome message to bytes")
+            throw MLSWelcomeMessageProcessingError.failedToConvertMessageToBytes
+        }
+
+        do {
+            let groupID = try coreCrypto.wire_processWelcomeMessage(welcomeMessage: messageBytes)
+            return MLSGroupID(groupID)
+        } catch {
+            logger.error("failed to process welcome message: \(String(describing: error))")
+            throw MLSWelcomeMessageProcessingError.failedToProcessMessage
+        }
+    }
+
 }
 
 // MARK: -  Helper types
@@ -470,35 +500,4 @@ private class MLSActionsProvider: MLSActionsProviderProtocol {
         try await action.perform(in: context)
     }
 
-}
-
-// MARK: - Process Welcome Message
-
-extension MLSController {
-
-    public func conversationExists(groupID: MLSGroupID) -> Bool {
-        return coreCrypto.wire_conversationExists(conversationId: groupID.bytes)
-    }
-
-    @discardableResult
-    public func processWelcomeMessage(welcomeMessage: String) throws -> MLSGroupID {
-        guard let messageBytes = welcomeMessage.base64EncodedBytes else {
-            logger.error("failed to convert welcome message to bytes")
-            throw MLSWelcomeMessageProcessingError.failedToConvertMessageToBytes
-        }
-
-        do {
-            let groupID = try coreCrypto.wire_processWelcomeMessage(welcomeMessage: messageBytes)
-            return MLSGroupID(bytes: groupID)
-        } catch {
-            logger.error("failed to process welcome message: \(String(describing: error))")
-            throw MLSWelcomeMessageProcessingError.failedToProcessMessage
-        }
-    }
-
-}
-
-public enum MLSWelcomeMessageProcessingError: Error {
-    case failedToConvertMessageToBytes
-    case failedToProcessMessage
 }

@@ -33,6 +33,10 @@ public struct MLSGroupID: Equatable {
         self.init(data)
     }
 
+    public init(_ bytes: Bytes) {
+        self.init(bytes.data)
+    }
+
     public init(_ data: Data) {
         self.data = data
     }
@@ -50,14 +54,6 @@ public struct MLSGroupID: Equatable {
 
     public var bytes: Bytes {
         return data.bytes
-    }
-
-    public init(data: Data) {
-        self.data = data
-    }
-
-    public init(bytes: Bytes) {
-        data = bytes.data
     }
 
 }
