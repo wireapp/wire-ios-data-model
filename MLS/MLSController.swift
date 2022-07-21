@@ -30,6 +30,9 @@ public protocol MLSControllerProtocol {
     @discardableResult
     func processWelcomeMessage(welcomeMessage: String) throws -> MLSGroupID
 
+    @available(iOS 15, *)
+    func addParticipants(users: [ZMUser], conversation: ZMConversation) async throws
+
 }
 
 public final class MLSController: MLSControllerProtocol {
