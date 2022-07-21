@@ -20,7 +20,7 @@ import Foundation
 import XCTest
 @testable import WireDataModel
 
-@available(iOS 13, *)
+@available(iOS 15, *)
 class MLSControllerTests: ZMConversationTestsBase {
 
     var sut: MLSController!
@@ -48,7 +48,7 @@ class MLSControllerTests: ZMConversationTestsBase {
 
     // MARK: - Create group
 
-    @available(iOS 13, *)
+    @available(iOS 15, *)
     func test_CreateGroup_ThrowsNoGroupID() async {
         // Given
         var conversation: ZMConversation!
@@ -74,7 +74,7 @@ class MLSControllerTests: ZMConversationTestsBase {
         }
     }
 
-    @available(iOS 13, *)
+    @available(iOS 15, *)
     func test_CreateGroup_ThrowsNotAnMLSConversation() async {
         // Given
         var conversation: ZMConversation!
@@ -101,7 +101,7 @@ class MLSControllerTests: ZMConversationTestsBase {
         }
     }
 
-    @available(iOS 13, *)
+    @available(iOS 15, *)
     func test_CreateGroup_ThrowsNoParticipantsToAdd() async {
         // Given
         var conversation: ZMConversation!
@@ -129,7 +129,7 @@ class MLSControllerTests: ZMConversationTestsBase {
         }
     }
 
-    @available(iOS 13, *)
+    @available(iOS 15, *)
     func test_CreateGroup_IsSuccessful() async {
         // Given
         let user1ID = UUID.create()

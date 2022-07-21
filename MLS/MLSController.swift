@@ -22,7 +22,7 @@ public protocol MLSControllerProtocol {
 
     func uploadKeyPackagesIfNeeded()
 
-    @available(iOS 13, *)
+    @available(iOS 15, *)
     func createGroup(for conversation: ZMConversation) async throws
 
     func conversationExists(groupID: MLSGroupID) -> Bool
@@ -107,7 +107,7 @@ public final class MLSController: MLSControllerProtocol {
     /// - Throws:
     ///   - MLSGroupCreationError if the group could not be created.
 
-    @available(iOS 13, *)
+    @available(iOS 15, *)
     public func createGroup(for conversation: ZMConversation) async throws {
         guard let context = context else { return }
 
@@ -142,7 +142,7 @@ public final class MLSController: MLSControllerProtocol {
         try await sendWelcomeMessage(messagesToSend.welcome)
     }
 
-    @available(iOS 13, *)
+    @available(iOS 15, *)
     private func claimKeyPackages(for users: [User]) async throws -> [KeyPackage] {
         do {
             guard let context = context else { return [] }
@@ -161,7 +161,7 @@ public final class MLSController: MLSControllerProtocol {
 
     }
 
-    @available(iOS 13, *)
+    @available(iOS 15, *)
     private func claimKeyPackages(
         for users: [User],
         in context: NSManagedObjectContext
@@ -209,7 +209,7 @@ public final class MLSController: MLSControllerProtocol {
         }
     }
 
-    @available(iOS 13, *)
+    @available(iOS 15, *)
     private func sendMessage(_ bytes: [UInt8]) async throws {
         do {
             guard let context = context else { return }
@@ -223,7 +223,7 @@ public final class MLSController: MLSControllerProtocol {
         }
     }
 
-    @available(iOS 13, *)
+    @available(iOS 15, *)
     private func sendWelcomeMessage(_ bytes: [UInt8]) async throws {
         do {
             guard let context = context else { return }
@@ -432,7 +432,7 @@ protocol MLSActionsProviderProtocol {
         resultHandler: @escaping UploadSelfMLSKeyPackagesAction.ResultHandler
     )
 
-    @available(iOS 13, *)
+    @available(iOS 15, *)
     func claimKeyPackages(
         userID: UUID,
         domain: String?,
@@ -440,13 +440,13 @@ protocol MLSActionsProviderProtocol {
         in context: NotificationContext
     ) async throws -> [KeyPackage]
 
-    @available(iOS 13, *)
+    @available(iOS 15, *)
     func sendMessage(
         base64EncodedMessage: String,
         in context: NotificationContext
     ) async throws
 
-    @available(iOS 13, *)
+    @available(iOS 15, *)
     func sendWelcomeMessage(
         base64EncodedMessage: String,
         in context: NotificationContext
@@ -466,7 +466,7 @@ private class MLSActionsProvider: MLSActionsProviderProtocol {
         action.send(in: context)
     }
 
-    @available(iOS 13, *)
+    @available(iOS 15, *)
     func claimKeyPackages(
         userID: UUID,
         domain: String?,
@@ -482,7 +482,7 @@ private class MLSActionsProvider: MLSActionsProviderProtocol {
         return try await action.perform(in: context)
     }
 
-    @available(iOS 13, *)
+    @available(iOS 15, *)
     func sendMessage(
         base64EncodedMessage: String,
         in context: NotificationContext
@@ -491,7 +491,7 @@ private class MLSActionsProvider: MLSActionsProviderProtocol {
         try await action.perform(in: context)
     }
 
-    @available(iOS 13, *)
+    @available(iOS 15, *)
     func sendWelcomeMessage(
         base64EncodedMessage: String,
         in context: NotificationContext
