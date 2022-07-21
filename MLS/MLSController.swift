@@ -232,6 +232,47 @@ public final class MLSController: MLSControllerProtocol {
         }
     }
 
+    // MARK: - Add Participant to group
+
+    public func addParticipants(users: [ZMUser], conversation: ZMConversation) throws {
+        Task {
+
+            guard let context = context else { return }
+
+            var mlsUsers = [User]()
+            var groupID: MLSGroupID?
+            var messageProtocol: MessageProtocol?
+
+            context.performGroupedAndWait { _ in
+                messageProtocol = conversation.messageProtocol
+                groupID = conversation.mlsGroupID
+                mlsUsers = users.map(User.init)
+            }
+
+            guard let groupID = groupID else {
+                throw MLSGroupCreationError.noGroupID
+            }
+
+            guard messageProtocol == .mls else {
+                throw MLSGroupCreationError.notAnMLSConversation
+            }
+
+            guard !users.isEmpty else {
+                throw MLSGroupCreationError.noParticipantsToAdd
+            }
+
+            let keyPackages = try await claimKeyPackages(for: mlsUsers)
+            let invitees = keyPackages.map(Invitee.init(from:))
+            let messagesToSend = try createGroup(id: groupID, invitees: invitees)
+
+            guard let messagesToSend = messagesToSend else { return }
+            try await sendMessage(messagesToSend.message)
+            try await sendWelcomeMessage(messagesToSend.welcome)
+
+        }
+    }
+
+
     // MARK: - Key packages
 
     enum MLSKeyPackagesError: Error {
