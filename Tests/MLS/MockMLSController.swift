@@ -23,10 +23,18 @@ class MockMLSController: MLSControllerProtocol {
 
     // MARK: - Types
 
+    enum MockError: Error {
+
+        case unmockedMethodCalled
+
+    }
+
     struct Calls {
 
-        var createGroup = [ZMConversation]()
         var uploadKeyPackagesIfNeeded: [Void] = []
+        var createGroup = [ZMConversation]()
+        var conversationExists = [MLSGroupID]()
+        var processWelcomeMessage = [String]()
 
     }
 
@@ -36,12 +44,31 @@ class MockMLSController: MLSControllerProtocol {
 
     // MARK: - Methods
 
+    func uploadKeyPackagesIfNeeded() {
+        calls.uploadKeyPackagesIfNeeded.append(())
+    }
+
     func createGroup(for conversation: ZMConversation) throws {
         calls.createGroup.append(conversation)
     }
 
-    func uploadKeyPackagesIfNeeded() {
-        calls.uploadKeyPackagesIfNeeded.append(())
+    typealias ConversationExistsMock = (MLSGroupID) -> Bool
+
+    var conversationExistsMock: ConversationExistsMock?
+
+    func conversationExists(groupID: MLSGroupID) -> Bool {
+        calls.conversationExists.append(groupID)
+        return conversationExistsMock?(groupID) ?? false
+    }
+
+    typealias ProcessWelcomeMessageMock = (String) throws -> MLSGroupID
+
+    var processWelcomeMessageMock: ProcessWelcomeMessageMock?
+
+    func processWelcomeMessage(welcomeMessage: String) throws -> MLSGroupID {
+        calls.processWelcomeMessage.append(welcomeMessage)
+        guard let mock = processWelcomeMessageMock else { throw MockError.unmockedMethodCalled }
+        return try mock(welcomeMessage)
     }
 
 }

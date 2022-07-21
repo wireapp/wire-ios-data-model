@@ -350,14 +350,6 @@ private struct User {
 
 // MARK: - Helper Extensions
 
-private extension Array where Element == UInt8 {
-
-    var base64EncodedString: String {
-        return Data(self).base64EncodedString()
-    }
-
-}
-
 private extension String {
 
     var utf8Data: Data? {
