@@ -21,7 +21,7 @@ import Foundation
 public protocol MLSControllerProtocol {
 
     @available(iOS 13, *)
-    func createGroup(for conversation: ZMConversation) throws
+    func createGroup(for conversation: ZMConversation) async throws
 
     func uploadKeyPackagesIfNeeded()
 
@@ -37,18 +37,18 @@ public final class MLSController: MLSControllerProtocol {
 
     let targetUnclaimedKeyPackageCount = 100
 
-    let actionProvider: MLSActionsProviderProtocol
+    let actionsProvider: MLSActionsProviderProtocol
 
     // MARK: - Life cycle
 
     init(
         context: NSManagedObjectContext,
         coreCrypto: CoreCryptoProtocol,
-        actionProvider: MLSActionsProviderProtocol = MLSActionsProvider()
+        actionsProvider: MLSActionsProviderProtocol = MLSActionsProvider()
     ) {
         self.context = context
         self.coreCrypto = coreCrypto
-        self.actionProvider = actionProvider
+        self.actionsProvider = actionsProvider
 
         do {
             try generatePublicKeysIfNeeded()
@@ -89,7 +89,6 @@ public final class MLSController: MLSControllerProtocol {
         case failedToClaimKeyPackages
         case failedToCreateGroup
         case failedToAddMembers
-        case noMessagesToSend
         case failedToSendHandshakeMessage
         case failedToSendWelcomeMessage
 
@@ -104,38 +103,38 @@ public final class MLSController: MLSControllerProtocol {
     ///   - MLSGroupCreationError if the group could not be created.
 
     @available(iOS 13, *)
-    public func createGroup(for conversation: ZMConversation) throws {
-        Task {
-            guard let context = context else { return }
+    public func createGroup(for conversation: ZMConversation) async throws {
+        guard let context = context else { return }
 
-            var groupID: MLSGroupID?
-            var messageProtocol: MessageProtocol?
-            var users = [User]()
+        var groupID: MLSGroupID?
+        var messageProtocol: MessageProtocol?
+        var users = [User]()
 
-            context.performGroupedAndWait { _ in
-                groupID = conversation.mlsGroupID
-                messageProtocol = conversation.messageProtocol
-                users = conversation.localParticipants.map(User.init)
-            }
-
-            guard let groupID = groupID else {
-                throw MLSGroupCreationError.noGroupID
-            }
-
-            guard messageProtocol == .mls else {
-                throw MLSGroupCreationError.notAnMLSConversation
-            }
-
-            guard !users.isEmpty else {
-                throw MLSGroupCreationError.noParticipantsToAdd
-            }
-
-            let keyPackages = try await claimKeyPackages(for: users)
-            let invitees = keyPackages.map(Invitee.init(from:))
-            let messagesToSend = try createGroup(id: groupID, invitees: invitees)
-            try await sendMessage(messagesToSend.message)
-            try await sendWelcomeMessage(messagesToSend.welcome)
+        context.performGroupedAndWait { _ in
+            groupID = conversation.mlsGroupID
+            messageProtocol = conversation.messageProtocol
+            users = conversation.localParticipants.map(User.init)
         }
+
+        guard let groupID = groupID else {
+            throw MLSGroupCreationError.noGroupID
+        }
+
+        guard messageProtocol == .mls else {
+            throw MLSGroupCreationError.notAnMLSConversation
+        }
+
+        guard !users.isEmpty else {
+            throw MLSGroupCreationError.noParticipantsToAdd
+        }
+
+        let keyPackages = try await claimKeyPackages(for: users)
+        let invitees = keyPackages.map(Invitee.init(from:))
+        let messagesToSend = try createGroup(id: groupID, invitees: invitees)
+
+        guard let messagesToSend = messagesToSend else { return }
+        try await sendMessage(messagesToSend.message)
+        try await sendWelcomeMessage(messagesToSend.welcome)
     }
 
     @available(iOS 13, *)
@@ -164,26 +163,24 @@ public final class MLSController: MLSControllerProtocol {
     ) -> AsyncThrowingStream<([KeyPackage]), Error> {
         var index = 0
 
-        return AsyncThrowingStream {
+        return AsyncThrowingStream { [actionsProvider] in
             guard let user = users.element(atIndex: index) else { return nil }
 
             index += 1
 
-            var action = ClaimMLSKeyPackageAction(
+            return try await actionsProvider.claimKeyPackages(
+                userID: user.id,
                 domain: user.domain,
-                userId: user.id,
-                excludedSelfClientId: user.selfClientID
+                excludedSelfClientID: user.selfClientID,
+                in: context.notificationContext
             )
-
-            return try await action.perform(in: context.notificationContext)
         }
     }
 
     private func createGroup(
         id: MLSGroupID,
         invitees: [Invitee]
-    ) throws -> MemberAddedMessages {
-        let messagesToSend: MemberAddedMessages?
+    ) throws -> MemberAddedMessages? {
         let config = ConversationConfiguration(ciphersuite: .mls128Dhkemx25519Aes128gcmSha256Ed25519)
 
         do {
@@ -197,7 +194,7 @@ public final class MLSController: MLSControllerProtocol {
         }
 
         do {
-            messagesToSend = try coreCrypto.wire_addClientsToConversation(
+            return try coreCrypto.wire_addClientsToConversation(
                 conversationId: id.bytes,
                 clients: invitees
             )
@@ -205,21 +202,16 @@ public final class MLSController: MLSControllerProtocol {
             logger.error("failed to add members: \(String(describing: error))")
             throw MLSGroupCreationError.failedToAddMembers
         }
-
-        guard let messagesToSend = messagesToSend else {
-            logger.error("added participants, but no messages to send")
-            throw MLSGroupCreationError.noMessagesToSend
-        }
-
-        return messagesToSend
     }
 
     @available(iOS 13, *)
     private func sendMessage(_ bytes: [UInt8]) async throws {
         do {
             guard let context = context else { return }
-            var action = SendMLSMessageAction(mlsMessage: bytes.base64EncodedString)
-            try await action.perform(in: context.notificationContext)
+            try await actionsProvider.sendMessage(
+                base64EncodedMessage: bytes.base64EncodedString,
+                in: context.notificationContext
+            )
         } catch let error {
             logger.error("failed to send mls message: \(String(describing: error))")
             throw MLSGroupCreationError.failedToSendHandshakeMessage
@@ -230,8 +222,10 @@ public final class MLSController: MLSControllerProtocol {
     private func sendWelcomeMessage(_ bytes: [UInt8]) async throws {
         do {
             guard let context = context else { return }
-            var action = SendMLSWelcomeAction(body: bytes.base64EncodedString)
-            try await action.perform(in: context.notificationContext)
+            try await actionsProvider.sendWelcomeMessage(
+                base64EncodedMessage: bytes.base64EncodedString,
+                in: context.notificationContext
+            )
         } catch let error {
             logger.error("failed to send welcome message: \(String(describing: error))")
             throw MLSGroupCreationError.failedToSendWelcomeMessage
@@ -280,7 +274,7 @@ public final class MLSController: MLSControllerProtocol {
     }
 
     private func countUnclaimedKeyPackages(clientID: String, context: NotificationContext, completion: @escaping (Int) -> Void) {
-        actionProvider.countUnclaimedKeyPackages(clientID: clientID, context: context) { result in
+        actionsProvider.countUnclaimedKeyPackages(clientID: clientID, context: context) { result in
             switch result {
             case .success(let count):
                 completion(count)
@@ -315,7 +309,7 @@ public final class MLSController: MLSControllerProtocol {
     }
 
     private func uploadKeyPackages(clientID: String, keyPackages: [String], context: NotificationContext) {
-        actionProvider.uploadKeyPackages(clientID: clientID, keyPackages: keyPackages, context: context) { result in
+        actionsProvider.uploadKeyPackages(clientID: clientID, keyPackages: keyPackages, context: context) { result in
             switch result {
             case .success:
                 break
@@ -411,6 +405,26 @@ protocol MLSActionsProviderProtocol {
         resultHandler: @escaping UploadSelfMLSKeyPackagesAction.ResultHandler
     )
 
+    @available(iOS 13, *)
+    func claimKeyPackages(
+        userID: UUID,
+        domain: String?,
+        excludedSelfClientID: String?,
+        in context: NotificationContext
+    ) async throws -> [KeyPackage]
+
+    @available(iOS 13, *)
+    func sendMessage(
+        base64EncodedMessage: String,
+        in context: NotificationContext
+    ) async throws
+
+    @available(iOS 13, *)
+    func sendWelcomeMessage(
+        base64EncodedMessage: String,
+        in context: NotificationContext
+    ) async throws
+
 }
 
 private class MLSActionsProvider: MLSActionsProviderProtocol {
@@ -423,6 +437,40 @@ private class MLSActionsProvider: MLSActionsProviderProtocol {
     func uploadKeyPackages(clientID: String, keyPackages: [String], context: NotificationContext, resultHandler: @escaping UploadSelfMLSKeyPackagesAction.ResultHandler) {
         let action = UploadSelfMLSKeyPackagesAction(clientID: clientID, keyPackages: keyPackages, resultHandler: resultHandler)
         action.send(in: context)
+    }
+
+    @available(iOS 13, *)
+    func claimKeyPackages(
+        userID: UUID,
+        domain: String?,
+        excludedSelfClientID: String?,
+        in context: NotificationContext
+    ) async throws -> [KeyPackage] {
+        var action = ClaimMLSKeyPackageAction(
+            domain: domain,
+            userId: userID,
+            excludedSelfClientId: excludedSelfClientID
+        )
+
+        return try await action.perform(in: context)
+    }
+
+    @available(iOS 13, *)
+    func sendMessage(
+        base64EncodedMessage: String,
+        in context: NotificationContext
+    ) async throws {
+        var action = SendMLSMessageAction(mlsMessage: base64EncodedMessage)
+        try await action.perform(in: context)
+    }
+
+    @available(iOS 13, *)
+    func sendWelcomeMessage(
+        base64EncodedMessage: String,
+        in context: NotificationContext
+    ) async throws {
+        var action = SendMLSMessageAction(mlsMessage: base64EncodedMessage)
+        try await action.perform(in: context)
     }
 
 }
