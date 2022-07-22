@@ -31,7 +31,7 @@ public protocol MLSControllerProtocol {
     func processWelcomeMessage(welcomeMessage: String) throws -> MLSGroupID
 
     @available(iOS 15, *)
-    func addParticipants(users: [ZMUser], conversation: ZMConversation) async throws
+    func addMembersToConversation(with users: [MLSUser], for groupID: MLSGroupID) async throws
 
 }
 
@@ -116,12 +116,12 @@ public final class MLSController: MLSControllerProtocol {
 
         var groupID: MLSGroupID?
         var messageProtocol: MessageProtocol?
-        var users = [User]()
+        var users = [MLSUser]()
 
         context.performGroupedAndWait { _ in
             groupID = conversation.mlsGroupID
             messageProtocol = conversation.messageProtocol
-            users = conversation.localParticipants.map(User.init)
+            users = conversation.localParticipants.map(MLSUser.init)
         }
 
         guard let groupID = groupID else {
@@ -146,7 +146,7 @@ public final class MLSController: MLSControllerProtocol {
     }
 
     @available(iOS 15, *)
-    private func claimKeyPackages(for users: [User]) async throws -> [KeyPackage] {
+    private func claimKeyPackages(for users: [MLSUser]) async throws -> [KeyPackage] {
         do {
             guard let context = context else { return [] }
 
@@ -166,7 +166,7 @@ public final class MLSController: MLSControllerProtocol {
 
     @available(iOS 15, *)
     private func claimKeyPackages(
-        for users: [User],
+        for users: [MLSUser],
         in context: NSManagedObjectContext
     ) -> AsyncThrowingStream<([KeyPackage]), Error> {
         var index = 0
@@ -243,43 +243,28 @@ public final class MLSController: MLSControllerProtocol {
     // MARK: - Add participants to mls group
 
     @available(iOS 15, *)
-    public func addParticipants(users: [ZMUser], conversation: ZMConversation) async throws {
+    public func addMembersToConversation(with users: [MLSUser], for groupID: MLSGroupID) async throws {
 
-            guard let context = context else { return }
+        guard !users.isEmpty else {
+            throw MLSGroupCreationError.noParticipantsToAdd
+        }
 
-            var mlsUsers = [User]()
-            var groupID: MLSGroupID?
-            var messageProtocol: MessageProtocol?
+        guard !groupID.data.isEmpty else {
+            throw MLSGroupCreationError.noGroupID
+        }
 
-            context.performGroupedAndWait { _ in
-                messageProtocol = conversation.messageProtocol
-                groupID = conversation.mlsGroupID
-                mlsUsers = users.map(User.init)
-            }
 
-            guard let groupID = groupID else {
-                throw MLSGroupCreationError.noGroupID
-            }
+        let keyPackages = try await claimKeyPackages(for: users)
+        let invitees = keyPackages.map(Invitee.init(from:))
+        let messagesToSend = try addMembers(id: groupID, invitees: invitees)
 
-            guard messageProtocol == .mls else {
-                throw MLSGroupCreationError.notAnMLSConversation
-            }
-
-            guard !users.isEmpty else {
-                throw MLSGroupCreationError.noParticipantsToAdd
-            }
-
-            let keyPackages = try await claimKeyPackages(for: mlsUsers)
-            let invitees = keyPackages.map(Invitee.init(from:))
-            let messagesToSend = try addParticipant(id: groupID, invitees: invitees)
-
-            guard let messagesToSend = messagesToSend else { return }
-            try await sendMessage(messagesToSend.message)
-            try await sendWelcomeMessage(messagesToSend.welcome)
+        guard let messagesToSend = messagesToSend else { return }
+        try await sendMessage(messagesToSend.message)
+        try await sendWelcomeMessage(messagesToSend.welcome)
 
     }
 
-    private func addParticipant(
+    private func addMembers(
         id: MLSGroupID,
         invitees: [Invitee]
     ) throws -> MemberAddedMessages? {
@@ -417,7 +402,7 @@ public final class MLSController: MLSControllerProtocol {
 
 // MARK: -  Helper types
 
-private struct User {
+public struct MLSUser {
 
     let id: UUID
     let domain: String
@@ -432,6 +417,12 @@ private struct User {
         } else {
             selfClientID = nil
         }
+    }
+
+    public init(id: UUID, domain: String, selfClientID: String? = nil) {
+        self.id = id
+        self.domain = domain
+        self.selfClientID = selfClientID
     }
 
 }

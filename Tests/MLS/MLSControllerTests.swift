@@ -225,37 +225,22 @@ class MLSControllerTests: ZMConversationTestsBase {
     }
 
     @available(iOS 15, *)
-    func test_AddParticipantsToConversations_IsSuccessful() async {
+    func test_AddingMembersToConversation_Successfully() async {
         // Given
         let domain = "example.com"
+        let id = UUID.create()
         let mlsGroupID = MLSGroupID(Data([1, 2, 3]))
-        var conversation: ZMConversation!
-        var mlsUser = [ZMUser]()
+        let mlsUser: [MLSUser] = [MLSUser(id: id, domain: domain)]
 
-        uiMOC.performAndWait {
-            let user = createUser(in: uiMOC)
-            user.remoteIdentifier = UUID.create()
-            user.domain = domain
-
-            conversation = createConversation(in: uiMOC, with: [user])
-            conversation.mlsGroupID = mlsGroupID
-            conversation.messageProtocol = .mls
-
-            let user2 = createUser(in: uiMOC)
-            user2.remoteIdentifier = UUID.create()
-            user2.domain = domain
-            mlsUser.append(user)
-        }
-
-        // Mock first key package.
+        // Mock key package.
         var keyPackage: KeyPackage!
 
         mockActionsProvider.claimKeyPackagesMocks.append({ userID, _, _ in
             keyPackage = KeyPackage(
-                client: "client1",
+                client: "client",
                 domain: domain,
                 keyPackage: Data([1, 2, 3]).base64EncodedString(),
-                keyPackageRef: "keyPackageRef1",
+                keyPackageRef: "keyPackageRef",
                 userID: userID
             )
 
@@ -280,7 +265,7 @@ class MLSControllerTests: ZMConversationTestsBase {
 
         do {
             // When
-            try await sut.addParticipants(users: mlsUser, conversation: conversation)
+            try await sut.addMembersToConversation(with: mlsUser, for: mlsGroupID)
 
         } catch let error {
             XCTFail("Unexpected error: \(String(describing: error))")
@@ -290,10 +275,55 @@ class MLSControllerTests: ZMConversationTestsBase {
         XCTAssertEqual(addClientsToConversationCalls.count, 1)
         XCTAssertEqual(addClientsToConversationCalls[0].0, mlsGroupID.bytes)
 
-        let invitee1 = Invitee(from: keyPackage)
+        let invitee = Invitee(from: keyPackage)
         let actualInvitees = addClientsToConversationCalls[0].1
         XCTAssertEqual(actualInvitees.count, 1)
-        XCTAssertTrue(actualInvitees.contains(invitee1))
+        XCTAssertTrue(actualInvitees.contains(invitee))
     }
 
+    @available(iOS 15, *)
+    func test_AddingMembersToConversation_ThrowsNoParticipantsToAdd() async {
+        // Given
+        let mlsGroupID = MLSGroupID(Data([1, 2, 3]))
+        let mlsUser = [MLSUser]()
+
+        do {
+            // When
+            try await sut.addMembersToConversation(with: mlsUser, for: mlsGroupID)
+
+        } catch let error {
+            // Then
+            switch error {
+            case MLSController.MLSGroupCreationError.noParticipantsToAdd:
+                break
+
+            default:
+                XCTFail("Unexpected error: \(String(describing: error))")
+            }
+        }
+    }
+
+    @available(iOS 15, *)
+    func test_AddingMembersToConversation_ThrowsNoGroupID() async {
+        // Given
+        let domain = "example.com"
+        let id = UUID.create()
+        let mlsGroupID = MLSGroupID(Data([]))
+        let mlsUser: [MLSUser] = [MLSUser(id: id, domain: domain)]
+
+        do {
+            // When
+            try await sut.addMembersToConversation(with: mlsUser, for: mlsGroupID)
+
+        } catch let error {
+            // Then
+            switch error {
+            case MLSController.MLSGroupCreationError.noGroupID:
+                break
+
+            default:
+                XCTFail("Unexpected error: \(String(describing: error))")
+            }
+        }
+    }
 }

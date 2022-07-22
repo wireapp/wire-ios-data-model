@@ -35,6 +35,7 @@ class MockMLSController: MLSControllerProtocol {
         var createGroup = [ZMConversation]()
         var conversationExists = [MLSGroupID]()
         var processWelcomeMessage = [String]()
+        var addMembersToConversation = [([MLSUser], MLSGroupID)]()
 
     }
 
@@ -69,6 +70,10 @@ class MockMLSController: MLSControllerProtocol {
         calls.processWelcomeMessage.append(welcomeMessage)
         guard let mock = processWelcomeMessageMock else { throw MockError.unmockedMethodCalled }
         return try mock(welcomeMessage)
+    }
+
+    func addMembersToConversation(with users: [MLSUser], for groupID: MLSGroupID) throws {
+        calls.addMembersToConversation.append((users, groupID))
     }
 
 }
