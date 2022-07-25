@@ -158,7 +158,7 @@ public final class MLSController: MLSControllerProtocol {
 
             return result
         } catch let error {
-            logger.error("failed to claim key packages: \(String(describing: error))")
+            logger.warn("failed to claim key packages: \(String(describing: error))")
             throw MLSGroupCreationError.failedToClaimKeyPackages
         }
 
@@ -221,7 +221,7 @@ public final class MLSController: MLSControllerProtocol {
                 in: context.notificationContext
             )
         } catch let error {
-            logger.error("failed to send mls message: \(String(describing: error))")
+            logger.warn("failed to send mls message: \(String(describing: error))")
             throw MLSGroupCreationError.failedToSendHandshakeMessage
         }
     }
@@ -235,13 +235,17 @@ public final class MLSController: MLSControllerProtocol {
                 in: context.notificationContext
             )
         } catch let error {
-            logger.error("failed to send welcome message: \(String(describing: error))")
+            logger.warn("failed to send welcome message: \(String(describing: error))")
             throw MLSGroupCreationError.failedToSendWelcomeMessage
         }
     }
 
     // MARK: - Add participants to mls group
 
+    /// Add users an MLS group in the given conversation.
+    /// - Parameters:
+    ///   - users: Users represents the MLS group to be added.
+    ///   - groupID: Represents the MLS conversation group ID in which users to be added
     @available(iOS 15, *)
     public func addMembersToConversation(with users: [MLSUser], for groupID: MLSGroupID) async throws {
 

@@ -326,4 +326,124 @@ class MLSControllerTests: ZMConversationTestsBase {
             }
         }
     }
+
+    @available(iOS 15, *)
+    func test_AddingMembersToConversation_ThrowsFailedToClaimKeyPackages() async {
+        // Given
+        let domain = "example.com"
+        let id = UUID.create()
+        let mlsGroupID = MLSGroupID(Data([1, 2, 3]))
+        let mlsUser: [MLSUser] = [MLSUser(id: id, domain: domain)]
+
+        do {
+            // When
+            try await sut.addMembersToConversation(with: mlsUser, for: mlsGroupID)
+
+        } catch let error {
+            // Then
+            switch error {
+            case MLSController.MLSGroupCreationError.failedToClaimKeyPackages:
+                break
+
+            default:
+                XCTFail("Unexpected error: \(String(describing: error))")
+            }
+        }
+    }
+
+    @available(iOS 15, *)
+    func test_AddingMembersToConversation_ThrowsFailedToSendHandshakeMessage() async {
+        // Given
+        let domain = "example.com"
+        let id = UUID.create()
+        let mlsGroupID = MLSGroupID(Data([1, 2, 3]))
+        let mlsUser: [MLSUser] = [MLSUser(id: id, domain: domain)]
+
+        // Mock key package.
+        var keyPackage: KeyPackage!
+
+        mockActionsProvider.claimKeyPackagesMocks.append({ userID, _, _ in
+            keyPackage = KeyPackage(
+                client: "client",
+                domain: domain,
+                keyPackage: Data([1, 2, 3]).base64EncodedString(),
+                keyPackageRef: "keyPackageRef",
+                userID: userID
+            )
+
+            return [keyPackage]
+        })
+
+        // Mock return value for adding clients to conversation.
+        mockCoreCrypto.mockAddClientsToConversation = MemberAddedMessages(
+            message: [0, 0, 0, 0],
+            welcome: [1, 1, 1, 1]
+        )
+
+        do {
+            // When
+            try await sut.addMembersToConversation(with: mlsUser, for: mlsGroupID)
+
+        } catch let error {
+            // Then
+            switch error {
+            case MLSController.MLSGroupCreationError.failedToSendHandshakeMessage:
+                break
+
+            default:
+                XCTFail("Unexpected error: \(String(describing: error))")
+            }
+        }
+    }
+
+    @available(iOS 15, *)
+    func test_AddingMembersToConversation_ThrowsFailedToSendWelcomeMessage() async {
+        // Given
+        let domain = "example.com"
+        let id = UUID.create()
+        let mlsGroupID = MLSGroupID(Data([1, 2, 3]))
+        let mlsUser: [MLSUser] = [MLSUser(id: id, domain: domain)]
+
+        // Mock key package.
+        var keyPackage: KeyPackage!
+
+        mockActionsProvider.claimKeyPackagesMocks.append({ userID, _, _ in
+            keyPackage = KeyPackage(
+                client: "client",
+                domain: domain,
+                keyPackage: Data([1, 2, 3]).base64EncodedString(),
+                keyPackageRef: "keyPackageRef",
+                userID: userID
+            )
+
+            return [keyPackage]
+        })
+
+        // Mock return value for adding clients to conversation.
+        mockCoreCrypto.mockAddClientsToConversation = MemberAddedMessages(
+            message: [0, 0, 0, 0],
+            welcome: [1, 1, 1, 1]
+        )
+
+        // Mock sending message.
+        mockActionsProvider.sendMessageMocks.append({ message in
+            XCTAssertEqual(message, Data([0, 0, 0, 0]).base64EncodedString())
+        })
+
+        do {
+            // When
+            try await sut.addMembersToConversation(with: mlsUser, for: mlsGroupID)
+
+        } catch let error {
+            // Then
+            switch error {
+            case MLSController.MLSGroupCreationError.failedToSendWelcomeMessage:
+                break
+
+            default:
+                XCTFail("Unexpected error: \(String(describing: error))")
+            }
+        }
+    }
+
 }
