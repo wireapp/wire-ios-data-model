@@ -23,7 +23,7 @@ public protocol MLSControllerProtocol {
     func uploadKeyPackagesIfNeeded()
 
     @available(iOS 15, *)
-    func createGroup(for conversation: ZMConversation) async throws
+    func createGroup(for groupID: MLSGroupID, with users: [MLSUser]) async throws
 
     func conversationExists(groupID: MLSGroupID) -> Bool
 
@@ -88,8 +88,6 @@ public final class MLSController: MLSControllerProtocol {
 
     enum MLSGroupCreationError: Error {
 
-        case noGroupID
-        case notAnMLSConversation
         case noParticipantsToAdd
         case failedToClaimKeyPackages
         case failedToCreateGroup
@@ -108,26 +106,8 @@ public final class MLSController: MLSControllerProtocol {
     ///   - MLSGroupCreationError if the group could not be created.
 
     @available(iOS 15, *)
-    public func createGroup(for conversation: ZMConversation) async throws {
+    public func createGroup(for groupID: MLSGroupID, with users: [MLSUser]) async throws {
         guard let context = context else { return }
-
-        var groupID: MLSGroupID?
-        var messageProtocol: MessageProtocol?
-        var users = [User]()
-
-        context.performGroupedAndWait { _ in
-            groupID = conversation.mlsGroupID
-            messageProtocol = conversation.messageProtocol
-            users = conversation.localParticipants.map(User.init)
-        }
-
-        guard let groupID = groupID else {
-            throw MLSGroupCreationError.noGroupID
-        }
-
-        guard messageProtocol == .mls else {
-            throw MLSGroupCreationError.notAnMLSConversation
-        }
 
         guard !users.isEmpty else {
             throw MLSGroupCreationError.noParticipantsToAdd
@@ -143,7 +123,7 @@ public final class MLSController: MLSControllerProtocol {
     }
 
     @available(iOS 15, *)
-    private func claimKeyPackages(for users: [User]) async throws -> [KeyPackage] {
+    private func claimKeyPackages(for users: [MLSUser]) async throws -> [KeyPackage] {
         do {
             guard let context = context else { return [] }
 
@@ -163,7 +143,7 @@ public final class MLSController: MLSControllerProtocol {
 
     @available(iOS 15, *)
     private func claimKeyPackages(
-        for users: [User],
+        for users: [MLSUser],
         in context: NSManagedObjectContext
     ) -> AsyncThrowingStream<([KeyPackage]), Error> {
         var index = 0
@@ -359,13 +339,23 @@ public final class MLSController: MLSControllerProtocol {
 
 // MARK: -  Helper types
 
-private struct User {
+public struct MLSUser {
 
-    let id: UUID
-    let domain: String
-    let selfClientID: String?
+    public let id: UUID
+    public let domain: String
+    public let selfClientID: String?
 
-    init(from user: ZMUser) {
+    public init(
+        id: UUID,
+        domain: String,
+        selfClientID: String? = nil
+    ) {
+        self.id = id
+        self.domain = domain
+        self.selfClientID = selfClientID
+    }
+
+    public init(from user: ZMUser) {
         id = user.remoteIdentifier
         domain = user.domain?.selfOrNilIfEmpty ?? APIVersion.domain!
 

@@ -32,7 +32,7 @@ class MockMLSController: MLSControllerProtocol {
     struct Calls {
 
         var uploadKeyPackagesIfNeeded: [Void] = []
-        var createGroup = [ZMConversation]()
+        var createGroup = [(MLSGroupID, [MLSUser])]()
         var conversationExists = [MLSGroupID]()
         var processWelcomeMessage = [String]()
 
@@ -48,8 +48,8 @@ class MockMLSController: MLSControllerProtocol {
         calls.uploadKeyPackagesIfNeeded.append(())
     }
 
-    func createGroup(for conversation: ZMConversation) throws {
-        calls.createGroup.append(conversation)
+    func createGroup(for groupID: MLSGroupID, with users: [MLSUser]) throws {
+        calls.createGroup.append((groupID, users))
     }
 
     typealias ConversationExistsMock = (MLSGroupID) -> Bool
