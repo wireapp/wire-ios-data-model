@@ -190,7 +190,7 @@ public final class MLSController: MLSControllerProtocol {
     }
 
     @available(iOS 15, *)
-    private func sendMessage(_ bytes: [UInt8]) async throws {
+    private func sendMessage(_ bytes: Bytes) async throws {
         do {
             guard let context = context else { return }
             try await actionsProvider.sendMessage(
@@ -204,7 +204,7 @@ public final class MLSController: MLSControllerProtocol {
     }
 
     @available(iOS 15, *)
-    private func sendWelcomeMessage(_ bytes: [UInt8]) async throws {
+    private func sendWelcomeMessage(_ bytes:  Bytes) async throws {
         do {
             guard let context = context else { return }
             try await actionsProvider.sendWelcomeMessage(
