@@ -214,7 +214,7 @@ public final class MLSController: MLSControllerProtocol {
         do {
             guard let context = context else { return }
             try await actionsProvider.sendMessage(
-                base64EncodedMessage: bytes.base64EncodedString,
+                bytes.data,
                 in: context.notificationContext
             )
         } catch let error {
@@ -228,7 +228,7 @@ public final class MLSController: MLSControllerProtocol {
         do {
             guard let context = context else { return }
             try await actionsProvider.sendWelcomeMessage(
-                base64EncodedMessage: bytes.base64EncodedString,
+                bytes.data,
                 in: context.notificationContext
             )
         } catch let error {
@@ -442,13 +442,13 @@ protocol MLSActionsProviderProtocol {
 
     @available(iOS 15, *)
     func sendMessage(
-        base64EncodedMessage: String,
+        _ message: Data,
         in context: NotificationContext
     ) async throws
 
     @available(iOS 15, *)
     func sendWelcomeMessage(
-        base64EncodedMessage: String,
+        _ welcomeMessage: Data,
         in context: NotificationContext
     ) async throws
 
@@ -484,19 +484,19 @@ private class MLSActionsProvider: MLSActionsProviderProtocol {
 
     @available(iOS 15, *)
     func sendMessage(
-        base64EncodedMessage: String,
+        _ message: Data,
         in context: NotificationContext
     ) async throws {
-        var action = SendMLSMessageAction(mlsMessage: base64EncodedMessage)
+        var action = SendMLSMessageAction(message: message)
         try await action.perform(in: context)
     }
 
     @available(iOS 15, *)
     func sendWelcomeMessage(
-        base64EncodedMessage: String,
+        _ welcomeMessage: Data,
         in context: NotificationContext
     ) async throws {
-        var action = SendMLSMessageAction(mlsMessage: base64EncodedMessage)
+        var action = SendMLSWelcomeAction(welcomeMessage: welcomeMessage)
         try await action.perform(in: context)
     }
 

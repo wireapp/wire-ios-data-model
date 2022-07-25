@@ -190,12 +190,12 @@ class MLSControllerTests: ZMConversationTestsBase {
 
         // Mock sending message.
         mockActionsProvider.sendMessageMocks.append({ message in
-            XCTAssertEqual(message, Data([0, 0, 0, 0]).base64EncodedString())
+            XCTAssertEqual(message, Data([0, 0, 0, 0]))
         })
 
         // Mock sending welcome message.
         mockActionsProvider.sendWelcomeMessageMocks.append({ message in
-            XCTAssertEqual(message, Data([1, 1, 1, 1]).base64EncodedString())
+            XCTAssertEqual(message, Data([1, 1, 1, 1]))
         })
 
         do {

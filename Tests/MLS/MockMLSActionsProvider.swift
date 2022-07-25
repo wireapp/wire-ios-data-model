@@ -63,28 +63,28 @@ class MockMLSActionsProvider: MLSActionsProviderProtocol {
         return mock(userID, domain, excludedSelfClientID)
     }
 
-    typealias SendMessageMock = (String) -> Void
+    typealias SendMessageMock = (Data) -> Void
     var sendMessageMocks = [SendMessageMock]()
 
     func sendMessage(
-        base64EncodedMessage: String,
+        _ message: Data,
         in context: NotificationContext
     ) async throws {
         guard let mock = sendMessageMocks.first else { throw MockError.unmockedMethodInvoked }
         sendMessageMocks.removeFirst()
-        return mock(base64EncodedMessage)
+        return mock(message)
     }
 
-    typealias SendWelcomeMessageMock = (String) -> Void
+    typealias SendWelcomeMessageMock = (Data) -> Void
     var sendWelcomeMessageMocks = [SendWelcomeMessageMock]()
 
     func sendWelcomeMessage(
-        base64EncodedMessage: String,
+        _ welcomeMessage: Data,
         in context: NotificationContext
     ) async throws {
         guard let mock = sendWelcomeMessageMocks.first else { throw MockError.unmockedMethodInvoked }
         sendWelcomeMessageMocks.removeFirst()
-        return mock(base64EncodedMessage)
+        return mock(welcomeMessage)
     }
 
 }
