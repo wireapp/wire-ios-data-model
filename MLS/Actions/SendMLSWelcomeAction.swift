@@ -50,7 +50,6 @@ public class SendMLSWelcomeAction: EntityAction {
 
     // MARK: - Properties
 
-    // TODO: Find out what type the body should be
     public let welcomeMessage: Data
     public var resultHandler: ResultHandler?
 
