@@ -125,12 +125,25 @@ extension ZMConversation {
 
     // MARK: - Participant actions
 
-    public func addParticipants(_ participants: [UserType],
-                                completion: @escaping AddParticipantAction.ResultHandler) {
-        guard
-            let context = managedObjectContext
-        else {
-            return completion(.failure(ConversationAddParticipantsError.unknown))
+    @available(*, renamed: "addParticipants(_:)")
+    public func addParticipants(
+        _ participants: [UserType],
+        completion: @escaping AddParticipantAction.ResultHandler
+    ) {
+        Task {
+            do {
+                try await addParticipants(participants)
+                completion(.success(()))
+            } catch {
+                let error = error as? AddParticipantAction.Failure
+                completion(.failure(error ?? .unknown))
+            }
+        }
+    }
+
+    public func addParticipants(_ participants: [UserType]) async throws {
+        guard let context = managedObjectContext else {
+            throw ConversationAddParticipantsError.unknown
         }
 
         let users = participants.materialize(in: context)
@@ -140,12 +153,11 @@ extension ZMConversation {
             !users.isEmpty,
             !users.contains(ZMUser.selfUser(in: context))
         else {
-            return completion(.failure(ConversationAddParticipantsError.invalidOperation))
+            throw ConversationAddParticipantsError.invalidOperation
         }
 
         var action = AddParticipantAction(users: users, conversation: self)
-        action.onResult(resultHandler: completion)
-        action.send(in: context.notificationContext)
+        try await action.perform(in: context.notificationContext)
     }
 
     public func removeParticipant(_ participant: UserType,
