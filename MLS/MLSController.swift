@@ -22,7 +22,6 @@ public protocol MLSControllerProtocol {
 
     func uploadKeyPackagesIfNeeded()
 
-    @available(iOS 15, *)
     func createGroup(for groupID: MLSGroupID, with users: [MLSUser]) async throws
 
     func conversationExists(groupID: MLSGroupID) -> Bool
@@ -30,7 +29,6 @@ public protocol MLSControllerProtocol {
     @discardableResult
     func processWelcomeMessage(welcomeMessage: String) throws -> MLSGroupID
 
-    @available(iOS 15, *)
     func addMembersToConversation(with users: [MLSUser], for groupID: MLSGroupID) async throws
 
 }
@@ -108,7 +106,6 @@ public final class MLSController: MLSControllerProtocol {
     /// - Throws:
     ///   - MLSGroupCreationError if the group could not be created.
 
-    @available(iOS 15, *)
     public func createGroup(for groupID: MLSGroupID, with users: [MLSUser]) async throws {
         guard let context = context else { return }
 
@@ -125,7 +122,6 @@ public final class MLSController: MLSControllerProtocol {
         try await sendWelcomeMessage(messagesToSend.welcome)
     }
 
-    @available(iOS 15, *)
     private func claimKeyPackages(for users: [MLSUser]) async throws -> [KeyPackage] {
         do {
             guard let context = context else { return [] }
@@ -144,7 +140,6 @@ public final class MLSController: MLSControllerProtocol {
 
     }
 
-    @available(iOS 15, *)
     private func claimKeyPackages(
         for users: [MLSUser],
         in context: NSManagedObjectContext
@@ -192,7 +187,6 @@ public final class MLSController: MLSControllerProtocol {
         }
     }
 
-    @available(iOS 15, *)
     private func sendMessage(_ bytes: Bytes) async throws {
         do {
             guard let context = context else { return }
@@ -206,7 +200,6 @@ public final class MLSController: MLSControllerProtocol {
         }
     }
 
-    @available(iOS 15, *)
     private func sendWelcomeMessage(_ bytes:  Bytes) async throws {
         do {
             guard let context = context else { return }
@@ -226,7 +219,7 @@ public final class MLSController: MLSControllerProtocol {
     /// - Parameters:
     ///   - users: Users represents the MLS group to be added.
     ///   - groupID: Represents the MLS conversation group ID in which users to be added
-    @available(iOS 15, *)
+
     public func addMembersToConversation(with users: [MLSUser], for groupID: MLSGroupID) async throws {
 
         guard !users.isEmpty else {
@@ -464,7 +457,6 @@ protocol MLSActionsProviderProtocol {
         resultHandler: @escaping UploadSelfMLSKeyPackagesAction.ResultHandler
     )
 
-    @available(iOS 15, *)
     func claimKeyPackages(
         userID: UUID,
         domain: String?,
@@ -472,13 +464,11 @@ protocol MLSActionsProviderProtocol {
         in context: NotificationContext
     ) async throws -> [KeyPackage]
 
-    @available(iOS 15, *)
     func sendMessage(
         _ message: Data,
         in context: NotificationContext
     ) async throws
 
-    @available(iOS 15, *)
     func sendWelcomeMessage(
         _ welcomeMessage: Data,
         in context: NotificationContext
@@ -498,7 +488,6 @@ private class MLSActionsProvider: MLSActionsProviderProtocol {
         action.send(in: context)
     }
 
-    @available(iOS 15, *)
     func claimKeyPackages(
         userID: UUID,
         domain: String?,
@@ -514,7 +503,6 @@ private class MLSActionsProvider: MLSActionsProviderProtocol {
         return try await action.perform(in: context)
     }
 
-    @available(iOS 15, *)
     func sendMessage(
         _ message: Data,
         in context: NotificationContext
@@ -523,7 +511,6 @@ private class MLSActionsProvider: MLSActionsProviderProtocol {
         try await action.perform(in: context)
     }
 
-    @available(iOS 15, *)
     func sendWelcomeMessage(
         _ welcomeMessage: Data,
         in context: NotificationContext

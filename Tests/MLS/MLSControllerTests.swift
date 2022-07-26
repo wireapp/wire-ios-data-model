@@ -20,7 +20,6 @@ import Foundation
 import XCTest
 @testable import WireDataModel
 
-@available(iOS 15, *)
 class MLSControllerTests: ZMConversationTestsBase {
 
     var sut: MLSController!
@@ -48,7 +47,6 @@ class MLSControllerTests: ZMConversationTestsBase {
 
     // MARK: - Create group
 
-    @available(iOS 15, *)
     func test_CreateGroup_ThrowsNoParticipantsToAdd() async {
         // Given
         let groupID = MLSGroupID(Data([1, 2, 3]))
@@ -69,7 +67,6 @@ class MLSControllerTests: ZMConversationTestsBase {
         }
     }
 
-    @available(iOS 15, *)
     func test_CreateGroup_IsSuccessful() async {
         // Given
         let user1ID = UUID.create()
@@ -153,7 +150,6 @@ class MLSControllerTests: ZMConversationTestsBase {
 
     // MARK: - Adding participants
 
-    @available(iOS 15, *)
     func test_AddingMembersToConversation_Successfully() async {
         // Given
         let domain = "example.com"
@@ -210,7 +206,6 @@ class MLSControllerTests: ZMConversationTestsBase {
         XCTAssertTrue(actualInvitees.contains(invitee))
     }
 
-    @available(iOS 15, *)
     func test_AddingMembersToConversation_ThrowsNoParticipantsToAdd() async {
         // Given
         let mlsGroupID = MLSGroupID(Data([1, 2, 3]))
@@ -232,7 +227,6 @@ class MLSControllerTests: ZMConversationTestsBase {
         }
     }
 
-    @available(iOS 15, *)
     func test_AddingMembersToConversation_ThrowsFailedToClaimKeyPackages() async {
         // Given
         let domain = "example.com"
@@ -256,7 +250,6 @@ class MLSControllerTests: ZMConversationTestsBase {
         }
     }
 
-    @available(iOS 15, *)
     func test_AddingMembersToConversation_ThrowsFailedToSendHandshakeMessage() async {
         // Given
         let domain = "example.com"
@@ -301,7 +294,6 @@ class MLSControllerTests: ZMConversationTestsBase {
         }
     }
 
-    @available(iOS 15, *)
     func test_AddingMembersToConversation_ThrowsFailedToSendWelcomeMessage() async {
         // Given
         let domain = "example.com"
