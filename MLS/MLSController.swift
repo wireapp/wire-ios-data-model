@@ -107,7 +107,7 @@ public final class MLSController: MLSControllerProtocol {
     ///   - MLSGroupCreationError if the group could not be created.
 
     public func createGroup(for groupID: MLSGroupID, with users: [MLSUser]) async throws {
-        guard let context = context else { return }
+        guard context != nil else { return }
 
         guard !users.isEmpty else {
             throw MLSGroupCreationError.noParticipantsToAdd
