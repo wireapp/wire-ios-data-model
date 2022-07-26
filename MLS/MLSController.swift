@@ -30,6 +30,8 @@ public protocol MLSControllerProtocol {
     @discardableResult
     func processWelcomeMessage(welcomeMessage: String) throws -> MLSGroupID
 
+    func decrypt(message: String, for conversation: ZMConversation) throws -> Data
+
 }
 
 public final class MLSController: MLSControllerProtocol {
@@ -107,7 +109,6 @@ public final class MLSController: MLSControllerProtocol {
 
     @available(iOS 15, *)
     public func createGroup(for groupID: MLSGroupID, with users: [MLSUser]) async throws {
-        guard let context = context else { return }
 
         guard !users.isEmpty else {
             throw MLSGroupCreationError.noParticipantsToAdd
@@ -272,7 +273,7 @@ public final class MLSController: MLSControllerProtocol {
 
     private func generateKeyPackages(amountRequested: UInt32) throws -> [String] {
 
-        var keyPackages = [[UInt8]]()
+        var keyPackages = [Bytes]()
 
         do {
 
@@ -288,9 +289,7 @@ public final class MLSController: MLSControllerProtocol {
             throw MLSKeyPackagesError.failedToGenerateKeyPackages
         }
 
-        return keyPackages.map {
-            Data($0).base64EncodedString()
-        }
+        return keyPackages.map { $0.base64EncodedString } 
     }
 
     private func uploadKeyPackages(clientID: String, keyPackages: [String], context: NotificationContext) {
@@ -332,6 +331,56 @@ public final class MLSController: MLSControllerProtocol {
         } catch {
             logger.error("failed to process welcome message: \(String(describing: error))")
             throw MLSWelcomeMessageProcessingError.failedToProcessMessage
+        }
+    }
+
+    // MARK: - Decrypting Message
+
+    public enum MLSMessageDecryptionError: Error {
+
+        case failedToConvertMessageToBytes
+        case failedToDecryptMessage
+        case noGroupID
+
+    }
+
+    /// Decrypts an MLS message for the given conversation
+    ///
+    /// - Parameters:
+    ///   - message: a base64 encoded encrypted message
+    ///   - conversation: the conversation representing the MLS group
+    ///
+    /// - Returns: The data representing the decrypted message bytes
+    ///
+    /// - Throws: `MLSMessageDecryptionError` if the message could not be decrypted
+
+    public func decrypt(message: String, for conversation: ZMConversation) throws -> Data {
+
+        guard let groupID = conversation.mlsGroupID else {
+            throw MLSMessageDecryptionError.noGroupID
+        }
+
+        guard let messageBytes = message.base64EncodedBytes else {
+            throw MLSMessageDecryptionError.failedToConvertMessageToBytes
+        }
+
+        guard let decryptedData = try decrypt(bytes: messageBytes, for: groupID) else {
+            throw MLSMessageDecryptionError.failedToDecryptMessage
+        }
+
+        return decryptedData
+    }
+
+    private func decrypt(bytes: Bytes, for groupID: MLSGroupID) throws -> Data? {
+        do {
+            let decryptedMessageBytes = try coreCrypto.wire_decryptMessage(
+                conversationId: groupID.bytes,
+                payload: bytes
+            )
+            return decryptedMessageBytes?.data
+        } catch {
+            logger.error("failed to decrypt message: \(String(describing: error))")
+            throw MLSMessageDecryptionError.failedToDecryptMessage
         }
     }
 
@@ -403,7 +452,6 @@ extension Invitee {
             kp: keyPackageData.bytes
         )
     }
-
 
 }
 
