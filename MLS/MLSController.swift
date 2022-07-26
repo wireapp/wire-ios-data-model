@@ -233,11 +233,6 @@ public final class MLSController: MLSControllerProtocol {
             throw MLSGroupCreationError.noParticipantsToAdd
         }
 
-        guard !groupID.data.isEmpty else {
-            throw MLSGroupCreationError.noGroupID
-        }
-
-
         let keyPackages = try await claimKeyPackages(for: users)
         let invitees = keyPackages.map(Invitee.init(from:))
         let messagesToSend = try addMembers(id: groupID, invitees: invitees)

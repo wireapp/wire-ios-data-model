@@ -184,12 +184,12 @@ class MLSControllerTests: ZMConversationTestsBase {
 
         // Mock sending message.
         mockActionsProvider.sendMessageMocks.append({ message in
-            XCTAssertEqual(message, Data([0, 0, 0, 0]).base64EncodedString())
+            XCTAssertEqual(message, Data([0, 0, 0, 0]))
         })
 
         // Mock sending welcome message.
         mockActionsProvider.sendWelcomeMessageMocks.append({ message in
-            XCTAssertEqual(message, Data([1, 1, 1, 1]).base64EncodedString())
+            XCTAssertEqual(message, Data([1, 1, 1, 1]))
         })
 
         do {
@@ -224,30 +224,6 @@ class MLSControllerTests: ZMConversationTestsBase {
             // Then
             switch error {
             case MLSController.MLSGroupCreationError.noParticipantsToAdd:
-                break
-
-            default:
-                XCTFail("Unexpected error: \(String(describing: error))")
-            }
-        }
-    }
-
-    @available(iOS 15, *)
-    func test_AddingMembersToConversation_ThrowsNoGroupID() async {
-        // Given
-        let domain = "example.com"
-        let id = UUID.create()
-        let mlsGroupID = MLSGroupID(Data([]))
-        let mlsUser: [MLSUser] = [MLSUser(id: id, domain: domain)]
-
-        do {
-            // When
-            try await sut.addMembersToConversation(with: mlsUser, for: mlsGroupID)
-
-        } catch let error {
-            // Then
-            switch error {
-            case MLSController.MLSGroupCreationError.noGroupID:
                 break
 
             default:
@@ -356,7 +332,7 @@ class MLSControllerTests: ZMConversationTestsBase {
 
         // Mock sending message.
         mockActionsProvider.sendMessageMocks.append({ message in
-            XCTAssertEqual(message, Data([0, 0, 0, 0]).base64EncodedString())
+            XCTAssertEqual(message, Data([0, 0, 0, 0]))
         })
 
         do {
