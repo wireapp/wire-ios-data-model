@@ -23,7 +23,7 @@ public protocol MLSControllerProtocol {
     func uploadKeyPackagesIfNeeded()
 
     @available(iOS 15, *)
-    func createGroup(for conversation: ZMConversation) async throws
+    func createGroup(for groupID: MLSGroupID, with users: [MLSUser]) async throws
 
     func conversationExists(groupID: MLSGroupID) -> Bool
 
@@ -91,8 +91,6 @@ public final class MLSController: MLSControllerProtocol {
 
     enum MLSGroupCreationError: Error {
 
-        case noGroupID
-        case notAnMLSConversation
         case noParticipantsToAdd
         case failedToClaimKeyPackages
         case failedToCreateGroup
@@ -111,26 +109,8 @@ public final class MLSController: MLSControllerProtocol {
     ///   - MLSGroupCreationError if the group could not be created.
 
     @available(iOS 15, *)
-    public func createGroup(for conversation: ZMConversation) async throws {
+    public func createGroup(for groupID: MLSGroupID, with users: [MLSUser]) async throws {
         guard let context = context else { return }
-
-        var groupID: MLSGroupID?
-        var messageProtocol: MessageProtocol?
-        var users = [MLSUser]()
-
-        context.performGroupedAndWait { _ in
-            groupID = conversation.mlsGroupID
-            messageProtocol = conversation.messageProtocol
-            users = conversation.localParticipants.map(MLSUser.init)
-        }
-
-        guard let groupID = groupID else {
-            throw MLSGroupCreationError.noGroupID
-        }
-
-        guard messageProtocol == .mls else {
-            throw MLSGroupCreationError.notAnMLSConversation
-        }
 
         guard !users.isEmpty else {
             throw MLSGroupCreationError.noParticipantsToAdd
@@ -213,11 +193,11 @@ public final class MLSController: MLSControllerProtocol {
     }
 
     @available(iOS 15, *)
-    private func sendMessage(_ bytes: [UInt8]) async throws {
+    private func sendMessage(_ bytes: Bytes) async throws {
         do {
             guard let context = context else { return }
             try await actionsProvider.sendMessage(
-                base64EncodedMessage: bytes.base64EncodedString,
+                bytes.data,
                 in: context.notificationContext
             )
         } catch let error {
@@ -227,11 +207,11 @@ public final class MLSController: MLSControllerProtocol {
     }
 
     @available(iOS 15, *)
-    private func sendWelcomeMessage(_ bytes: [UInt8]) async throws {
+    private func sendWelcomeMessage(_ bytes:  Bytes) async throws {
         do {
             guard let context = context else { return }
             try await actionsProvider.sendWelcomeMessage(
-                base64EncodedMessage: bytes.base64EncodedString,
+                bytes.data,
                 in: context.notificationContext
             )
         } catch let error {
@@ -279,7 +259,7 @@ public final class MLSController: MLSControllerProtocol {
                 clients: invitees
             )
         } catch let error {
-            logger.error("failed to add members: \(String(describing: error))")
+            logger.warn("failed to add members: \(String(describing: error))")
             throw MLSGroupCreationError.failedToAddMembers
         }
     }
@@ -408,11 +388,21 @@ public final class MLSController: MLSControllerProtocol {
 
 public struct MLSUser {
 
-    let id: UUID
-    let domain: String
-    let selfClientID: String?
+    public let id: UUID
+    public let domain: String
+    public let selfClientID: String?
 
-    init(from user: ZMUser) {
+    public init(
+        id: UUID,
+        domain: String,
+        selfClientID: String? = nil
+    ) {
+        self.id = id
+        self.domain = domain
+        self.selfClientID = selfClientID
+    }
+
+    public init(from user: ZMUser) {
         id = user.remoteIdentifier
         domain = user.domain?.selfOrNilIfEmpty ?? APIVersion.domain!
 
@@ -421,12 +411,6 @@ public struct MLSUser {
         } else {
             selfClientID = nil
         }
-    }
-
-    public init(id: UUID, domain: String, selfClientID: String? = nil) {
-        self.id = id
-        self.domain = domain
-        self.selfClientID = selfClientID
     }
 
 }
@@ -495,13 +479,13 @@ protocol MLSActionsProviderProtocol {
 
     @available(iOS 15, *)
     func sendMessage(
-        base64EncodedMessage: String,
+        _ message: Data,
         in context: NotificationContext
     ) async throws
 
     @available(iOS 15, *)
     func sendWelcomeMessage(
-        base64EncodedMessage: String,
+        _ welcomeMessage: Data,
         in context: NotificationContext
     ) async throws
 
@@ -537,19 +521,19 @@ private class MLSActionsProvider: MLSActionsProviderProtocol {
 
     @available(iOS 15, *)
     func sendMessage(
-        base64EncodedMessage: String,
+        _ message: Data,
         in context: NotificationContext
     ) async throws {
-        var action = SendMLSMessageAction(mlsMessage: base64EncodedMessage)
+        var action = SendMLSMessageAction(message: message)
         try await action.perform(in: context)
     }
 
     @available(iOS 15, *)
     func sendWelcomeMessage(
-        base64EncodedMessage: String,
+        _ welcomeMessage: Data,
         in context: NotificationContext
     ) async throws {
-        var action = SendMLSMessageAction(mlsMessage: base64EncodedMessage)
+        var action = SendMLSWelcomeAction(welcomeMessage: welcomeMessage)
         try await action.perform(in: context)
     }
 
