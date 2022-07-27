@@ -198,33 +198,6 @@ final class ConversationParticipantsTests: ZMConversationTestsBase {
         XCTAssertEqual(expectedActiveParticipants, conversation.localParticipants)
     }
 
-    func testThatItAddsParticipants_mls() {
-
-        // given
-
-        syncMOC.performGroupedAndWait { [self] syncMOC in
-            let mockCoreCrypto = MockCoreCrypto()
-            let mockActionsProvider = MockMLSActionsProvider()
-            let mockMLSController = MockMLSController()
-
-            let conversation = ZMConversation.insertNewObject(in: self.uiMOC)
-            conversation.conversationType = .group
-            conversation.messageProtocol = .mls
-            let user1 = self.createUser()
-
-            syncMOC.test_setMockMLSController(mockMLSController)
-            //conversation.managedObjectContext?.test_setMockMLSController(mockMLSController)
-
-            conversation.addParticipantAndUpdateConversationState(user: user1, role: nil)
-
-            let expectedActiveParticipants = Set([user1])
-            XCTAssertEqual(expectedActiveParticipants, conversation.localParticipants)
-
-        }
-
-
-    }
-
     func testThatItDoesNotUnarchiveTheConversationWhenTheSelfUserIsAddedIfMuted() {
         // given
         let conversation = ZMConversation.insertNewObject(in: self.uiMOC)
@@ -593,29 +566,6 @@ final class ConversationParticipantsTests: ZMConversationTestsBase {
 
             // when
             conversation.markToDownloadRolesIfNeeded()
-
-            // then
-            XCTAssertTrue(conversation.needsToDownloadRoles)
-        }
-    }
-
-    func testThatItRefetchesRolesIfNoRoles1() {
-
-        syncMOC.performGroupedAndWait { _ -> Void in
-            // given
-
-            ZMUser.selfUser(in: self.syncMOC).teamIdentifier = UUID()
-            let conversation = ZMConversation.insertNewObject(in: self.syncMOC)
-            let selfUser = ZMUser.selfUser(in: self.syncMOC)
-            conversation.remoteIdentifier = UUID.create()
-            conversation.conversationType = .group
-            conversation.messageProtocol = .mls
-            let user1 = self.createUser()
-            conversation.addParticipantAndUpdateConversationState(user: user1, role: nil)
-
-            // when
-            //conversation.markToDownloadRolesIfNeeded()
-            //conversation.addParticipantAndUpdateConversationState(user: user1, role: nil)
 
             // then
             XCTAssertTrue(conversation.needsToDownloadRoles)
