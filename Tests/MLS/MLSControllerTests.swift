@@ -26,11 +26,17 @@ class MLSControllerTests: ZMConversationTestsBase {
     var sut: MLSController!
     var mockCoreCrypto: MockCoreCrypto!
     var mockActionsProvider: MockMLSActionsProvider!
+    var conversation: ZMConversation!
+    let groupID = MLSGroupID([1, 2, 3])
 
     override func setUp() {
         super.setUp()
         mockCoreCrypto = MockCoreCrypto()
         mockActionsProvider = MockMLSActionsProvider()
+
+        syncMOC.performAndWait {
+            self.conversation = ZMConversation.insertNewObject(in: self.syncMOC)
+        }
 
         sut = MLSController(
             context: uiMOC,
@@ -43,7 +49,71 @@ class MLSControllerTests: ZMConversationTestsBase {
         sut = nil
         mockCoreCrypto = nil
         mockActionsProvider = nil
+        conversation = nil
         super.tearDown()
+    }
+
+    // MARK: - Message Decryption
+
+    typealias DecryptionError = MLSController.MLSMessageDecryptionError
+
+    func test_Decrypt_ThrowsNoGroupID() {
+        syncMOC.performAndWait {
+            // When / Then
+            assertItThrows(error: DecryptionError.noGroupID) {
+                try _ = sut.decrypt(message: "message", for: conversation)
+            }
+        }
+    }
+
+    func test_Decrypt_ThrowsFailedToConvertMessageToBytes() {
+        syncMOC.performAndWait {
+            // Given
+            self.conversation.mlsGroupID = self.groupID
+
+            // When / Then
+            assertItThrows(error: DecryptionError.failedToConvertMessageToBytes) {
+                try _ = sut.decrypt(message: "%", for: conversation)
+            }
+        }
+    }
+
+    func test_Decrypt_ThrowsFailedToDecryptMessage() {
+        syncMOC.performAndWait {
+            // Given
+            let message = Data([1, 2, 3]).base64EncodedString()
+            self.conversation.mlsGroupID = self.groupID
+            self.mockCoreCrypto.mockDecryptMessage = .some(.none)
+
+            // When / Then
+            assertItThrows(error: DecryptionError.failedToDecryptMessage) {
+                try _ = sut.decrypt(message: message, for: conversation)
+            }
+        }
+    }
+
+    func test_Decrypt_IsSuccessful() {
+        syncMOC.performAndWait {
+            // Given
+            let messageBytes: Bytes = [1, 2, 3]
+            self.conversation.mlsGroupID = self.groupID
+            self.mockCoreCrypto.mockDecryptMessage = .some(messageBytes)
+
+            // When
+            var data: Data?
+            do {
+                data = try sut.decrypt(message: messageBytes.data.base64EncodedString(), for: conversation)
+            } catch {
+                XCTFail("Unexpected error: \(String(describing: error))")
+            }
+
+            // Then
+            XCTAssertEqual(data, messageBytes.data)
+
+            let decryptMessageCalls = self.mockCoreCrypto.calls.decryptMessage
+            XCTAssertEqual(decryptMessageCalls.first?.0, self.groupID.bytes)
+            XCTAssertEqual(decryptMessageCalls.first?.1, messageBytes)
+        }
     }
 
     // MARK: - Create group
@@ -54,19 +124,9 @@ class MLSControllerTests: ZMConversationTestsBase {
         let groupID = MLSGroupID(Data([1, 2, 3]))
         let users = [MLSUser]()
 
-        do {
-            // When
+        // When / Then
+        await assertItThrows(error: MLSController.MLSGroupCreationError.noParticipantsToAdd) {
             try await sut.createGroup(for: groupID, with: users)
-
-        } catch let error {
-            // Then
-            switch error {
-            case MLSController.MLSGroupCreationError.noParticipantsToAdd:
-                break
-
-            default:
-                XCTFail("Unexpected error: \(String(describing: error))")
-            }
         }
     }
 
