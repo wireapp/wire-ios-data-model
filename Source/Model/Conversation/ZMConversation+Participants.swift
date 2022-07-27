@@ -265,6 +265,35 @@ extension ZMConversation {
             self.checkIfArchivedStatusChanged(addedSelfUser: addedSelfUser)
             self.checkIfVerificationLevelChanged(addedUsers: Set(addedRoles.compactMap { $0.user }), addedSelfUser: addedSelfUser)
         }
+
+        if messageProtocol == .mls {
+
+            let mlsUsers: [MLSUser] = usersAndRoles.compactMap { MLSUser(from: $0.0) }
+
+            guard
+                let mlsController = managedObjectContext?.mlsController,
+                let groupID = mlsGroupID?.base64EncodedString,
+                let mlsGroupID = MLSGroupID(base64Encoded: groupID)
+            else {
+                return
+            }
+
+            guard
+                #available(iOS 15, *)
+            else {
+                Logging.messageProcessing.warn("iOS 15 required for adding members to mls group.")
+                return
+            }
+
+            Task {
+                do {
+                    try await mlsController.addMembersToConversation(with: mlsUsers, for: mlsGroupID)
+
+                } catch {
+                    Logging.eventProcessing.error("Failed to add members to mls group: \(String(describing: error))")
+                }
+            }
+        }
     }
 
     private enum FetchOrCreation {
