@@ -184,7 +184,7 @@ public final class MLSController: MLSControllerProtocol {
 
     // MARK: - Add participants to mls group
 
-    /// Add users an MLS group in the given conversation.
+    /// Add users to MLS group in the given conversation.
     /// - Parameters:
     ///   - users: Users represents the MLS group to be added.
     ///   - groupID: Represents the MLS conversation group ID in which users to be added
