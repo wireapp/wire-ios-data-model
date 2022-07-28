@@ -41,11 +41,10 @@ extension XCTestCase {
     }
 
     func assertError<T: EquatableError>(_ error: Error, equals expectedError: T) {
-        guard
-            let error = error as? T,
-            error == expectedError
-        else {
+        guard let error = error as? T else {
             return XCTFail("Unexpected error: \(String(describing: error))")
         }
+
+        XCTAssertEqual(error, expectedError)
     }
 }
