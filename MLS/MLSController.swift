@@ -38,21 +38,23 @@ public final class MLSController: MLSControllerProtocol {
 
     private weak var context: NSManagedObjectContext?
     private let coreCrypto: CoreCryptoProtocol
+    private let conversationEventProcessor: ConversationEventProcessorProtocol
     private let logger = ZMSLog(tag: "core-crypto")
 
-    let targetUnclaimedKeyPackageCount = 100
-
     let actionsProvider: MLSActionsProviderProtocol
+    let targetUnclaimedKeyPackageCount = 100
 
     // MARK: - Life cycle
 
     init(
         context: NSManagedObjectContext,
         coreCrypto: CoreCryptoProtocol,
+        conversationEventProcessor: ConversationEventProcessorProtocol,
         actionsProvider: MLSActionsProviderProtocol = MLSActionsProvider()
     ) {
         self.context = context
         self.coreCrypto = coreCrypto
+        self.conversationEventProcessor = conversationEventProcessor
         self.actionsProvider = actionsProvider
 
         do {
@@ -489,5 +491,11 @@ private class MLSActionsProvider: MLSActionsProviderProtocol {
         var action = SendMLSWelcomeAction(welcomeMessage: welcomeMessage)
         try await action.perform(in: context)
     }
+
+}
+
+public protocol ConversationEventProcessorProtocol {
+
+    func processConversationEvents(_ events: [ZMUpdateEvent])
 
 }

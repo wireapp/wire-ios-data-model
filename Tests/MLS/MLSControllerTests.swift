@@ -26,15 +26,18 @@ class MLSControllerTests: ZMConversationTestsBase {
     var sut: MLSController!
     var mockCoreCrypto: MockCoreCrypto!
     var mockActionsProvider: MockMLSActionsProvider!
+    var mockConversationEventProcessor: MockConversationEventProcessor!
 
     override func setUp() {
         super.setUp()
         mockCoreCrypto = MockCoreCrypto()
         mockActionsProvider = MockMLSActionsProvider()
+        mockConversationEventProcessor = MockConversationEventProcessor()
 
         sut = MLSController(
             context: uiMOC,
             coreCrypto: mockCoreCrypto,
+            conversationEventProcessor: mockConversationEventProcessor,
             actionsProvider: mockActionsProvider
         )
     }
