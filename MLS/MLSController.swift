@@ -30,7 +30,7 @@ public protocol MLSControllerProtocol {
     @discardableResult
     func processWelcomeMessage(welcomeMessage: String) throws -> MLSGroupID
 
-    func decrypt(message: String, for conversation: ZMConversation) throws -> Data
+    func decrypt(message: String, for groupID: MLSGroupID) throws -> Data?
 
 }
 
@@ -139,7 +139,6 @@ public final class MLSController: MLSControllerProtocol {
             logger.error("failed to claim key packages: \(String(describing: error))")
             throw MLSGroupCreationError.failedToClaimKeyPackages
         }
-
     }
 
     @available(iOS 15, *)
@@ -340,46 +339,35 @@ public final class MLSController: MLSControllerProtocol {
 
         case failedToConvertMessageToBytes
         case failedToDecryptMessage
-        case noGroupID
 
     }
 
-    /// Decrypts an MLS message for the given conversation
+    /// Decrypts an MLS message for the given group
     ///
     /// - Parameters:
     ///   - message: a base64 encoded encrypted message
-    ///   - conversation: the conversation representing the MLS group
+    ///   - groupID: the id of the MLS group
     ///
-    /// - Returns: The data representing the decrypted message bytes
+    /// - Returns:
+    ///   The data representing the decrypted message bytes.
+    ///   May be nil if the message was a handshake message, in which case it is safe to ignore.
     ///
     /// - Throws: `MLSMessageDecryptionError` if the message could not be decrypted
 
-    public func decrypt(message: String, for conversation: ZMConversation) throws -> Data {
-
-        guard let groupID = conversation.mlsGroupID else {
-            throw MLSMessageDecryptionError.noGroupID
-        }
+    public func decrypt(message: String, for groupID: MLSGroupID) throws -> Data? {
 
         guard let messageBytes = message.base64EncodedBytes else {
             throw MLSMessageDecryptionError.failedToConvertMessageToBytes
         }
 
-        guard let decryptedData = try decrypt(bytes: messageBytes, for: groupID) else {
-            throw MLSMessageDecryptionError.failedToDecryptMessage
-        }
-
-        return decryptedData
-    }
-
-    private func decrypt(bytes: Bytes, for groupID: MLSGroupID) throws -> Data? {
         do {
             let decryptedMessageBytes = try coreCrypto.wire_decryptMessage(
                 conversationId: groupID.bytes,
-                payload: bytes
+                payload: messageBytes
             )
             return decryptedMessageBytes?.data
         } catch {
-            logger.error("failed to decrypt message: \(String(describing: error))")
+            logger.warn("failed to decrypt message: \(String(describing: error))")
             throw MLSMessageDecryptionError.failedToDecryptMessage
         }
     }
