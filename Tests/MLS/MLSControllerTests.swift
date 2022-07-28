@@ -123,6 +123,7 @@ class MLSControllerTests: ZMConversationTestsBase {
         // Mock sending message.
         mockActionsProvider.sendMessageMocks.append({ message in
             XCTAssertEqual(message, Data([0, 0, 0, 0]))
+            return []
         })
 
         // Mock sending welcome message.

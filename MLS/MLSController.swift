@@ -436,7 +436,7 @@ protocol MLSActionsProviderProtocol {
     func sendMessage(
         _ message: Data,
         in context: NotificationContext
-    ) async throws
+    ) async throws -> [ZMUpdateEvent]
 
     @available(iOS 15, *)
     func sendWelcomeMessage(
@@ -478,9 +478,9 @@ private class MLSActionsProvider: MLSActionsProviderProtocol {
     func sendMessage(
         _ message: Data,
         in context: NotificationContext
-    ) async throws {
+    ) async throws -> [ZMUpdateEvent] {
         var action = SendMLSMessageAction(message: message)
-        try await action.perform(in: context)
+        return try await action.perform(in: context)
     }
 
     @available(iOS 15, *)
