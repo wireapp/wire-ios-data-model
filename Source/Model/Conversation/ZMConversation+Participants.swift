@@ -32,7 +32,8 @@ public enum ConversationAddParticipantsError: Error {
         notConnectedToUser,
         conversationNotFound,
         tooManyMembers,
-        missingLegalHoldConsent
+        missingLegalHoldConsent,
+        failedToAddMLSMembers
 }
 
 public class AddParticipantAction: EntityAction {
@@ -125,25 +126,13 @@ extension ZMConversation {
 
     // MARK: - Participant actions
 
-    @available(*, renamed: "addParticipants(_:)")
     public func addParticipants(
         _ participants: [UserType],
         completion: @escaping AddParticipantAction.ResultHandler
     ) {
-        Task {
-            do {
-                try await addParticipants(participants)
-                completion(.success(()))
-            } catch {
-                let error = error as? AddParticipantAction.Failure
-                completion(.failure(error ?? .unknown))
-            }
-        }
-    }
-
-    public func addParticipants(_ participants: [UserType]) async throws {
         guard let context = managedObjectContext else {
-            throw ConversationAddParticipantsError.unknown
+            completion(.failure(.unknown))
+            return
         }
 
         let users = participants.materialize(in: context)
@@ -153,11 +142,47 @@ extension ZMConversation {
             !users.isEmpty,
             !users.contains(ZMUser.selfUser(in: context))
         else {
-            throw ConversationAddParticipantsError.invalidOperation
+            completion(.failure(.invalidOperation))
+            return
         }
 
-        var action = AddParticipantAction(users: users, conversation: self)
-        try await action.perform(in: context.notificationContext)
+        switch messageProtocol {
+
+        case .proteus:
+            var action = AddParticipantAction(users: users, conversation: self)
+            action.onResult(resultHandler: completion)
+            action.send(in: context.notificationContext)
+
+        case .mls:
+            guard
+                let mlsController = context.mlsController,
+                let groupID = mlsGroupID?.base64EncodedString,
+                let mlsGroupID = MLSGroupID(base64Encoded: groupID)
+            else {
+                completion(.failure(.invalidOperation))
+                return
+            }
+
+            let mlsUsers = users.compactMap(MLSUser.init(from:))
+
+            Task {
+                do {
+                    try await mlsController.addMembersToConversation(with: mlsUsers, for: mlsGroupID)
+
+                    context.perform {
+                        completion(.success(()))
+                    }
+
+                } catch {
+                    Logging.eventProcessing.error("Failed to add members to mls group: \(String(describing: error))")
+
+                    context.perform {
+                        completion(.failure(.failedToAddMLSMembers))
+                    }
+
+                }
+            }
+        }
     }
 
     public func removeParticipant(_ participant: UserType,
@@ -278,28 +303,6 @@ extension ZMConversation {
             self.checkIfVerificationLevelChanged(addedUsers: Set(addedRoles.compactMap { $0.user }), addedSelfUser: addedSelfUser)
         }
 
-        if messageProtocol == .mls {
-
-            let mlsUsers: [MLSUser] = usersAndRoles.compactMap { MLSUser(from: $0.0) }
-
-            guard
-                let context = managedObjectContext,
-                let mlsController = context.mlsController,
-                let groupID = mlsGroupID?.base64EncodedString,
-                let mlsGroupID = MLSGroupID(base64Encoded: groupID)
-            else {
-                return
-            }
-
-            Task {
-                do {
-                    try await mlsController.addMembersToConversation(with: mlsUsers, for: mlsGroupID)
-
-                } catch {
-                    Logging.eventProcessing.error("Failed to add members to mls group: \(String(describing: error))")
-                }
-            }
-        }
     }
 
     private enum FetchOrCreation {
