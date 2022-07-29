@@ -24,7 +24,6 @@ extension XCTestCase {
     typealias ThrowingBlock = () throws -> Void
     typealias EquatableError = Error & Equatable
 
-    @available(iOS 13, *)
     func assertItThrows<T: EquatableError>(error expectedError: T, block: AsyncThrowingBlock) async {
         do {
             try await block()
