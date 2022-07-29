@@ -159,9 +159,11 @@ public final class MLSController: MLSControllerProtocol {
     }
 
     private func sendMessage(_ bytes: Bytes) async throws {
+        var updateEvents = [ZMUpdateEvent]()
+
         do {
             guard let context = context else { return }
-            try await actionsProvider.sendMessage(
+            updateEvents = try await actionsProvider.sendMessage(
                 bytes.data,
                 in: context.notificationContext
             )
@@ -169,6 +171,8 @@ public final class MLSController: MLSControllerProtocol {
             logger.warn("failed to send mls message: \(String(describing: error))")
             throw MLSGroupCreationError.failedToSendHandshakeMessage
         }
+
+        conversationEventProcessor.processConversationEvents(updateEvents)
     }
 
     private func sendWelcomeMessage(_ bytes:  Bytes) async throws {
