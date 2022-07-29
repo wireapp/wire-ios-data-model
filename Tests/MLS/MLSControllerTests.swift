@@ -120,6 +120,9 @@ class MLSControllerTests: ZMConversationTestsBase {
         // Mock sending message.
         mockActionsProvider.sendMessageMocks.append({ message in
             XCTAssertEqual(message, Data([0, 0, 0, 0]))
+            // TODO: mock the update events for member join.
+            // TODO: assert that conversation event processor receives the events.
+            return []
         })
 
         // Mock sending welcome message.
