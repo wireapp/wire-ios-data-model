@@ -22,7 +22,8 @@ import WireProtos
 public enum ConversationRemoveParticipantError: Error {
    case unknown,
         invalidOperation,
-        conversationNotFound
+        conversationNotFound,
+        failedToRemoveMLSMembers
 }
 
 public enum ConversationAddParticipantsError: Error {
@@ -200,9 +201,46 @@ extension ZMConversation {
             return completion(.failure(ConversationRemoveParticipantError.invalidOperation))
         }
 
-        var action = RemoveParticipantAction(user: user, conversation: self)
-        action.onResult(resultHandler: completion)
-        action.send(in: context.notificationContext)
+        switch messageProtocol {
+
+        case .proteus:
+            var action = RemoveParticipantAction(user: user, conversation: self)
+            action.onResult(resultHandler: completion)
+            action.send(in: context.notificationContext)
+
+        case .mls:
+            guard
+                let mlsController = context.mlsController,
+                let groupID = mlsGroupID?.base64EncodedString,
+                let mlsGroupID = MLSGroupID(base64Encoded: groupID)
+
+            else {
+                completion(.failure(.invalidOperation))
+                return
+            }
+
+            let mlsClientIDs = user.clients.compactMap {
+                MLSClientID(userClient: $0)?.string.base64EncodedBytes
+            }
+
+            Task {
+                do {
+                    try await mlsController.removeMembersFromConversation(with: mlsClientIDs, for: mlsGroupID)
+
+                    context.perform {
+                        completion(.success(()))
+                    }
+
+                } catch {
+                    Logging.eventProcessing.error("Failed to remove member to mls group: \(String(describing: error))")
+
+                    context.perform {
+                        completion(.failure(.failedToRemoveMLSMembers))
+                    }
+
+                }
+            }
+        }
     }
 
     // MARK: - Participants methods

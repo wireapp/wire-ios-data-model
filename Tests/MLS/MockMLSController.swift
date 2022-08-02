@@ -37,6 +37,7 @@ class MockMLSController: MLSControllerProtocol {
         var processWelcomeMessage = [String]()
         var decrypt = [(String, MLSGroupID)]()
         var addMembersToConversation = [([MLSUser], MLSGroupID)]()
+        var removeMembersFromConversation = [([ClientId], MLSGroupID)]()
 
     }
 
@@ -85,6 +86,10 @@ class MockMLSController: MLSControllerProtocol {
 
     func addMembersToConversation(with users: [MLSUser], for groupID: MLSGroupID) throws {
         calls.addMembersToConversation.append((users, groupID))
+    }
+
+    func removeMembersFromConversation(with clientIds: [ClientId], for groupID: MLSGroupID) throws {
+        calls.removeMembersFromConversation.append((clientIds, groupID))
     }
 
 }

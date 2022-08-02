@@ -33,6 +33,7 @@ public protocol MLSControllerProtocol {
 
     func addMembersToConversation(with users: [MLSUser], for groupID: MLSGroupID) async throws
 
+    func removeMembersFromConversation(with clientIds: [ClientId], for groupID: MLSGroupID) async throws
 }
 
 public final class MLSController: MLSControllerProtocol {
@@ -225,6 +226,47 @@ public final class MLSController: MLSControllerProtocol {
         } catch let error {
             logger.warn("failed to add members: \(String(describing: error))")
             throw MLSGroupCreationError.failedToAddMembers
+        }
+    }
+
+    // MARK: - Remove participants from mls group
+
+    enum MLSRemoveParticipantsError: Error {
+
+        case failedToRemoveMembers
+        case noClientsToRemove
+
+    }
+
+    public func removeMembersFromConversation(
+        with clientIds: [ClientId],
+        for groupID: MLSGroupID
+    ) async throws {
+
+        guard !clientIds.isEmpty else {
+            throw MLSRemoveParticipantsError.noClientsToRemove
+        }
+
+        let messageToSend = try removeMembers(id: groupID, clientIds: clientIds)
+
+        guard let messageToSend = messageToSend else { return }
+        try await sendMessage(messageToSend)
+
+    }
+
+    private func removeMembers(
+        id: MLSGroupID,
+        clientIds: [ClientId]
+    ) throws -> Bytes? {
+
+        do {
+            return try coreCrypto.wire_removeClientsFromConversation(
+                conversationId: id.bytes,
+                clients: clientIds
+            )
+        } catch let error {
+            logger.error("failed to remove members: \(String(describing: error))")
+            throw MLSRemoveParticipantsError.failedToRemoveMembers
         }
     }
 

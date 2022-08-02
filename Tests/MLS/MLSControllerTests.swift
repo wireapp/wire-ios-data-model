@@ -359,4 +359,98 @@ class MLSControllerTests: ZMConversationTestsBase {
         }
     }
 
+    // MARK: - Remove participants
+
+    func test_RemoveMembersFromConversation_IsSuccessfull() async {
+        // Given
+        let domain = "example.com"
+        let id = UUID.create().uuidString
+        let clientID = UUID.create().uuidString
+        let mlsGroupID = MLSGroupID(Data([1, 2, 3]))
+        let mlsClientID = MLSClientID(userID: id, clientID: clientID, domain: domain).string.data(using: .utf8)!.base64EncodedString().base64EncodedBytes!
+
+        // Mock return value for removing clients to conversation.
+        mockCoreCrypto.mockRemoveClientsFromConversation = [0, 0, 0, 0]
+
+        // Mock sending message.
+        mockActionsProvider.sendMessageMocks.append({ message in
+            XCTAssertEqual(message, Data([0, 0, 0, 0]))
+
+            // Mock update event for member join
+            let payload: NSDictionary = [
+                "type": "team.member-join",
+                "data": message
+            ]
+
+            let updateEvent = ZMUpdateEvent(fromEventStreamPayload: payload, uuid: nil)!
+
+            self.mockConversationEventProcessor.processConversationEvents([updateEvent])
+
+            let processConversationEventsCalls = self.mockConversationEventProcessor.calls.processConversationEvents
+            XCTAssertEqual(processConversationEventsCalls.count, 1)
+
+            return [updateEvent]
+        })
+
+        do {
+            // When
+            try await sut.removeMembersFromConversation(with: [mlsClientID], for: mlsGroupID)
+
+        } catch let error {
+            XCTFail("Unexpected error: \(String(describing: error))")
+        }
+
+        let removeMembersFromConversationCalls = mockCoreCrypto.calls.removeClientsFromConversation
+        XCTAssertEqual(removeMembersFromConversationCalls.count, 1)
+        XCTAssertEqual(removeMembersFromConversationCalls[0].0, mlsGroupID.bytes)
+        XCTAssertEqual(removeMembersFromConversationCalls[0].1, [mlsClientID])
+    }
+
+    func test_AddingMembersToConversation_ThrowsNoClientsToRemove() async {
+        // Given
+        let mlsGroupID = MLSGroupID(Data([1, 2, 3]))
+
+        do {
+            // When
+            try await sut.removeMembersFromConversation(with: [], for: mlsGroupID)
+
+        } catch let error {
+            // Then
+            switch error {
+            case MLSController.MLSRemoveParticipantsError.noClientsToRemove:
+                break
+
+            default:
+                XCTFail("Unexpected error: \(String(describing: error))")
+            }
+        }
+    }
+
+    func test_AddingMembersToConversation_FailsToSendHandShakeMessage() async {
+        // Given
+        let domain = "example.com"
+        let id = UUID.create().uuidString
+        let clientID = UUID.create().uuidString
+        let mlsGroupID = MLSGroupID(Data([1, 2, 3]))
+        let mlsClientID = MLSClientID(userID: id, clientID: clientID, domain: domain).string.data(using: .utf8)!.base64EncodedString().base64EncodedBytes!
+
+        // Mock return value for removing clients to conversation.
+        mockCoreCrypto.mockRemoveClientsFromConversation = [0, 0, 0, 0]
+
+        do {
+            // When
+            try await sut.removeMembersFromConversation(with: [mlsClientID], for: mlsGroupID)
+
+        } catch let error {
+            // Then
+            switch error {
+            case MLSController.MLSGroupCreationError.failedToSendHandshakeMessage:
+                break
+
+            default:
+                XCTFail("Unexpected error: \(String(describing: error))")
+            }
+        }
+    }
+
 }
