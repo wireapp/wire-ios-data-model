@@ -29,6 +29,8 @@ public protocol MLSControllerProtocol {
     @discardableResult
     func processWelcomeMessage(welcomeMessage: String) throws -> MLSGroupID
 
+    func encrypt(message: Bytes, for groupID: MLSGroupID) throws -> Bytes
+
     func decrypt(message: String, for groupID: MLSGroupID) throws -> Data?
 
     func addMembersToConversation(with users: [MLSUser], for groupID: MLSGroupID) async throws
@@ -343,6 +345,25 @@ public final class MLSController: MLSControllerProtocol {
             throw MLSWelcomeMessageProcessingError.failedToProcessMessage
         }
     }
+
+    // MARK: - Encrypt message
+
+    public enum MLSMessageEncryptionError: Error {
+
+        case failedToEncryptMessage
+
+    }
+
+    // TODO: [John] test
+    public func encrypt(message: Bytes, for groupID: MLSGroupID) throws -> Bytes {
+        do {
+            return try coreCrypto.wire_encryptMessage(conversationId: groupID.bytes, message: message)
+        } catch let error {
+            logger.warn("failed to encrypt message: \(String(describing: error))")
+            throw MLSMessageEncryptionError.failedToEncryptMessage
+        }
+    }
+
 
     // MARK: - Decrypting Message
 
