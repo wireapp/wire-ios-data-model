@@ -405,7 +405,9 @@ class MLSControllerTests: ZMConversationTestsBase {
         let removeMembersFromConversationCalls = mockCoreCrypto.calls.removeClientsFromConversation
         XCTAssertEqual(removeMembersFromConversationCalls.count, 1)
         XCTAssertEqual(removeMembersFromConversationCalls[0].0, mlsGroupID.bytes)
-        XCTAssertEqual(removeMembersFromConversationCalls[0].1, [mlsClientID.bytes])
+
+        let mlsClientIDBytes = mlsClientID.string.data(using: .utf8)!.bytes
+        XCTAssertEqual(removeMembersFromConversationCalls[0].1, [mlsClientIDBytes])
     }
 
     func test_RemovingMembersToConversation_ThrowsNoClientsToRemove() async {

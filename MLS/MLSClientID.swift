@@ -61,9 +61,4 @@ public struct MLSClientID: Equatable {
         self.string = "\(self.userID):\(self.clientID)@\(self.domain)"
     }
 
-    
-    public var bytes: Bytes? {
-        string.base64EncodedString?.base64EncodedBytes
-    }
-
 }

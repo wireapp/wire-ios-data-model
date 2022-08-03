@@ -247,7 +247,7 @@ public final class MLSController: MLSControllerProtocol {
             throw MLSRemoveParticipantsError.noClientsToRemove
         }
         
-        let clientIds =  clientIds.compactMap { $0.bytes }
+        let clientIds =  clientIds.compactMap { $0.string.utf8Data?.bytes }
 
         let messageToSend = try removeMembers(id: groupID, clientIds: clientIds)
 
