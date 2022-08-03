@@ -20,7 +20,7 @@ import Foundation
 
 /// An ID representing a identifying a single user client.
 
-struct MLSClientID: Equatable {
+public struct MLSClientID: Equatable {
 
     // MARK: - Properties
 
@@ -59,6 +59,11 @@ struct MLSClientID: Equatable {
         self.clientID = clientID.lowercased()
         self.domain = domain.lowercased()
         self.string = "\(self.userID):\(self.clientID)@\(self.domain)"
+    }
+
+    
+    public var bytes: Bytes? {
+        string.base64EncodedString?.base64EncodedBytes
     }
 
 }

@@ -24,4 +24,8 @@ extension String {
         return Bytes(base64Encoded: self)
     }
 
+    public var base64EncodedString: String? {
+        data(using: .utf8)?.base64EncodedString()
+    }
+
 }

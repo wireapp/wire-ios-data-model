@@ -361,33 +361,30 @@ class MLSControllerTests: ZMConversationTestsBase {
 
     // MARK: - Remove participants
 
-    func test_RemoveMembersFromConversation_IsSuccessfull() async {
+    func test_RemoveMembersFromConversation_IsSuccessful() async {
         // Given
         let domain = "example.com"
         let id = UUID.create().uuidString
         let clientID = UUID.create().uuidString
         let mlsGroupID = MLSGroupID(Data([1, 2, 3]))
-        let mlsClientID = MLSClientID(userID: id, clientID: clientID, domain: domain).string.data(using: .utf8)!.base64EncodedString().base64EncodedBytes!
+        let mlsClientID = MLSClientID(userID: id, clientID: clientID, domain: domain)
 
         // Mock return value for removing clients to conversation.
         mockCoreCrypto.mockRemoveClientsFromConversation = [0, 0, 0, 0]
+
+        // // Mock update event for member leaves from conversation
+        var updateEvent: ZMUpdateEvent!
 
         // Mock sending message.
         mockActionsProvider.sendMessageMocks.append({ message in
             XCTAssertEqual(message, Data([0, 0, 0, 0]))
 
-            // Mock update event for member join
-            let payload: NSDictionary = [
-                "type": "team.member-join",
+            let mockPayload: NSDictionary = [
+                "type": "conversation.member-leave",
                 "data": message
             ]
 
-            let updateEvent = ZMUpdateEvent(fromEventStreamPayload: payload, uuid: nil)!
-
-            self.mockConversationEventProcessor.processConversationEvents([updateEvent])
-
-            let processConversationEventsCalls = self.mockConversationEventProcessor.calls.processConversationEvents
-            XCTAssertEqual(processConversationEventsCalls.count, 1)
+            updateEvent = ZMUpdateEvent(fromEventStreamPayload: mockPayload, uuid: nil)!
 
             return [updateEvent]
         })
@@ -400,13 +397,18 @@ class MLSControllerTests: ZMConversationTestsBase {
             XCTFail("Unexpected error: \(String(describing: error))")
         }
 
+        // Then
+        let processConversationEventsCalls = self.mockConversationEventProcessor.calls.processConversationEvents
+        XCTAssertEqual(processConversationEventsCalls.count, 1)
+        XCTAssertEqual(processConversationEventsCalls[0], [updateEvent])
+
         let removeMembersFromConversationCalls = mockCoreCrypto.calls.removeClientsFromConversation
         XCTAssertEqual(removeMembersFromConversationCalls.count, 1)
         XCTAssertEqual(removeMembersFromConversationCalls[0].0, mlsGroupID.bytes)
-        XCTAssertEqual(removeMembersFromConversationCalls[0].1, [mlsClientID])
+        XCTAssertEqual(removeMembersFromConversationCalls[0].1, [mlsClientID.bytes])
     }
 
-    func test_AddingMembersToConversation_ThrowsNoClientsToRemove() async {
+    func test_RemovingMembersToConversation_ThrowsNoClientsToRemove() async {
         // Given
         let mlsGroupID = MLSGroupID(Data([1, 2, 3]))
 
@@ -426,13 +428,13 @@ class MLSControllerTests: ZMConversationTestsBase {
         }
     }
 
-    func test_AddingMembersToConversation_FailsToSendHandShakeMessage() async {
+    func test_RemovingMembersToConversation_FailsToSendHandShakeMessage() async {
         // Given
         let domain = "example.com"
         let id = UUID.create().uuidString
         let clientID = UUID.create().uuidString
         let mlsGroupID = MLSGroupID(Data([1, 2, 3]))
-        let mlsClientID = MLSClientID(userID: id, clientID: clientID, domain: domain).string.data(using: .utf8)!.base64EncodedString().base64EncodedBytes!
+        let mlsClientID = MLSClientID(userID: id, clientID: clientID, domain: domain)
 
         // Mock return value for removing clients to conversation.
         mockCoreCrypto.mockRemoveClientsFromConversation = [0, 0, 0, 0]

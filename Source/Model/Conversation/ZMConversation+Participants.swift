@@ -186,8 +186,10 @@ extension ZMConversation {
         }
     }
 
-    public func removeParticipant(_ participant: UserType,
-                                  completion: @escaping RemoveParticipantAction.ResultHandler) {
+    public func removeParticipant(
+        _ participant: UserType,
+        completion: @escaping RemoveParticipantAction.ResultHandler
+    ) {
         guard
             let context = managedObjectContext
         else {
@@ -211,28 +213,25 @@ extension ZMConversation {
         case .mls:
             guard
                 let mlsController = context.mlsController,
-                let groupID = mlsGroupID?.base64EncodedString,
-                let mlsGroupID = MLSGroupID(base64Encoded: groupID)
+                let groupID = mlsGroupID
 
             else {
                 completion(.failure(.invalidOperation))
                 return
             }
 
-            let mlsClientIDs = user.clients.compactMap {
-                MLSClientID(userClient: $0)?.string.base64EncodedBytes
-            }
-
             Task {
                 do {
-                    try await mlsController.removeMembersFromConversation(with: mlsClientIDs, for: mlsGroupID)
+                    let clientIDs = user.clients.compactMap { MLSClientID(userClient: $0) }
+
+                    try await mlsController.removeMembersFromConversation(with: clientIDs, for: groupID)
 
                     context.perform {
                         completion(.success(()))
                     }
 
                 } catch {
-                    Logging.eventProcessing.error("Failed to remove member to mls group: \(String(describing: error))")
+                    Logging.eventProcessing.warn("Failed to remove member to mls group: \(String(describing: error))")
 
                     context.perform {
                         completion(.failure(.failedToRemoveMLSMembers))

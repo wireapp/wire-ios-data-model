@@ -33,7 +33,7 @@ public protocol MLSControllerProtocol {
 
     func addMembersToConversation(with users: [MLSUser], for groupID: MLSGroupID) async throws
 
-    func removeMembersFromConversation(with clientIds: [ClientId], for groupID: MLSGroupID) async throws
+    func removeMembersFromConversation(with clientIds: [MLSClientID], for groupID: MLSGroupID) async throws
 }
 
 public final class MLSController: MLSControllerProtocol {
@@ -239,13 +239,15 @@ public final class MLSController: MLSControllerProtocol {
     }
 
     public func removeMembersFromConversation(
-        with clientIds: [ClientId],
+        with clientIds: [MLSClientID],
         for groupID: MLSGroupID
     ) async throws {
 
         guard !clientIds.isEmpty else {
             throw MLSRemoveParticipantsError.noClientsToRemove
         }
+        
+        let clientIds =  clientIds.compactMap { $0.bytes }
 
         let messageToSend = try removeMembers(id: groupID, clientIds: clientIds)
 
