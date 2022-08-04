@@ -44,7 +44,7 @@ public final class MLSController: MLSControllerProtocol {
     private weak var context: NSManagedObjectContext?
     private let coreCrypto: CoreCryptoProtocol
     private let conversationEventProcessor: ConversationEventProcessorProtocol
-    private let logger = ZMSLog(tag: "core-crypto")
+    private let logger = Logging.mls
 
     let actionsProvider: MLSActionsProviderProtocol
     let targetUnclaimedKeyPackageCount = 100
