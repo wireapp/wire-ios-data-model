@@ -619,38 +619,24 @@ public protocol MLSEncryptedPayloadGenerator {
 public enum MLSEncryptedPayloadGeneratorError: Error {
 
     case noContext
-    case noGroupID
     case noUnencryptedData
-    case noEncryptionFunction
 
 }
 
 extension ZMClientMessage: MLSEncryptedPayloadGenerator {
 
     // TODO: [John] test
-    public func encryptForTransport(using encryptionFunction: EncryptionFunction) throws -> Data {
+    public func encryptForTransport(using encrypt: EncryptionFunction) throws -> Data {
         guard let context = managedObjectContext else {
             throw MLSEncryptedPayloadGeneratorError.noContext
-        }
-
-        guard let mlsGroupID = conversation?.mlsGroupID else {
-            throw MLSEncryptedPayloadGeneratorError.noGroupID
         }
 
         guard let genericMessage = underlyingMessage else {
             throw MLSEncryptedPayloadGeneratorError.noUnencryptedData
         }
 
-        guard let mlsController = context.mlsController else {
-            throw MLSEncryptedPayloadGeneratorError.noEncryptionFunction
-        }
-
         updateUnderlayingMessageBeforeSending(in: context)
-
-        return try genericMessage.encryptForTransport { message in
-            let encryptedBytes = try mlsController.encrypt(message: message.bytes, for: mlsGroupID)
-            return encryptedBytes.data
-        }
+        return try genericMessage.encryptForTransport(using: encrypt)
     }
 
 }
@@ -659,29 +645,17 @@ extension ZMAssetClientMessage: MLSEncryptedPayloadGenerator {
 
     // TODO: [John] test
 
-    public func encryptForTransport(using encryptionFunction: EncryptionFunction) throws -> Data {
+    public func encryptForTransport(using encrypt: EncryptionFunction) throws -> Data {
         guard let context = managedObjectContext else {
             throw MLSEncryptedPayloadGeneratorError.noContext
-        }
-
-        guard let mlsGroupID = conversation?.mlsGroupID else {
-            throw MLSEncryptedPayloadGeneratorError.noGroupID
         }
 
         guard let genericMessage = underlyingMessage else {
             throw MLSEncryptedPayloadGeneratorError.noUnencryptedData
         }
 
-        guard let mlsController = context.mlsController else {
-            throw MLSEncryptedPayloadGeneratorError.noEncryptionFunction
-        }
-
         updateUnderlayingMessageBeforeSending(in: context)
-
-        return try genericMessage.encryptForTransport { message in
-            let encryptedBytes = try mlsController.encrypt(message: message.bytes, for: mlsGroupID)
-            return encryptedBytes.data
-        }
+        return try genericMessage.encryptForTransport(using: encrypt)
     }
 
 }
