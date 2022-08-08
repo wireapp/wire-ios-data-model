@@ -85,3 +85,29 @@ extension ZMConversation {
     @NSManaged public var isPendingWelcomeMessage: Bool
 
 }
+
+// MARK: - Fetch by group id
+
+public extension ZMConversation {
+
+    static func fetch(
+        with groupID: MLSGroupID,
+        in context: NSManagedObjectContext
+    ) -> ZMConversation? {
+        let request = Self.fetchRequest()
+
+        // TODO: Also use the domain?
+        request.predicate = NSPredicate(
+            format: "%K == %@",
+            argumentArray: [Self.mlsGroupID, groupID.data]
+        )
+
+        request.fetchLimit = 2
+
+        let result = context.executeFetchRequestOrAssert(request)
+        // TODO: assert one result
+        return result.first
+
+    }
+
+}
