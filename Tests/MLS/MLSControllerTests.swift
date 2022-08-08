@@ -372,7 +372,7 @@ class MLSControllerTests: ZMConversationTestsBase {
         // Mock return value for removing clients to conversation.
         mockCoreCrypto.mockRemoveClientsFromConversation = [0, 0, 0, 0]
 
-        // // Mock update event for member leaves from conversation
+        // Mock update event for member leaves from conversation
         var updateEvent: ZMUpdateEvent!
 
         // Mock sending message.

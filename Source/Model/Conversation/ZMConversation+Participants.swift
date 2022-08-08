@@ -226,7 +226,7 @@ extension ZMConversation {
                 return
             }
 
-            let clientIDs = user.clients.compactMap { MLSClientID(userClient: $0) }
+            let clientIDs = user.clients.compactMap( MLSClientID.init(userClient:))
 
             Task {
                 do {
