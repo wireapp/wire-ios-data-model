@@ -380,8 +380,6 @@ class MLSControllerTests: ZMConversationTestsBase {
                 XCTAssertEqual(processConversationEventsCalls.count, 1)
                 XCTAssertEqual(processConversationEventsCalls[0], [updateEvent])
 
-                break
-
             default:
                 XCTFail("Unexpected error: \(String(describing: error))")
             }
