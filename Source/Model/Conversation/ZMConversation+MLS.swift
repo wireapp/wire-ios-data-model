@@ -105,9 +105,10 @@ public extension ZMConversation {
         request.fetchLimit = 2
 
         let result = context.executeFetchRequestOrAssert(request)
-        // TODO: assert one result
-        return result.first
 
+        // TODO: assert one result
+
+        return result.first as? ZMConversation
     }
 
 }
