@@ -100,13 +100,13 @@ public extension ZMConversation {
 
         if APIVersion.isFederationEnabled {
             request.predicate = NSPredicate(
-                format: "%K == %@",
-                argumentArray: [Self.mlsGroupID, groupID.data]
+                format: "%K == %@ AND %K == %@",
+                argumentArray: [Self.mlsGroupID, groupID.data, Self.domainKey()!, domain]
             )
         } else {
             request.predicate = NSPredicate(
-                format: "%K == %@ AND %K == %@",
-                argumentArray: [Self.mlsGroupID, groupID.data, Self.domainKey()!, domain]
+                format: "%K == %@",
+                argumentArray: [Self.mlsGroupID, groupID.data]
             )
         }
 
