@@ -21,9 +21,31 @@ import Foundation
 
 final class ZMConversationTests_MLS: ZMConversationTestsBase {
 
-    func testThatItFetchesConversationWithGroupID() {
+    override func tearDown() {
+        APIVersion.isFederationEnabled = false
+        super.tearDown()
+    }
+
+    func testThatItFetchesConversationWithGroupID_FederationDisabled() {
         syncMOC.performGroupedBlockAndWait { [self] in
             // Given
+            APIVersion.isFederationEnabled = false
+            let groupID = MLSGroupID([1, 2, 3])
+            let domain = "example.com"
+            let conversation = self.createConversation(groupID: groupID, domain: domain)
+
+            // When
+            let fetchedConversation = ZMConversation.fetch(with: groupID, domain: domain, in: syncMOC)
+
+            // Then
+            XCTAssertEqual(fetchedConversation, conversation)
+        }
+    }
+
+    func testThatItFetchesConversationWithGroupID_FederationEnabled() {
+        syncMOC.performGroupedBlockAndWait { [self] in
+            // Given
+            APIVersion.isFederationEnabled = true
             let groupID = MLSGroupID([1, 2, 3])
             let domain = "example.com"
             let conversation = self.createConversation(groupID: groupID, domain: domain)
