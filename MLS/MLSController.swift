@@ -20,7 +20,7 @@ import Foundation
 
 public protocol MLSControllerProtocol {
 
-    func uploadKeyPackagesIfNeeded()
+    func uploadKeyPackagesIfNeeded() async throws
 
     func createGroup(for groupID: MLSGroupID) throws
 
@@ -233,6 +233,7 @@ public final class MLSController: MLSControllerProtocol {
     enum MLSKeyPackagesError: Error {
 
         case failedToGenerateKeyPackages
+        case failedToCountUnclaimedKeyPackages
 
     }
 
@@ -241,43 +242,76 @@ public final class MLSController: MLSControllerProtocol {
     /// Checks how many key packages are available on the backend and
     /// generates new ones if there are less than 50% of the target unclaimed key package count..
 
-    public func uploadKeyPackagesIfNeeded() {
-        guard let context = context else { return }
-        let user = ZMUser.selfUser(in: context)
-        guard let clientID = user.selfClient()?.remoteIdentifier else { return }
+//    public func uploadKeyPackagesIfNeeded() {
+//        guard let context = context else { return }
+//        let user = ZMUser.selfUser(in: context)
+//        guard let clientID = user.selfClient()?.remoteIdentifier else { return }
+//
+//        // TODO: Here goes the logic to determine how check to remaining key packages and re filling the new key packages after calculating number of welcome messages it receives by the client.
+//
+//        /// For now temporarily we generate and upload at most 100 new key packages
+//
+//         countUnclaimedKeyPackages(clientID: clientID, context: context.notificationContext) { unclaimedKeyPackageCount in
+//            guard unclaimedKeyPackageCount <= self.targetUnclaimedKeyPackageCount / 2 else { return }
+//
+//            do {
+//                let amount = UInt32(self.targetUnclaimedKeyPackageCount - unclaimedKeyPackageCount)
+//                let keyPackages = try self.generateKeyPackages(amountRequested: amount)
+//
+//                self.uploadKeyPackages(
+//                    clientID: clientID,
+//                    keyPackages: keyPackages,
+//                    context: context.notificationContext
+//                )
+//
+//            } catch {
+//                self.logger.error("failed to generate new key packages: \(String(describing: error))")
+//            }
+//        }
+//    }
 
-        // TODO: Here goes the logic to determine how check to remaining key packages and re filling the new key packages after calculating number of welcome messages it receives by the client.
+    public func uploadKeyPackagesIfNeeded() async throws {
 
-        /// For now temporarily we generate and upload at most 100 new key packages
+        // TODO: Get actual key packages count from CoreCrypto once updated to latest. For now using a mock value of 50.
+        let clientValidKeyPackagesCount  = 50
+        let remainingKeyPackagesCountCheck = clientValidKeyPackagesCount < targetUnclaimedKeyPackageCount / 2
+        let lastCheckWasMoreThen24Hours = UserDefaults.standard.has24HoursPassedSinceLastKeyPackage
 
-         countUnclaimedKeyPackages(clientID: clientID, context: context.notificationContext) { unclaimedKeyPackageCount in
-            guard unclaimedKeyPackageCount <= self.targetUnclaimedKeyPackageCount / 2 else { return }
+        guard lastCheckWasMoreThen24Hours || remainingKeyPackagesCountCheck else { return }
 
-            do {
-                let amount = UInt32(self.targetUnclaimedKeyPackageCount - unclaimedKeyPackageCount)
-                let keyPackages = try self.generateKeyPackages(amountRequested: amount)
-
-                self.uploadKeyPackages(
-                    clientID: clientID,
-                    keyPackages: keyPackages,
-                    context: context.notificationContext
-                )
-
-            } catch {
-                self.logger.error("failed to generate new key packages: \(String(describing: error))")
-            }
+        guard
+            let context = context,
+            let clientID = ZMUser.selfUser(in: context).selfClient()?.remoteIdentifier
+        else {
+            return
         }
+
+        let unclaimedKeyPackageCount = try await countUnclaimedKeyPackages(clientID: clientID, context: context.notificationContext)
+
+        UserDefaults.standard.has24HoursPassedSinceLastKeyPackage = false
+
+        guard unclaimedKeyPackageCount <= targetUnclaimedKeyPackageCount / 2 else { return }
+
+        let amount = UInt32(targetUnclaimedKeyPackageCount - unclaimedKeyPackageCount)
+
+        let keyPackages = try generateKeyPackages(amountRequested: amount)
+
+        try await uploadKeyPackages(clientID: clientID, keyPackages: keyPackages, context: context.notificationContext)
     }
 
-    private func countUnclaimedKeyPackages(clientID: String, context: NotificationContext, completion: @escaping (Int) -> Void) {
-        actionsProvider.countUnclaimedKeyPackages(clientID: clientID, context: context) { result in
-            switch result {
-            case .success(let count):
-                completion(count)
+    private func countUnclaimedKeyPackages(
+        clientID: String,
+        context: NotificationContext
+    ) async throws -> Int {
+        do {
+            return try await actionsProvider.countUnclaimedKeyPackages(
+                clientID: clientID,
+                context: context
+            )
 
-            case .failure(let error):
-                self.logger.error("failed to fetch MLS key packages count with error: \(String(describing: error))")
-            }
+        } catch let error {
+            self.logger.warn("failed to count unclaimed key packages with error: \(String(describing: error))")
+            throw MLSKeyPackagesError.failedToCountUnclaimedKeyPackages
         }
     }
 
@@ -302,15 +336,22 @@ public final class MLSController: MLSControllerProtocol {
         return keyPackages.map { $0.base64EncodedString } 
     }
 
-    private func uploadKeyPackages(clientID: String, keyPackages: [String], context: NotificationContext) {
-        actionsProvider.uploadKeyPackages(clientID: clientID, keyPackages: keyPackages, context: context) { result in
-            switch result {
-            case .success:
-                break
+    private func uploadKeyPackages(
+        clientID: String,
+        keyPackages: [String],
+        context: NotificationContext
+    ) async throws {
 
-            case .failure(let error):
-                self.logger.error("failed to upload key packages: \(String(describing: error))")
-            }
+        do {
+            try await actionsProvider.uploadKeyPackages(
+                clientID: clientID,
+                keyPackages: keyPackages,
+                context: context
+            )
+
+        } catch let error {
+            logger.warn("failed to upload key packages: \(String(describing: error))")
+            throw MLSKeyPackagesError.failedToGenerateKeyPackages
         }
     }
 
@@ -458,16 +499,14 @@ protocol MLSActionsProviderProtocol {
 
     func countUnclaimedKeyPackages(
         clientID: String,
-        context: NotificationContext,
-        resultHandler: @escaping CountSelfMLSKeyPackagesAction.ResultHandler
-    )
+        context: NotificationContext
+    ) async throws -> Int
 
     func uploadKeyPackages(
         clientID: String,
         keyPackages: [String],
-        context: NotificationContext,
-        resultHandler: @escaping UploadSelfMLSKeyPackagesAction.ResultHandler
-    )
+        context: NotificationContext
+    ) async throws
 
     func claimKeyPackages(
         userID: UUID,
@@ -490,14 +529,27 @@ protocol MLSActionsProviderProtocol {
 
 private class MLSActionsProvider: MLSActionsProviderProtocol {
 
-    func countUnclaimedKeyPackages(clientID: String, context: NotificationContext, resultHandler: @escaping CountSelfMLSKeyPackagesAction.ResultHandler) {
-        let action = CountSelfMLSKeyPackagesAction(clientID: clientID, resultHandler: resultHandler)
-        action.send(in: context)
+    func countUnclaimedKeyPackages(
+        clientID: String,
+        context: NotificationContext
+    ) async throws -> Int {
+        var action = CountSelfMLSKeyPackagesAction(clientID: clientID)
+        return try await action.perform(in: context)
     }
 
-    func uploadKeyPackages(clientID: String, keyPackages: [String], context: NotificationContext, resultHandler: @escaping UploadSelfMLSKeyPackagesAction.ResultHandler) {
-        let action = UploadSelfMLSKeyPackagesAction(clientID: clientID, keyPackages: keyPackages, resultHandler: resultHandler)
-        action.send(in: context)
+
+
+    func uploadKeyPackages(
+        clientID: String,
+        keyPackages: [String],
+        context: NotificationContext
+    ) async throws {
+        var action = UploadSelfMLSKeyPackagesAction(
+            clientID: clientID,
+            keyPackages: keyPackages
+        )
+
+        try await action.perform(in: context)
     }
 
     func claimKeyPackages(
@@ -537,4 +589,33 @@ public protocol ConversationEventProcessorProtocol {
 
     func processConversationEvents(_ events: [ZMUpdateEvent])
 
+}
+
+// MARK: - Helper
+
+private extension UserDefaults {
+
+    enum Keys {
+        static let keyPackageQueriedTime = "keyPackageQueriedTime"
+    }
+
+    var has24HoursPassedSinceLastKeyPackage: Bool {
+
+        set {
+            set(Date(), forKey: Keys.keyPackageQueriedTime)
+        }
+
+        get {
+            guard
+                let storedDate = UserDefaults.standard.object(forKey: Keys.keyPackageQueriedTime) as? Date,
+                let difference = Calendar.current.dateComponents([.hour], from: storedDate, to: Date()).hour,
+                difference > 24
+
+            else {
+                return false
+            }
+
+            return true
+        }
+    }
 }
