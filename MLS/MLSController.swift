@@ -396,7 +396,6 @@ public final class MLSController: MLSControllerProtocol {
 
     }
 
-    // TODO: [John] test
     public func encrypt(message: Bytes, for groupID: MLSGroupID) throws -> Bytes {
         do {
             return try coreCrypto.wire_encryptMessage(conversationId: groupID.bytes, message: message)
