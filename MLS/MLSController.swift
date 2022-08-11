@@ -26,13 +26,13 @@ public protocol MLSControllerProtocol {
 
     func conversationExists(groupID: MLSGroupID) -> Bool
 
-    @discardableResult
     func processWelcomeMessage(welcomeMessage: String) throws -> MLSGroupID
 
     func decrypt(message: String, for groupID: MLSGroupID) throws -> Data?
 
     func addMembersToConversation(with users: [MLSUser], for groupID: MLSGroupID) async throws
 
+    func removeMembersFromConversation(with clientIds: [MLSClientID], for groupID: MLSGroupID) async throws
 }
 
 public final class MLSController: MLSControllerProtocol {
@@ -228,6 +228,49 @@ public final class MLSController: MLSControllerProtocol {
         }
     }
 
+    // MARK: - Remove participants from mls group
+
+    enum MLSRemoveParticipantsError: Error {
+
+        case failedToRemoveMembers
+        case noClientsToRemove
+
+    }
+
+    public func removeMembersFromConversation(
+        with clientIds: [MLSClientID],
+        for groupID: MLSGroupID
+    ) async throws {
+
+        guard !clientIds.isEmpty else {
+            throw MLSRemoveParticipantsError.noClientsToRemove
+        }
+        
+        let clientIds =  clientIds.compactMap { $0.string.utf8Data?.bytes }
+
+        let messageToSend = try removeMembers(id: groupID, clientIds: clientIds)
+
+        guard let messageToSend = messageToSend else { return }
+        try await sendMessage(messageToSend)
+
+    }
+
+    private func removeMembers(
+        id: MLSGroupID,
+        clientIds: [ClientId]
+    ) throws -> Bytes? {
+
+        do {
+            return try coreCrypto.wire_removeClientsFromConversation(
+                conversationId: id.bytes,
+                clients: clientIds
+            )
+        } catch let error {
+            logger.error("failed to remove members: \(String(describing: error))")
+            throw MLSRemoveParticipantsError.failedToRemoveMembers
+        }
+    }
+
     // MARK: - Key packages
 
     enum MLSKeyPackagesError: Error {
@@ -338,7 +381,6 @@ public final class MLSController: MLSControllerProtocol {
         return coreCrypto.wire_conversationExists(conversationId: groupID.bytes)
     }
 
-    @discardableResult
     public func processWelcomeMessage(welcomeMessage: String) throws -> MLSGroupID {
         guard let messageBytes = welcomeMessage.base64EncodedBytes else {
             logger.error("failed to convert welcome message to bytes")

@@ -190,12 +190,21 @@ class MLSControllerTests: ZMConversationTestsBase {
             welcome: [1, 1, 1, 1]
         )
 
+        // Mock update event for member joins the conversation
+        var updateEvent: ZMUpdateEvent!
+
         // Mock sending message.
         mockActionsProvider.sendMessageMocks.append({ message in
             XCTAssertEqual(message, Data([0, 0, 0, 0]))
-            // TODO: mock the update events for member join.
-            // TODO: assert that conversation event processor receives the events.
-            return []
+
+            let mockPayload: NSDictionary = [
+                "type": "conversation.member-join",
+                "data": message
+            ]
+
+            updateEvent = ZMUpdateEvent(fromEventStreamPayload: mockPayload, uuid: nil)!
+
+            return [updateEvent]
         })
 
         // Mock sending welcome message.
@@ -210,6 +219,10 @@ class MLSControllerTests: ZMConversationTestsBase {
         } catch let error {
             XCTFail("Unexpected error: \(String(describing: error))")
         }
+
+        let processConversationEventsCalls = self.mockConversationEventProcessor.calls.processConversationEvents
+        XCTAssertEqual(processConversationEventsCalls.count, 1)
+        XCTAssertEqual(processConversationEventsCalls[0], [updateEvent])
 
         let addClientsToConversationCalls = mockCoreCrypto.calls.addClientsToConversation
         XCTAssertEqual(addClientsToConversationCalls.count, 1)
@@ -337,10 +350,21 @@ class MLSControllerTests: ZMConversationTestsBase {
             welcome: [1, 1, 1, 1]
         )
 
+        // Mock update event for member joins the conversation
+        var updateEvent: ZMUpdateEvent!
+
         // Mock sending message.
         mockActionsProvider.sendMessageMocks.append({ message in
             XCTAssertEqual(message, Data([0, 0, 0, 0]))
-            return []
+
+            let mockPayload: NSDictionary = [
+                "type": "conversation.member-join",
+                "data": message
+            ]
+
+            updateEvent = ZMUpdateEvent(fromEventStreamPayload: mockPayload, uuid: nil)!
+
+            return [updateEvent]
         })
 
         do {
@@ -351,6 +375,107 @@ class MLSControllerTests: ZMConversationTestsBase {
             // Then
             switch error {
             case MLSController.MLSGroupCreationError.failedToSendWelcomeMessage:
+
+                let processConversationEventsCalls = self.mockConversationEventProcessor.calls.processConversationEvents
+                XCTAssertEqual(processConversationEventsCalls.count, 1)
+                XCTAssertEqual(processConversationEventsCalls[0], [updateEvent])
+
+            default:
+                XCTFail("Unexpected error: \(String(describing: error))")
+            }
+        }
+    }
+
+    // MARK: - Remove participants
+
+    func test_RemoveMembersFromConversation_IsSuccessful() async {
+        // Given
+        let domain = "example.com"
+        let id = UUID.create().uuidString
+        let clientID = UUID.create().uuidString
+        let mlsGroupID = MLSGroupID(Data([1, 2, 3]))
+        let mlsClientID = MLSClientID(userID: id, clientID: clientID, domain: domain)
+
+        // Mock return value for removing clients to conversation.
+        mockCoreCrypto.mockRemoveClientsFromConversation = [0, 0, 0, 0]
+
+        // Mock update event for member leaves from conversation
+        var updateEvent: ZMUpdateEvent!
+
+        // Mock sending message.
+        mockActionsProvider.sendMessageMocks.append({ message in
+            XCTAssertEqual(message, Data([0, 0, 0, 0]))
+
+            let mockPayload: NSDictionary = [
+                "type": "conversation.member-leave",
+                "data": message
+            ]
+
+            updateEvent = ZMUpdateEvent(fromEventStreamPayload: mockPayload, uuid: nil)!
+
+            return [updateEvent]
+        })
+
+        do {
+            // When
+            try await sut.removeMembersFromConversation(with: [mlsClientID], for: mlsGroupID)
+
+        } catch let error {
+            XCTFail("Unexpected error: \(String(describing: error))")
+        }
+
+        // Then
+        let processConversationEventsCalls = self.mockConversationEventProcessor.calls.processConversationEvents
+        XCTAssertEqual(processConversationEventsCalls.count, 1)
+        XCTAssertEqual(processConversationEventsCalls[0], [updateEvent])
+
+        let removeMembersFromConversationCalls = mockCoreCrypto.calls.removeClientsFromConversation
+        XCTAssertEqual(removeMembersFromConversationCalls.count, 1)
+        XCTAssertEqual(removeMembersFromConversationCalls[0].0, mlsGroupID.bytes)
+
+        let mlsClientIDBytes = mlsClientID.string.data(using: .utf8)!.bytes
+        XCTAssertEqual(removeMembersFromConversationCalls[0].1, [mlsClientIDBytes])
+    }
+
+    func test_RemovingMembersToConversation_ThrowsNoClientsToRemove() async {
+        // Given
+        let mlsGroupID = MLSGroupID(Data([1, 2, 3]))
+
+        do {
+            // When
+            try await sut.removeMembersFromConversation(with: [], for: mlsGroupID)
+
+        } catch let error {
+            // Then
+            switch error {
+            case MLSController.MLSRemoveParticipantsError.noClientsToRemove:
+                break
+
+            default:
+                XCTFail("Unexpected error: \(String(describing: error))")
+            }
+        }
+    }
+
+    func test_RemovingMembersToConversation_FailsToSendHandShakeMessage() async {
+        // Given
+        let domain = "example.com"
+        let id = UUID.create().uuidString
+        let clientID = UUID.create().uuidString
+        let mlsGroupID = MLSGroupID(Data([1, 2, 3]))
+        let mlsClientID = MLSClientID(userID: id, clientID: clientID, domain: domain)
+
+        // Mock return value for removing clients to conversation.
+        mockCoreCrypto.mockRemoveClientsFromConversation = [0, 0, 0, 0]
+
+        do {
+            // When
+            try await sut.removeMembersFromConversation(with: [mlsClientID], for: mlsGroupID)
+
+        } catch let error {
+            // Then
+            switch error {
+            case MLSController.MLSGroupCreationError.failedToSendHandshakeMessage:
                 break
 
             default:
