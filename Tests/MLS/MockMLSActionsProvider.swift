@@ -27,25 +27,29 @@ class MockMLSActionsProvider: MLSActionsProviderProtocol {
 
     }
 
-    var mockCountUncliamedKeyPackagesResult: Swift.Result<CountSelfMLSKeyPackagesAction.Result, CountSelfMLSKeyPackagesAction.Failure>?
+    typealias CountUnclaimedKeyPackagesMock = (String) -> Int
+    var countUnclaimedKeyPackagesMocks = [CountUnclaimedKeyPackagesMock]()
 
     func countUnclaimedKeyPackages(
         clientID: String,
-        context: NotificationContext,
-        resultHandler: @escaping CountSelfMLSKeyPackagesAction.ResultHandler
-    ) {
-        resultHandler(mockCountUncliamedKeyPackagesResult ?? .failure(.unknown(status: 999)))
+        context: NotificationContext
+    ) async throws -> Int {
+        guard let mock = countUnclaimedKeyPackagesMocks.first else { throw MockError.unmockedMethodInvoked }
+        countUnclaimedKeyPackagesMocks.removeFirst()
+        return mock(clientID)
     }
 
-    var mockUploadKeyPackagesResult: Swift.Result<UploadSelfMLSKeyPackagesAction.Result, UploadSelfMLSKeyPackagesAction.Failure>?
+    typealias UploadKeyPackagesMock = (String, [String]) -> Void
+    var uploadKeyPackagesMocks = [UploadKeyPackagesMock]()
 
     func uploadKeyPackages(
         clientID: String,
         keyPackages: [String],
-        context: NotificationContext,
-        resultHandler: @escaping UploadSelfMLSKeyPackagesAction.ResultHandler
-    ) {
-        resultHandler(mockUploadKeyPackagesResult ?? .failure(.unknown(status: 999)))
+        context: NotificationContext
+    ) async throws {
+        guard let mock = uploadKeyPackagesMocks.first else { throw MockError.unmockedMethodInvoked }
+        uploadKeyPackagesMocks.removeFirst()
+        return mock(clientID, keyPackages)
     }
 
     typealias ClaimKeyPackagesMock = (UUID, String?, String?) -> [KeyPackage]

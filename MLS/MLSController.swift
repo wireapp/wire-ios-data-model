@@ -242,34 +242,6 @@ public final class MLSController: MLSControllerProtocol {
     /// Checks how many key packages are available on the backend and
     /// generates new ones if there are less than 50% of the target unclaimed key package count..
 
-//    public func uploadKeyPackagesIfNeeded() {
-//        guard let context = context else { return }
-//        let user = ZMUser.selfUser(in: context)
-//        guard let clientID = user.selfClient()?.remoteIdentifier else { return }
-//
-//        // TODO: Here goes the logic to determine how check to remaining key packages and re filling the new key packages after calculating number of welcome messages it receives by the client.
-//
-//        /// For now temporarily we generate and upload at most 100 new key packages
-//
-//         countUnclaimedKeyPackages(clientID: clientID, context: context.notificationContext) { unclaimedKeyPackageCount in
-//            guard unclaimedKeyPackageCount <= self.targetUnclaimedKeyPackageCount / 2 else { return }
-//
-//            do {
-//                let amount = UInt32(self.targetUnclaimedKeyPackageCount - unclaimedKeyPackageCount)
-//                let keyPackages = try self.generateKeyPackages(amountRequested: amount)
-//
-//                self.uploadKeyPackages(
-//                    clientID: clientID,
-//                    keyPackages: keyPackages,
-//                    context: context.notificationContext
-//                )
-//
-//            } catch {
-//                self.logger.error("failed to generate new key packages: \(String(describing: error))")
-//            }
-//        }
-//    }
-
     public func uploadKeyPackagesIfNeeded() async throws {
 
         // TODO: Get actual key packages count from CoreCrypto once updated to latest. For now using a mock value of 50.
@@ -287,15 +259,12 @@ public final class MLSController: MLSControllerProtocol {
         }
 
         let unclaimedKeyPackageCount = try await countUnclaimedKeyPackages(clientID: clientID, context: context.notificationContext)
-
         UserDefaults.standard.has24HoursPassedSinceLastKeyPackage = false
 
         guard unclaimedKeyPackageCount <= targetUnclaimedKeyPackageCount / 2 else { return }
 
         let amount = UInt32(targetUnclaimedKeyPackageCount - unclaimedKeyPackageCount)
-
         let keyPackages = try generateKeyPackages(amountRequested: amount)
-
         try await uploadKeyPackages(clientID: clientID, keyPackages: keyPackages, context: context.notificationContext)
     }
 
