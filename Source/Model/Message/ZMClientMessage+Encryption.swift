@@ -625,17 +625,17 @@ public enum MLSEncryptedPayloadGeneratorError: Error {
 
 extension ZMClientMessage: MLSEncryptedPayloadGenerator {
 
-    // TODO: [John] test
     public func encryptForTransport(using encrypt: EncryptionFunction) throws -> Data {
         guard let context = managedObjectContext else {
             throw MLSEncryptedPayloadGeneratorError.noContext
         }
 
+        updateUnderlayingMessageBeforeSending(in: context)
+
         guard let genericMessage = underlyingMessage else {
             throw MLSEncryptedPayloadGeneratorError.noUnencryptedData
         }
 
-        updateUnderlayingMessageBeforeSending(in: context)
         return try genericMessage.encryptForTransport(using: encrypt)
     }
 
@@ -643,26 +643,23 @@ extension ZMClientMessage: MLSEncryptedPayloadGenerator {
 
 extension ZMAssetClientMessage: MLSEncryptedPayloadGenerator {
 
-    // TODO: [John] test
-
     public func encryptForTransport(using encrypt: EncryptionFunction) throws -> Data {
         guard let context = managedObjectContext else {
             throw MLSEncryptedPayloadGeneratorError.noContext
         }
 
+        updateUnderlayingMessageBeforeSending(in: context)
+
         guard let genericMessage = underlyingMessage else {
             throw MLSEncryptedPayloadGeneratorError.noUnencryptedData
         }
 
-        updateUnderlayingMessageBeforeSending(in: context)
         return try genericMessage.encryptForTransport(using: encrypt)
     }
 
 }
 
 extension GenericMessage: MLSEncryptedPayloadGenerator {
-
-    // TODO: [John] test
 
     public func encryptForTransport(using encrypt: EncryptionFunction) throws -> Data {
         let unencryptedData = try unencryptedData()
