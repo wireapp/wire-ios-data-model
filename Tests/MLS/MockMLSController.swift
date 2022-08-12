@@ -31,7 +31,7 @@ class MockMLSController: MLSControllerProtocol {
 
     struct Calls {
 
-        var uploadKeyPackagesIfNeeded: [Void] = []
+        var uploadKeyPackagesIfNeeded = [(String, NotificationContext)]()
         var createGroup = [MLSGroupID]()
         var conversationExists = [MLSGroupID]()
         var processWelcomeMessage = [String]()
@@ -47,8 +47,8 @@ class MockMLSController: MLSControllerProtocol {
 
     // MARK: - Methods
 
-    func uploadKeyPackagesIfNeeded() {
-        calls.uploadKeyPackagesIfNeeded.append(())
+    func uploadKeyPackagesIfNeeded(for clientID: String, with context: NotificationContext) async throws {
+        calls.uploadKeyPackagesIfNeeded.append((clientID, context))
     }
 
     func createGroup(for groupID: MLSGroupID) throws {
