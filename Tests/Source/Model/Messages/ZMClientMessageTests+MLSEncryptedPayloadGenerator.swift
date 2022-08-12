@@ -19,7 +19,7 @@
 import Foundation
 @testable import WireDataModel
 
-final class ZMClientMessageTests_MLSEcnryptedPayloadGenerator:  BaseZMClientMessageTests {
+final class ZMClientMessageTests_MLSEncryptedPayloadGenerator: BaseZMClientMessageTests {
 
     let encryptionFunction: (Data) throws -> Data = {
         $0.zmSHA256Digest()
