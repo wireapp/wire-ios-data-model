@@ -184,7 +184,7 @@ public enum CiphersuiteName: Equatable, Hashable {
 
 }
 
-public enum CryptoError: Equatable, Hashable {
+public enum CryptoError: Error, Equatable, Hashable {
 
     // Simple error enums only carry a message
     case ConversationNotFound(message: String)
