@@ -247,6 +247,8 @@ class MLSControllerTests: ZMConversationTestsBase {
         let actualInvitees = addClientsToConversationCalls[0].1
         XCTAssertEqual(actualInvitees.count, 1)
         XCTAssertTrue(actualInvitees.contains(invitee))
+
+        XCTAssertEqual(mockCoreCrypto.calls.commitAccepted, [mlsGroupID.bytes])
     }
 
     func test_AddingMembersToConversation_ThrowsNoParticipantsToAdd() async {
@@ -268,6 +270,8 @@ class MLSControllerTests: ZMConversationTestsBase {
                 XCTFail("Unexpected error: \(String(describing: error))")
             }
         }
+
+        XCTAssertTrue(mockCoreCrypto.calls.commitAccepted.isEmpty)
     }
 
     func test_AddingMembersToConversation_ThrowsFailedToClaimKeyPackages() async {
@@ -291,6 +295,8 @@ class MLSControllerTests: ZMConversationTestsBase {
                 XCTFail("Unexpected error: \(String(describing: error))")
             }
         }
+
+        XCTAssertTrue(mockCoreCrypto.calls.commitAccepted.isEmpty)
     }
 
     func test_AddingMembersToConversation_ThrowsFailedToSendHandshakeMessage() async {
@@ -336,6 +342,8 @@ class MLSControllerTests: ZMConversationTestsBase {
                 XCTFail("Unexpected error: \(String(describing: error))")
             }
         }
+
+        XCTAssertTrue(mockCoreCrypto.calls.commitAccepted.isEmpty)
     }
 
     func test_AddingMembersToConversation_ThrowsFailedToSendWelcomeMessage() async {
@@ -401,6 +409,8 @@ class MLSControllerTests: ZMConversationTestsBase {
                 XCTFail("Unexpected error: \(String(describing: error))")
             }
         }
+
+        XCTAssertEqual(mockCoreCrypto.calls.commitAccepted, [mlsGroupID.bytes])
     }
 
     // MARK: - Remove participants
@@ -456,6 +466,8 @@ class MLSControllerTests: ZMConversationTestsBase {
 
         let mlsClientIDBytes = mlsClientID.string.data(using: .utf8)!.bytes
         XCTAssertEqual(removeMembersFromConversationCalls[0].1, [mlsClientIDBytes])
+
+        XCTAssertEqual(mockCoreCrypto.calls.commitAccepted, [mlsGroupID.bytes])
     }
 
     func test_RemovingMembersToConversation_ThrowsNoClientsToRemove() async {
@@ -476,6 +488,8 @@ class MLSControllerTests: ZMConversationTestsBase {
                 XCTFail("Unexpected error: \(String(describing: error))")
             }
         }
+
+        XCTAssertTrue(mockCoreCrypto.calls.commitAccepted.isEmpty)
     }
 
     func test_RemovingMembersToConversation_FailsToSendHandShakeMessage() async {
@@ -507,6 +521,8 @@ class MLSControllerTests: ZMConversationTestsBase {
                 XCTFail("Unexpected error: \(String(describing: error))")
             }
         }
+
+        XCTAssertTrue(mockCoreCrypto.calls.commitAccepted.isEmpty)
     }
 
 }
