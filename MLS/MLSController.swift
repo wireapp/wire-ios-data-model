@@ -291,15 +291,17 @@ public final class MLSController: MLSControllerProtocol {
     ) async throws {
 
         // TODO: Get actual key packages count from CoreCrypto once updated to latest. For now using a mock value of 50.
-        let clientValidKeyPackagesCount  = 50
-        let remainingKeyPackagesCountCheck = clientValidKeyPackagesCount < targetUnclaimedKeyPackageCount / 2
-        let lastCheckWasMoreThen24Hours = UserDefaults.standard.has24HoursPassedSinceLastKeyPackage
+        let estimatedLocalKeyPackageCount  = 50
+        let shouldCountRemainingKeyPackages = estimatedLocalKeyPackageCount < targetUnclaimedKeyPackageCount / 2
+        let lastCheckWasMoreThen24Hours = UserDefaults.standard.hasMoreThan24HoursPassedSinceLastCheck
 
         // Check if need to query the backend
-        guard lastCheckWasMoreThen24Hours || remainingKeyPackagesCountCheck else { return }
+        guard lastCheckWasMoreThen24Hours || shouldCountRemainingKeyPackages else { return }
 
         let unclaimedKeyPackageCount = try await countUnclaimedKeyPackages(clientID: clientID, context: context)
-        UserDefaults.standard.has24HoursPassedSinceLastKeyPackage = false
+
+        UserDefaults.standard.lastKeyPackageStoredDate = Date()
+
 
         guard unclaimedKeyPackageCount <= targetUnclaimedKeyPackageCount / 2 else { return }
 
@@ -607,26 +609,22 @@ private extension UserDefaults {
         static let keyPackageQueriedTime = "keyPackageQueriedTime"
     }
 
-    var has24HoursPassedSinceLastKeyPackage: Bool {
+    var lastKeyPackageStoredDate: Date? {
 
-        set {
-            set(Date(), forKey: Keys.keyPackageQueriedTime)
+        get { UserDefaults.standard.object(forKey: Keys.keyPackageQueriedTime) as? Date }
+        set { set(newValue, forKey: Keys.keyPackageQueriedTime) }
+    }
+
+    var hasMoreThan24HoursPassedSinceLastCheck: Bool {
+
+        guard
+            let storedDate = lastKeyPackageStoredDate,
+            Calendar.current.dateComponents([.hour], from: storedDate, to: Date()).hour > 24
+        else {
+            return false
         }
 
-        get {
-            guard
-                let storedDate = UserDefaults.standard.object(forKey: Keys.keyPackageQueriedTime) as? Date
-            else {
-                return true
-            }
+        return false
 
-            if let difference = Calendar.current.dateComponents([.hour], from: storedDate, to: Date()).hour,
-               difference > 24 {
-                return true
-
-            } else {
-                return false
-            }
-        }
     }
 }
