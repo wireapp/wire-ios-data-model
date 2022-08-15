@@ -70,7 +70,7 @@ class MLSControllerTests: ZMConversationTestsBase {
         syncMOC.performAndWait {
             // Given
             let message = Data([1, 2, 3]).base64EncodedString()
-            self.mockCoreCrypto.mockDecryptError = CryptoError.ConversationNotFound(message: "conversation not found")
+            self.mockCoreCrypto.mockErrorForDecryptMessage = CryptoError.ConversationNotFound(message: "conversation not found")
 
             // When / Then
             assertItThrows(error: DecryptionError.failedToDecryptMessage) {
@@ -83,7 +83,14 @@ class MLSControllerTests: ZMConversationTestsBase {
         syncMOC.performAndWait {
             // Given
             let messageBytes: Bytes = [1, 2, 3]
-            self.mockCoreCrypto.mockDecryptMessage = .some(.none)
+            self.mockCoreCrypto.mockResultForDecryptMessage = .some(
+                DecryptedMessage(
+                    message: nil,
+                    proposals: [],
+                    isActive: false,
+                    commitDelay: nil
+                )
+            )
 
             // When
             var data: Data?
@@ -102,7 +109,14 @@ class MLSControllerTests: ZMConversationTestsBase {
         syncMOC.performAndWait {
             // Given
             let messageBytes: Bytes = [1, 2, 3]
-            self.mockCoreCrypto.mockDecryptMessage = .some(messageBytes)
+            self.mockCoreCrypto.mockResultForDecryptMessage = .some(
+                DecryptedMessage(
+                    message: messageBytes,
+                    proposals: [],
+                    isActive: false,
+                    commitDelay: nil
+                )
+            )
 
             // When
             var data: Data?
@@ -140,7 +154,7 @@ class MLSControllerTests: ZMConversationTestsBase {
     func test_CreateGroup_ThrowsError() throws {
         // Given
         let groupID = MLSGroupID(Data([1, 2, 3]))
-        mockCoreCrypto.mockCreateConversationError = CryptoError.MalformedIdentifier(message: "bad id")
+        mockCoreCrypto.mockErrorForCreateConversation = CryptoError.MalformedIdentifier(message: "bad id")
 
         // When
         XCTAssertThrowsError(try sut.createGroup(for: groupID)) { error in
@@ -185,9 +199,10 @@ class MLSControllerTests: ZMConversationTestsBase {
         })
 
         // Mock return value for adding clients to conversation.
-        mockCoreCrypto.mockAddClientsToConversation = MemberAddedMessages(
-            message: [0, 0, 0, 0],
-            welcome: [1, 1, 1, 1]
+        mockCoreCrypto.mockResultForAddClientsToConversation = MemberAddedMessages(
+            commit: [0, 0, 0, 0],
+            welcome: [1, 1, 1, 1],
+            publicGroupState: []
         )
 
         // Mock update event for member joins the conversation
@@ -301,9 +316,10 @@ class MLSControllerTests: ZMConversationTestsBase {
         })
 
         // Mock return value for adding clients to conversation.
-        mockCoreCrypto.mockAddClientsToConversation = MemberAddedMessages(
-            message: [0, 0, 0, 0],
-            welcome: [1, 1, 1, 1]
+        mockCoreCrypto.mockResultForAddClientsToConversation = MemberAddedMessages(
+            commit: [0, 0, 0, 0],
+            welcome: [1, 1, 1, 1],
+            publicGroupState: []
         )
 
         do {
@@ -345,9 +361,10 @@ class MLSControllerTests: ZMConversationTestsBase {
         })
 
         // Mock return value for adding clients to conversation.
-        mockCoreCrypto.mockAddClientsToConversation = MemberAddedMessages(
-            message: [0, 0, 0, 0],
-            welcome: [1, 1, 1, 1]
+        mockCoreCrypto.mockResultForAddClientsToConversation = MemberAddedMessages(
+            commit: [0, 0, 0, 0],
+            welcome: [1, 1, 1, 1],
+            publicGroupState: []
         )
 
         // Mock update event for member joins the conversation
@@ -397,7 +414,11 @@ class MLSControllerTests: ZMConversationTestsBase {
         let mlsClientID = MLSClientID(userID: id, clientID: clientID, domain: domain)
 
         // Mock return value for removing clients to conversation.
-        mockCoreCrypto.mockRemoveClientsFromConversation = [0, 0, 0, 0]
+        mockCoreCrypto.mockResultForRemoveClientsFromConversation = CommitBundle(
+            welcome: nil,
+            commit: [0, 0, 0, 0],
+            publicGroupState: []
+        )
 
         // Mock update event for member leaves from conversation
         var updateEvent: ZMUpdateEvent!
@@ -466,7 +487,11 @@ class MLSControllerTests: ZMConversationTestsBase {
         let mlsClientID = MLSClientID(userID: id, clientID: clientID, domain: domain)
 
         // Mock return value for removing clients to conversation.
-        mockCoreCrypto.mockRemoveClientsFromConversation = [0, 0, 0, 0]
+        mockCoreCrypto.mockResultForRemoveClientsFromConversation = CommitBundle(
+            welcome: nil,
+            commit: [0, 0, 0, 0],
+            publicGroupState: []
+        )
 
         do {
             // When
