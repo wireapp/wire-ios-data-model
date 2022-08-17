@@ -20,7 +20,7 @@ import Foundation
 
 public protocol MLSControllerProtocol {
 
-    func uploadKeyPackagesIfNeeded(for clientID: String) async throws
+    func uploadKeyPackagesIfNeeded()
 
     func createGroup(for groupID: MLSGroupID) throws
 
@@ -285,7 +285,7 @@ public final class MLSController: MLSControllerProtocol {
     /// Checks how many key packages are available on the backend and
     /// generates new ones if there are less than 50% of the target unclaimed key package count..
 
-    public func uploadKeyPackagesIfNeeded(for clientID: String) async throws {
+    public func uploadKeyPackagesIfNeeded() {
 
         // TODO: Get actual key packages count from CoreCrypto once updated to latest. For now using a mock value of 50.
         let estimatedLocalKeyPackageCount  = 50
@@ -295,18 +295,24 @@ public final class MLSController: MLSControllerProtocol {
         // Check if need to query the backend
         guard lastCheckWasMoreThen24Hours || shouldCountRemainingKeyPackages else { return }
 
-        guard let context = context else { return }
+        guard
+            let context = context,
+            let clientID = ZMUser.selfUser(in: context).selfClient()?.remoteIdentifier
+        else {
+            return
+        }
 
-        let unclaimedKeyPackageCount = try await countUnclaimedKeyPackages(clientID: clientID, context: context.notificationContext)
+        Task {
+            let unclaimedKeyPackageCount = try await countUnclaimedKeyPackages(clientID: clientID, context: context.notificationContext)
 
-        UserDefaults.standard.lastKeyPackageCountDate = Date()
+            UserDefaults.standard.lastKeyPackageCountDate = Date()
 
+            guard unclaimedKeyPackageCount <= targetUnclaimedKeyPackageCount / 2 else { return }
 
-        guard unclaimedKeyPackageCount <= targetUnclaimedKeyPackageCount / 2 else { return }
-
-        let amount = UInt32(targetUnclaimedKeyPackageCount - unclaimedKeyPackageCount)
-        let keyPackages = try generateKeyPackages(amountRequested: amount)
-        try await uploadKeyPackages(clientID: clientID, keyPackages: keyPackages, context: context.notificationContext)
+            let amount = UInt32(targetUnclaimedKeyPackageCount - unclaimedKeyPackageCount)
+            let keyPackages = try generateKeyPackages(amountRequested: amount)
+            try await uploadKeyPackages(clientID: clientID, keyPackages: keyPackages, context: context.notificationContext)
+        }
     }
 
     private func countUnclaimedKeyPackages(
@@ -387,6 +393,7 @@ public final class MLSController: MLSControllerProtocol {
 
         do {
             let groupID = try coreCrypto.wire_processWelcomeMessage(welcomeMessage: messageBytes)
+            uploadKeyPackagesIfNeeded()
             return MLSGroupID(groupID)
         } catch {
             logger.error("failed to process welcome message: \(String(describing: error))")
@@ -617,14 +624,13 @@ private extension UserDefaults {
 
     var hasMoreThan24HoursPassedSinceLastCheck: Bool {
 
-        guard
-            let storedDate = lastKeyPackageCountDate,
-            Calendar.current.dateComponents([.hour], from: storedDate, to: Date()).hour > 24
-        else {
+        guard let storedDate = lastKeyPackageCountDate else { return true }
+
+        if Calendar.current.dateComponents([.hour], from: storedDate, to: Date()).hour > 24 {
+            return true
+        } else {
             return false
         }
-
-        return false
 
     }
 }
