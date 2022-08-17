@@ -20,7 +20,7 @@ import Foundation
 
 public protocol MLSControllerProtocol {
 
-    func uploadKeyPackagesIfNeeded(for clientID: String, with context: NotificationContext) async throws
+    func uploadKeyPackagesIfNeeded(for clientID: String) async throws
 
     func createGroup(for groupID: MLSGroupID) throws
 
@@ -285,10 +285,7 @@ public final class MLSController: MLSControllerProtocol {
     /// Checks how many key packages are available on the backend and
     /// generates new ones if there are less than 50% of the target unclaimed key package count..
 
-    public func uploadKeyPackagesIfNeeded(
-        for clientID: String,
-        with context: NotificationContext
-    ) async throws {
+    public func uploadKeyPackagesIfNeeded(for clientID: String) async throws {
 
         // TODO: Get actual key packages count from CoreCrypto once updated to latest. For now using a mock value of 50.
         let estimatedLocalKeyPackageCount  = 50
@@ -298,16 +295,18 @@ public final class MLSController: MLSControllerProtocol {
         // Check if need to query the backend
         guard lastCheckWasMoreThen24Hours || shouldCountRemainingKeyPackages else { return }
 
-        let unclaimedKeyPackageCount = try await countUnclaimedKeyPackages(clientID: clientID, context: context)
+        guard let context = context else { return }
 
-        UserDefaults.standard.lastKeyPackageStoredDate = Date()
+        let unclaimedKeyPackageCount = try await countUnclaimedKeyPackages(clientID: clientID, context: context.notificationContext)
+
+        UserDefaults.standard.lastKeyPackageCountDate = Date()
 
 
         guard unclaimedKeyPackageCount <= targetUnclaimedKeyPackageCount / 2 else { return }
 
         let amount = UInt32(targetUnclaimedKeyPackageCount - unclaimedKeyPackageCount)
         let keyPackages = try generateKeyPackages(amountRequested: amount)
-        try await uploadKeyPackages(clientID: clientID, keyPackages: keyPackages, context: context)
+        try await uploadKeyPackages(clientID: clientID, keyPackages: keyPackages, context: context.notificationContext)
     }
 
     private func countUnclaimedKeyPackages(
@@ -609,16 +608,17 @@ private extension UserDefaults {
         static let keyPackageQueriedTime = "keyPackageQueriedTime"
     }
 
-    var lastKeyPackageStoredDate: Date? {
+    var lastKeyPackageCountDate: Date? {
 
         get { UserDefaults.standard.object(forKey: Keys.keyPackageQueriedTime) as? Date }
         set { set(newValue, forKey: Keys.keyPackageQueriedTime) }
+
     }
 
     var hasMoreThan24HoursPassedSinceLastCheck: Bool {
 
         guard
-            let storedDate = lastKeyPackageStoredDate,
+            let storedDate = lastKeyPackageCountDate,
             Calendar.current.dateComponents([.hour], from: storedDate, to: Date()).hour > 24
         else {
             return false
