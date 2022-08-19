@@ -26,6 +26,7 @@ class MLSControllerTests: ZMConversationTestsBase {
     var mockCoreCrypto: MockCoreCrypto!
     var mockActionsProvider: MockMLSActionsProvider!
     var mockConversationEventProcessor: MockConversationEventProcessor!
+    var userDefaultsTestSuite: UserDefaults!
 
     let groupID = MLSGroupID([1, 2, 3])
 
@@ -34,12 +35,14 @@ class MLSControllerTests: ZMConversationTestsBase {
         mockCoreCrypto = MockCoreCrypto()
         mockActionsProvider = MockMLSActionsProvider()
         mockConversationEventProcessor = MockConversationEventProcessor()
+        userDefaultsTestSuite = UserDefaults(suiteName: "com.wire.mls-test-suite")!
 
         sut = MLSController(
             context: uiMOC,
             coreCrypto: mockCoreCrypto,
             conversationEventProcessor: mockConversationEventProcessor,
-            actionsProvider: mockActionsProvider
+            actionsProvider: mockActionsProvider,
+            userDefaults: userDefaultsTestSuite
         )
     }
 
@@ -484,4 +487,44 @@ class MLSControllerTests: ZMConversationTestsBase {
         }
     }
 
+    func test_upload_100_KeyPackages_successfully() {
+        // Given
+        let clientID = self.createSelfClient(onMOC: uiMOC).remoteIdentifier
+        let keyPackages: [Bytes] = [
+            [1, 2, 3],
+            [4, 5, 6]
+        ]
+
+        // expectation
+        let countUnclaimedKeyPackages = self.expectation(description: "Count unclaimed key packages")
+        let uploadKeyPackages = self.expectation(description: "Upload key packages")
+
+        mockCoreCrypto.mockClientKeyPackages = keyPackages
+
+        // Mock return value for unclaimed key packages count.
+        mockActionsProvider.countUnclaimedKeyPackagesMocks.append { cid in
+            XCTAssertEqual(cid, clientID)
+            countUnclaimedKeyPackages.fulfill()
+
+            return 0
+        }
+
+        mockActionsProvider.uploadKeyPackagesMocks.append { cid, kp in
+            let keyPackages = keyPackages.map { $0.base64EncodedString }
+
+            XCTAssertEqual(cid, clientID)
+            XCTAssertEqual(kp, keyPackages)
+
+            uploadKeyPackages.fulfill()
+        }
+
+        // When
+        sut.uploadKeyPackagesIfNeeded()
+
+        // Then
+        XCTAssertTrue(waitForCustomExpectations(withTimeout: 5))
+        let clientKeypackagesCalls = mockCoreCrypto.calls.clientKeypackages
+        XCTAssertEqual(clientKeypackagesCalls.count, 1)
+        XCTAssertEqual(clientKeypackagesCalls[0], 100)
+    }
 }

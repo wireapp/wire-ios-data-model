@@ -43,6 +43,7 @@ public final class MLSController: MLSControllerProtocol {
     private let coreCrypto: CoreCryptoProtocol
     private let conversationEventProcessor: ConversationEventProcessorProtocol
     private let logger = ZMSLog(tag: "core-crypto")
+    private let userDefaults: UserDefaults
 
     let actionsProvider: MLSActionsProviderProtocol
     let targetUnclaimedKeyPackageCount = 100
@@ -53,12 +54,14 @@ public final class MLSController: MLSControllerProtocol {
         context: NSManagedObjectContext,
         coreCrypto: CoreCryptoProtocol,
         conversationEventProcessor: ConversationEventProcessorProtocol,
-        actionsProvider: MLSActionsProviderProtocol = MLSActionsProvider()
+        actionsProvider: MLSActionsProviderProtocol = MLSActionsProvider(),
+        userDefaults: UserDefaults = UserDefaults(suiteName: "com.wire.mls")!
     ) {
         self.context = context
         self.coreCrypto = coreCrypto
         self.conversationEventProcessor = conversationEventProcessor
         self.actionsProvider = actionsProvider
+        self.userDefaults = userDefaults
 
         do {
             try generatePublicKeysIfNeeded()
@@ -290,7 +293,7 @@ public final class MLSController: MLSControllerProtocol {
         // TODO: Get actual key packages count from CoreCrypto once updated to latest. For now using a mock value of 50.
         let estimatedLocalKeyPackageCount  = 50
         let shouldCountRemainingKeyPackages = estimatedLocalKeyPackageCount < targetUnclaimedKeyPackageCount / 2
-        let lastCheckWasMoreThen24Hours = UserDefaults.standard.hasMoreThan24HoursPassedSinceLastCheck
+        let lastCheckWasMoreThen24Hours = userDefaults.hasMoreThan24HoursPassedSinceLastCheck
 
         // Check if need to query the backend
         guard lastCheckWasMoreThen24Hours || shouldCountRemainingKeyPackages else { return }
@@ -305,7 +308,7 @@ public final class MLSController: MLSControllerProtocol {
         Task {
             let unclaimedKeyPackageCount = try await countUnclaimedKeyPackages(clientID: clientID, context: context.notificationContext)
 
-            UserDefaults.standard.lastKeyPackageCountDate = Date()
+            userDefaults.lastKeyPackageCountDate = Date()
 
             guard unclaimedKeyPackageCount <= targetUnclaimedKeyPackageCount / 2 else { return }
 
