@@ -145,6 +145,15 @@ class ZMConversationAccessModeTests: ZMConversationTestsBase {
 
     }
 
+    func testThatItIgnoresAccessRoleStringsKeyV2() {
+        // given
+        sut.accessRoleStringsV2 = ["guest"]
+        // when
+        XCTAssertTrue(self.uiMOC.saveOrRollback())
+        // then
+        XCTAssertFalse(sut.keysThatHaveLocalModifications.contains("accessRoleStringsV2"))
+    }
+
     let testSetAccessMode: [(ConversationAccessMode?, [String]?)] = [(nil, nil),
                                                                      (ConversationAccessMode.teamOnly, []),
                                                                      (ConversationAccessMode.code, ["code"]),
