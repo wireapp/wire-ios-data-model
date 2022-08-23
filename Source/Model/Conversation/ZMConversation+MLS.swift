@@ -28,6 +28,9 @@ extension ZMConversation {
     @objc
     static let mlsGroupID = "mlsGroupID"
 
+    @objc
+    static let mlsStatusKey = "mlsStatus"
+
     // MARK: - Properties
 
     @NSManaged private var primitiveMessageProtocol: NSNumber
@@ -76,13 +79,28 @@ extension ZMConversation {
         }
     }
 
-    /// Whether the conversation is pending processing of an
-    /// mls welcome message.
-    ///
-    /// Until the welcome message is processed, this conversation
-    /// is not ready for communication.
+    // TODO: Add description
+    @NSManaged private var primitiveMlsStatus: NSNumber
 
-    @NSManaged public var isPendingWelcomeMessage: Bool
+    public var mlsStatus: MLSGroupStatus {
+        get {
+            willAccessValue(forKey: Self.mlsStatusKey)
+            let value = primitiveMlsStatus.int16Value
+            didAccessValue(forKey: Self.mlsStatusKey)
+
+            guard let result = MLSGroupStatus(rawValue: value) else {
+                fatalError("failed to init MLSGroupStatus from rawValue: \(value)")
+            }
+
+            return result
+        }
+
+        set {
+            willChangeValue(forKey: Self.mlsStatusKey)
+            primitiveMlsStatus = NSNumber(value: newValue.rawValue)
+            didChangeValue(forKey: Self.mlsStatusKey)
+        }
+    }
 
 }
 
