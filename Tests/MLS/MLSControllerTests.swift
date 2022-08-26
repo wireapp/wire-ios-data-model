@@ -62,7 +62,7 @@ class MLSControllerTests: ZMConversationTestsBase {
             let encryptedMessage: Bytes = [3, 3, 3]
 
             // Mock
-            mockCoreCrypto.mockEncryptMessage = encryptedMessage
+            mockCoreCrypto.mockResultForEncryptMessage = encryptedMessage
 
             // When
             let result = try sut.encrypt(message: unencryptedMessage, for: groupID)
@@ -85,7 +85,7 @@ class MLSControllerTests: ZMConversationTestsBase {
         let unencryptedMessage: Bytes = [2, 2, 2]
 
         // Mock
-        mockCoreCrypto.mockEncryptError = CryptoError.InvalidByteArrayError(message: "bad bytes!")
+        mockCoreCrypto.mockErrorForEncryptMessage = CryptoError.InvalidByteArrayError(message: "bad bytes!")
 
         // When / Then
         assertItThrows(error: EncryptionError.failedToEncryptMessage) {
