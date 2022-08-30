@@ -35,6 +35,10 @@ public protocol MLSControllerProtocol {
     func addMembersToConversation(with users: [MLSUser], for groupID: MLSGroupID) async throws
 
     func removeMembersFromConversation(with clientIds: [MLSClientID], for groupID: MLSGroupID) async throws
+
+    func addGroupPendingWelcomeMessage(_ group: MLSGroup)
+
+    func joinGroupsStillPendingWelcomeMessage()
 }
 
 public final class MLSController: MLSControllerProtocol {
@@ -45,6 +49,7 @@ public final class MLSController: MLSControllerProtocol {
     private let coreCrypto: CoreCryptoProtocol
     private let conversationEventProcessor: ConversationEventProcessorProtocol
     private let logger = Logging.mls
+    private var groupsPendingWelcome = [MLSGroup]()
 
     let actionsProvider: MLSActionsProviderProtocol
     let targetUnclaimedKeyPackageCount = 100
@@ -388,6 +393,38 @@ public final class MLSController: MLSControllerProtocol {
         }
     }
 
+    // MARK: - Joining conversations
+
+    public func addGroupPendingWelcomeMessage(_ group: MLSGroup) {
+        guard !groupsPendingWelcome.contains(group) else { return }
+
+        groupsPendingWelcome.append(group)
+    }
+
+    public func joinGroupsStillPendingWelcomeMessage() {
+        groupsPendingWelcome.forEach(joinGroupIfNeeded(_:))
+        groupsPendingWelcome = .init()
+    }
+
+    private func joinGroupIfNeeded(_ group: MLSGroup) {
+        guard let context = context else {
+            return
+        }
+
+        guard let conversation = ZMConversation.fetch(with: group.groupID, domain: group.domain, in: context) else {
+            return
+        }
+
+        guard let status = conversation.mlsStatus else {
+            return
+        }
+
+        if status == .pendingWelcomeMessage {
+            // ask to join
+        }
+
+    }
+
     // MARK: - Encrypt message
 
     public enum MLSMessageEncryptionError: Error {
@@ -476,6 +513,20 @@ public struct MLSUser: Equatable {
         }
     }
 
+}
+
+public struct MLSGroup: Equatable {
+    public let groupID: MLSGroupID
+    public let domain: String
+
+    public init?(from conversation: ZMConversation) {
+        guard let groupID = conversation.mlsGroupID else {
+            return nil
+        }
+
+        self.groupID = groupID
+        self.domain = conversation.domain ?? APIVersion.domain!
+    }
 }
 
 // MARK: - Helper Extensions
