@@ -38,7 +38,7 @@ public protocol MLSControllerProtocol {
 
     func addGroupPendingJoin(_ group: MLSGroup)
 
-    func joinGroupsStillPendingWelcomeMessage()
+    func joinGroupsStillPending()
 }
 
 public final class MLSController: MLSControllerProtocol {
@@ -49,7 +49,7 @@ public final class MLSController: MLSControllerProtocol {
     private let coreCrypto: CoreCryptoProtocol
     private let conversationEventProcessor: ConversationEventProcessorProtocol
     private let logger = Logging.mls
-    private var groupsPendingWelcome = Set<MLSGroup>()
+    private var groupsPendingJoin = Set<MLSGroup>()
 
     let actionsProvider: MLSActionsProviderProtocol
     let targetUnclaimedKeyPackageCount = 100
@@ -391,12 +391,12 @@ public final class MLSController: MLSControllerProtocol {
     // MARK: - Joining conversations
 
     public func addGroupPendingJoin(_ group: MLSGroup) {
-        groupsPendingWelcome.insert(group)
+        groupsPendingJoin.insert(group)
     }
 
-    public func joinGroupsStillPendingWelcomeMessage() {
-        while !groupsPendingWelcome.isEmpty {
-            joinGroupIfNeeded(groupsPendingWelcome.removeFirst())
+    public func joinGroupsStillPending() {
+        while !groupsPendingJoin.isEmpty {
+            joinGroupIfNeeded(groupsPendingJoin.removeFirst())
         }
     }
 
