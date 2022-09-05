@@ -19,7 +19,8 @@
 import Foundation
 
 public enum MLSGroupStatus: Int16 {
-    case pendingWelcomeMessage
+    case pendingJoin
     case pendingLeave
     case ready
+    case outOfSync
 }

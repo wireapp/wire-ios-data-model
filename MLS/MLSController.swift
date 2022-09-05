@@ -36,7 +36,7 @@ public protocol MLSControllerProtocol {
 
     func removeMembersFromConversation(with clientIds: [MLSClientID], for groupID: MLSGroupID) async throws
 
-    func addGroupPendingWelcomeMessage(_ group: MLSGroup)
+    func addGroupPendingJoin(_ group: MLSGroup)
 
     func joinGroupsStillPendingWelcomeMessage()
 }
@@ -49,7 +49,7 @@ public final class MLSController: MLSControllerProtocol {
     private let coreCrypto: CoreCryptoProtocol
     private let conversationEventProcessor: ConversationEventProcessorProtocol
     private let logger = Logging.mls
-    private var groupsPendingWelcome = [MLSGroup]()
+    private var groupsPendingWelcome = Set<MLSGroup>()
 
     let actionsProvider: MLSActionsProviderProtocol
     let targetUnclaimedKeyPackageCount = 100
@@ -395,15 +395,14 @@ public final class MLSController: MLSControllerProtocol {
 
     // MARK: - Joining conversations
 
-    public func addGroupPendingWelcomeMessage(_ group: MLSGroup) {
-        guard !groupsPendingWelcome.contains(group) else { return }
-
-        groupsPendingWelcome.append(group)
+    public func addGroupPendingJoin(_ group: MLSGroup) {
+        groupsPendingWelcome.insert(group)
     }
 
     public func joinGroupsStillPendingWelcomeMessage() {
-        groupsPendingWelcome.forEach(joinGroupIfNeeded(_:))
-        groupsPendingWelcome = .init()
+        while !groupsPendingWelcome.isEmpty {
+            joinGroupIfNeeded(groupsPendingWelcome.removeFirst())
+        }
     }
 
     private func joinGroupIfNeeded(_ group: MLSGroup) {
@@ -419,7 +418,7 @@ public final class MLSController: MLSControllerProtocol {
             return
         }
 
-        if status == .pendingWelcomeMessage {
+        if status == .pendingJoin {
             // ask to join
         }
 
@@ -515,7 +514,7 @@ public struct MLSUser: Equatable {
 
 }
 
-public struct MLSGroup: Equatable {
+public struct MLSGroup: Equatable, Hashable {
     public let groupID: MLSGroupID
     public let domain: String
 
