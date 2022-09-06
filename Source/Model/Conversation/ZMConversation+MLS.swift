@@ -79,8 +79,12 @@ extension ZMConversation {
         }
     }
 
-    // TODO: Add description
     @NSManaged private var primitiveMlsStatus: NSNumber?
+
+    /// The mls group status
+    ///
+    /// If this conversation is an mls group (which it should be if the
+    /// `messageProtocol` is `mls`), then this status should exist.
 
     public var mlsStatus: MLSGroupStatus? {
         get {
