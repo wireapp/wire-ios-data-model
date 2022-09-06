@@ -128,7 +128,7 @@ public final class MLSController: MLSControllerProtocol {
     }
 
     private func claimKeyPackages(for users: [MLSUser]) async throws -> [KeyPackage] {
-        logger.info("cliaming key packages for users: \(users)")
+        logger.info("claiming key packages for users: \(users)")
         do {
             guard let context = context else { return [] }
 
