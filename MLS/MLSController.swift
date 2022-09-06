@@ -303,7 +303,7 @@ public final class MLSController: MLSControllerProtocol {
         /// For now temporarily we generate and upload at most 100 new key packages
 
          countUnclaimedKeyPackages(clientID: clientID, context: context.notificationContext) { unclaimedKeyPackageCount in
-             logger.info("there are \(unclaimedKeyPackageCount) uncliamed key packages")
+             self.logger.info("there are \(unclaimedKeyPackageCount) uncliamed key packages")
 
              guard unclaimedKeyPackageCount <= self.targetUnclaimedKeyPackageCount / 2 else { return }
 
