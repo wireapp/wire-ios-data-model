@@ -496,6 +496,14 @@ public struct MLSUser: Equatable {
 
 }
 
+extension MLSUser: CustomStringConvertible {
+
+    public var description: String {
+        return "\(id)@\(domain)"
+    }
+
+}
+
 // MARK: - Helper Extensions
 
 private extension String {
