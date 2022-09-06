@@ -181,7 +181,7 @@ extension ZMConversation {
                     }
 
                 } catch {
-                    Logging.eventProcessing.error("Failed to add members to mls group: \(String(describing: error))")
+                    Logging.mls.error("failed to add members to mls group: \(String(describing: error))")
 
                     context.perform {
                         completion(.failure(.failedToAddMLSMembers))
@@ -226,17 +226,15 @@ extension ZMConversation {
             guard
                 let mlsController = mlsController,
                 let groupID = mlsGroupID
-
             else {
                 completion(.failure(.invalidOperation))
                 return
             }
 
-            let clientIDs = user.clients.compactMap( MLSClientID.init(userClient:))
+            let clientIDs = user.clients.compactMap(MLSClientID.init(userClient:))
 
             Task {
                 do {
-
                     try await mlsController.removeMembersFromConversation(with: clientIDs, for: groupID)
 
                     context.perform {
@@ -244,7 +242,7 @@ extension ZMConversation {
                     }
 
                 } catch {
-                    Logging.eventProcessing.warn("Failed to remove member to mls group: \(String(describing: error))")
+                    Logging.mls.warn("failed to remove member from mls group: \(String(describing: error))")
 
                     context.perform {
                         completion(.failure(.failedToRemoveMLSMembers))
