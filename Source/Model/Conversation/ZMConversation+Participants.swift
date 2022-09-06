@@ -155,6 +155,8 @@ extension ZMConversation {
             action.send(in: context.notificationContext)
 
         case .mls:
+            Logging.mls.info("adding \(participants.count) participants to conversation (\(qualifiedID))")
+
             var mlsController: MLSControllerProtocol?
 
             context.zm_sync.performAndWait {
@@ -166,6 +168,7 @@ extension ZMConversation {
                 let groupID = mlsGroupID?.base64EncodedString,
                 let mlsGroupID = MLSGroupID(base64Encoded: groupID)
             else {
+                Logging.mls.warn("failed to add participants to conversation (\(qualifiedID)): invalid operation")
                 completion(.failure(.invalidOperation))
                 return
             }
@@ -181,7 +184,7 @@ extension ZMConversation {
                     }
 
                 } catch {
-                    Logging.mls.error("failed to add members to mls group: \(String(describing: error))")
+                    Logging.mls.error("failed to add members to conversation (\(qualifiedID)): \(String(describing: error))")
 
                     context.perform {
                         completion(.failure(.failedToAddMLSMembers))
@@ -217,6 +220,8 @@ extension ZMConversation {
             action.send(in: context.notificationContext)
 
         case .mls:
+            Logging.mls.info("removing participant from conversation (\(qualifiedID))")
+
             var mlsController: MLSControllerProtocol?
 
             context.zm_sync.performAndWait {
@@ -227,6 +232,7 @@ extension ZMConversation {
                 let mlsController = mlsController,
                 let groupID = mlsGroupID
             else {
+                Logging.mls.info("failed to remove participant from conversation (\(qualifiedID)): invalid operation")
                 completion(.failure(.invalidOperation))
                 return
             }
@@ -242,7 +248,7 @@ extension ZMConversation {
                     }
 
                 } catch {
-                    Logging.mls.warn("failed to remove member from mls group: \(String(describing: error))")
+                    Logging.mls.warn("failed to remove member from conversation (\(qualifiedID)): \(String(describing: error))")
 
                     context.perform {
                         completion(.failure(.failedToRemoveMLSMembers))
