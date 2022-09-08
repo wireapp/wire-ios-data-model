@@ -55,9 +55,8 @@ public final class MLSController: MLSControllerProtocol {
     let actionsProvider: MLSActionsProviderProtocol
     let targetUnclaimedKeyPackageCount = 100
 
-    // TODO: in init, or after 24 hours, find all groups that need an update
-    // TODO: for each group that needs an update, ask cc for the commit and send it.
-    // TODO: on success, update the time stamps
+    var lastKeyMaterialUpdateCheck = Date.distantPast
+    private var keyMaterialUpdateCheckTimer: Timer?
 
     // MARK: - Life cycle
 
@@ -93,6 +92,16 @@ public final class MLSController: MLSControllerProtocol {
         } catch {
             logger.error("failed to generate public keys: \(String(describing: error))")
         }
+
+        // TODO: assert
+        updateKeyMaterialForAllStaleGroupsIfNeeded()
+
+        // TODO: assert
+        schedulePeriodicKeyMaterialUpdateCheck()
+    }
+
+    deinit {
+        keyMaterialUpdateCheckTimer?.invalidate()
     }
 
     // MARK: - Public keys
@@ -116,6 +125,52 @@ public final class MLSController: MLSControllerProtocol {
 
         selfClient.mlsPublicKeys = keys
         context.saveOrRollback()
+    }
+
+    // MARK: - Update key material
+
+    private func schedulePeriodicKeyMaterialUpdateCheck() {
+        // TODO: But do timers fire in the background? if they don't, will they fire as soon as you go to the foreground?
+        // Will need to do some experiments.
+        keyMaterialUpdateCheckTimer?.invalidate()
+        keyMaterialUpdateCheckTimer = Timer.scheduledTimer(
+            withTimeInterval: .oneDay,
+            repeats: true
+        ) { [weak self] _ in
+            self?.updateKeyMaterialForAllStaleGroupsIfNeeded()
+        }
+    }
+
+    private func updateKeyMaterialForAllStaleGroupsIfNeeded() {
+        guard lastKeyMaterialUpdateCheck.ageInDays >= 1 else { return }
+
+        Task {
+            await updateKeyMaterialForAllStaleGroups()
+            lastKeyMaterialUpdateCheck = Date()
+        }
+    }
+
+    private func updateKeyMaterialForAllStaleGroups() async {
+        Logging.mls.info("beginning to update key material for all stale groups")
+
+        let staleGroups = staleKeyMaterialDetector.groupsWithStaleKeyingMaterial
+
+        Logging.mls.info("found \(staleGroups.count) groups with stale key material")
+
+        for staleGroup in staleGroups {
+            await updateKeyMaterial(for: staleGroup)
+        }
+    }
+
+    private func updateKeyMaterial(for groupID: MLSGroupID) async {
+        do {
+            Logging.mls.info("updating key material for group (\(groupID))")
+            let commit = try coreCrypto.wire_updateKeyingMaterial(conversationId: groupID.bytes)
+            try await sendMessage(commit.commit, groupID: groupID)
+            staleKeyMaterialDetector.keyingMaterialUpdated(for: groupID)
+        } catch {
+            Logging.mls.warn("failed to update key material for group (\(groupID)): \(String(describing: error))")
+        }
     }
 
     // MARK: - Group creation

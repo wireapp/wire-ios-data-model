@@ -464,6 +464,7 @@
 		EE002F202878312F0027D63A /* MessageProtocol.swift in Sources */ = {isa = PBXBuildFile; fileRef = EE002F1F2878312F0027D63A /* MessageProtocol.swift */; };
 		EE002F222878345C0027D63A /* store2-104-0.wiredatabase in Resources */ = {isa = PBXBuildFile; fileRef = EE002F212878345C0027D63A /* store2-104-0.wiredatabase */; };
 		EE04084C28CA8283009E4B8D /* StaleMLSKeyMaterialDetector.swift in Sources */ = {isa = PBXBuildFile; fileRef = EE04084B28CA8283009E4B8D /* StaleMLSKeyMaterialDetector.swift */; };
+		EE04084E28CA85B2009E4B8D /* Date+Helpers.swift in Sources */ = {isa = PBXBuildFile; fileRef = EE04084D28CA85B2009E4B8D /* Date+Helpers.swift */; };
 		EE08B345284E2B450022830B /* CoreCryptoTypes.swift in Sources */ = {isa = PBXBuildFile; fileRef = EE08B344284E2B450022830B /* CoreCryptoTypes.swift */; };
 		EE09EEB1255959F000919A6B /* ZMUserTests+AnalyticsIdentifier.swift in Sources */ = {isa = PBXBuildFile; fileRef = EE09EEB0255959F000919A6B /* ZMUserTests+AnalyticsIdentifier.swift */; };
 		EE128A66286DE31200558550 /* UserClient+MLSPublicKeys.swift in Sources */ = {isa = PBXBuildFile; fileRef = EE128A65286DE31200558550 /* UserClient+MLSPublicKeys.swift */; };
@@ -1280,6 +1281,7 @@
 		EE002F1F2878312F0027D63A /* MessageProtocol.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MessageProtocol.swift; sourceTree = "<group>"; };
 		EE002F212878345C0027D63A /* store2-104-0.wiredatabase */ = {isa = PBXFileReference; lastKnownFileType = file; path = "store2-104-0.wiredatabase"; sourceTree = "<group>"; };
 		EE04084B28CA8283009E4B8D /* StaleMLSKeyMaterialDetector.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StaleMLSKeyMaterialDetector.swift; sourceTree = "<group>"; };
+		EE04084D28CA85B2009E4B8D /* Date+Helpers.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Date+Helpers.swift"; sourceTree = "<group>"; };
 		EE08B344284E2B450022830B /* CoreCryptoTypes.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CoreCryptoTypes.swift; sourceTree = "<group>"; };
 		EE09EEB0255959F000919A6B /* ZMUserTests+AnalyticsIdentifier.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "ZMUserTests+AnalyticsIdentifier.swift"; sourceTree = "<group>"; };
 		EE128A65286DE31200558550 /* UserClient+MLSPublicKeys.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "UserClient+MLSPublicKeys.swift"; sourceTree = "<group>"; };
@@ -2495,6 +2497,7 @@
 				630B4C9527D8C899005D6F30 /* APIVersion.swift */,
 				EE128A67286DE35F00558550 /* CodableHelpers.swift */,
 				6312162E287DB7D900FF9A56 /* String+Bytes.swift */,
+				EE04084D28CA85B2009E4B8D /* Date+Helpers.swift */,
 			);
 			name = Utilis;
 			path = Source/Utilis;
@@ -3456,6 +3459,7 @@
 				BF989D0A1E8A6A120052BF8F /* SearchUserAsset.swift in Sources */,
 				066328602428D01C005BB3BE /* ZMClientMessage+GenericMessage.swift in Sources */,
 				5E36B45E21CA5BBA00B7063B /* UnverifiedCredentials.swift in Sources */,
+				EE04084E28CA85B2009E4B8D /* Date+Helpers.swift in Sources */,
 				F9B71F091CB264DF001DB03F /* ZMConversationList.m in Sources */,
 				55C40BCE22B0316800EFD8BD /* ZMUser+LegalHoldRequest.swift in Sources */,
 				EE5E2C1926DFC67900C3928A /* MessageDestructionTimeoutValue.swift in Sources */,

@@ -102,7 +102,7 @@ final class StaleMLSKeyDetector: StaleMLSKeyDetectorProtocol {
             return true
         }
 
-        guard numberOfDays(since: lastUpdateDate) > keyLifetimeInDays else {
+        guard lastUpdateDate.ageInDays > keyLifetimeInDays else {
             return false
         }
 
