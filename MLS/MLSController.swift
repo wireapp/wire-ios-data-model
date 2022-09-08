@@ -55,27 +55,9 @@ public final class MLSController: MLSControllerProtocol {
     let actionsProvider: MLSActionsProviderProtocol
     let targetUnclaimedKeyPackageCount = 100
 
-    // we need to persist timestmaps keyed by a group id.
-    // we need to be able to know if a timestamp is too old.
-    // We also need to know all the keys.
-    // we could easily store time stamps by group id.
-    // We'd need to make sure we clean up and remove entries.
-    // We can get the group ids by querying core data.
-    // But we could also maybe store the timestamp on the conversation.
-    // But... I'd rather not have a core data object here.
-    // We could defer it to another object "KeyUpdater"
-    // We inform the KeyUpdater when a key is updated for a conversation.
-    // We ask it if it has any conversations needing an update.
-    // It's not really a key updater then.
-
-
-    // be able to store a timestamp for a conversation
-    // store the timestamp when creating a group.
-    // store the timestamp when processing a welcome message.
-    // in init, or after 24 hours, find all groups that need an update
-    // for each group that needs an update, ask cc for the commit and send it.
-    // on success, update the time stamps
-
+    // TODO: in init, or after 24 hours, find all groups that need an update
+    // TODO: for each group that needs an update, ask cc for the commit and send it.
+    // TODO: on success, update the time stamps
 
     // MARK: - Life cycle
 
