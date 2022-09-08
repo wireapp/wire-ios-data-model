@@ -26,7 +26,7 @@ public class FetchBackendMLSPublicKeysAction: EntityAction {
     public enum Failure: LocalizedError, Equatable {
 
         case endpointUnavailable
-        case malformdResponse
+        case malformedResponse
         case unknown(status: Int, label: String, message: String)
 
         public var errorDescription: String? {
@@ -34,7 +34,7 @@ public class FetchBackendMLSPublicKeysAction: EntityAction {
             case .endpointUnavailable:
                 return "Endpoint unavailable"
 
-            case .malformdResponse:
+            case .malformedResponse:
                 return "Malformed response"
 
             case let .unknown(status, label, message):
