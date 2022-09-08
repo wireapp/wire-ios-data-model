@@ -169,6 +169,9 @@ public final class MLSController: MLSControllerProtocol {
             logger.warn("failed to create group (\(groupID)): \(String(describing: error))")
             throw MLSGroupCreationError.failedToCreateGroup
         }
+
+        // TODO: assert
+        staleKeyMaterialDetector.keyingMaterialUpdated(for: groupID)
     }
 
     private func claimKeyPackages(for users: [MLSUser]) async throws -> [KeyPackage] {
@@ -439,8 +442,13 @@ public final class MLSController: MLSControllerProtocol {
         }
 
         do {
-            let groupID = try coreCrypto.wire_processWelcomeMessage(welcomeMessage: messageBytes)
-            return MLSGroupID(groupID)
+            let groupIDBytes = try coreCrypto.wire_processWelcomeMessage(welcomeMessage: messageBytes)
+            let groupID = MLSGroupID(groupIDBytes)
+            // TODO: but the conversation may not exist yet... maybe we should update the key material
+            // when we transition from not ready to ready.
+            // TODO: assert
+            staleKeyMaterialDetector.keyingMaterialUpdated(for: groupID)
+            return groupID
         } catch {
             logger.error("failed to process welcome message: \(String(describing: error))")
             throw MLSWelcomeMessageProcessingError.failedToProcessMessage
