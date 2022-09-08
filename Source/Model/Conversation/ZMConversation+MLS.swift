@@ -112,6 +112,10 @@ extension ZMConversation {
         }
     }
 
+    /// The date at which the MLS key material for the group was last updated.
+
+    @NSManaged var lastMLSKeyMaterialUpdateDate: Date?
+
 }
 
 // MARK: - Fetch by group id
