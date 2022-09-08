@@ -58,3 +58,10 @@ public struct MLSGroupID: Equatable, Hashable {
 
 }
 
+extension MLSGroupID: CustomStringConvertible {
+
+    public var description: String {
+        return base64EncodedString
+    }
+
+}
