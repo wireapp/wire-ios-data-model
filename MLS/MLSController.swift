@@ -48,23 +48,62 @@ public final class MLSController: MLSControllerProtocol {
     private weak var context: NSManagedObjectContext?
     private let coreCrypto: CoreCryptoProtocol
     private let conversationEventProcessor: ConversationEventProcessorProtocol
+    private let staleKeyMaterialDetector: StaleMLSKeyDetectorProtocol
     private let logger = Logging.mls
     private var groupsPendingJoin = Set<MLSGroup>()
 
     let actionsProvider: MLSActionsProviderProtocol
     let targetUnclaimedKeyPackageCount = 100
 
+    // we need to persist timestmaps keyed by a group id.
+    // we need to be able to know if a timestamp is too old.
+    // We also need to know all the keys.
+    // we could easily store time stamps by group id.
+    // We'd need to make sure we clean up and remove entries.
+    // We can get the group ids by querying core data.
+    // But we could also maybe store the timestamp on the conversation.
+    // But... I'd rather not have a core data object here.
+    // We could defer it to another object "KeyUpdater"
+    // We inform the KeyUpdater when a key is updated for a conversation.
+    // We ask it if it has any conversations needing an update.
+    // It's not really a key updater then.
+
+
+    // be able to store a timestamp for a conversation
+    // store the timestamp when creating a group.
+    // store the timestamp when processing a welcome message.
+    // in init, or after 24 hours, find all groups that need an update
+    // for each group that needs an update, ask cc for the commit and send it.
+    // on success, update the time stamps
+
+
     // MARK: - Life cycle
+
+    convenience init(
+        context: NSManagedObjectContext,
+        coreCrypto: CoreCryptoProtocol,
+        conversationEventProcessor: ConversationEventProcessorProtocol
+    ) {
+        self.init(
+            context: context,
+            coreCrypto: coreCrypto,
+            conversationEventProcessor: conversationEventProcessor,
+            staleKeyMaterialDetector: StaleMLSKeyDetector(keyLifetimeInDays: 90, context: context),
+            actionsProvider: MLSActionsProvider()
+        )
+    }
 
     init(
         context: NSManagedObjectContext,
         coreCrypto: CoreCryptoProtocol,
         conversationEventProcessor: ConversationEventProcessorProtocol,
+        staleKeyMaterialDetector: StaleMLSKeyDetectorProtocol,
         actionsProvider: MLSActionsProviderProtocol = MLSActionsProvider()
     ) {
         self.context = context
         self.coreCrypto = coreCrypto
         self.conversationEventProcessor = conversationEventProcessor
+        self.staleKeyMaterialDetector = staleKeyMaterialDetector
         self.actionsProvider = actionsProvider
 
         do {
