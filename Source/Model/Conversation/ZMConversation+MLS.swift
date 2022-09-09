@@ -118,7 +118,7 @@ extension ZMConversation {
     /// Point in time when the pending proposals in the conversation
     /// should be committed. If nil there's no pending proposals
     /// to commit.
-    @NSManaged public var commitPendingProposalTimestamp: Date?
+    @NSManaged public var commitPendingProposalDate: Date?
 
 }
 

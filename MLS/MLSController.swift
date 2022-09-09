@@ -545,7 +545,7 @@ public final class MLSController: MLSControllerProtocol {
             groupsWithPendingCommits = conversations.compactMap { conversation in
                 if
                     let groupID = conversation.mlsGroupID,
-                    let timestamp = conversation.commitPendingProposalTimestamp
+                    let timestamp = conversation.commitPendingProposalDate
                 {
                     return (groupID, timestamp)
                 } else {
@@ -594,7 +594,7 @@ public final class MLSController: MLSControllerProtocol {
 
         context?.performAndWait {
             let conversation = ZMConversation.fetch(with: groupID, in: context!)
-            conversation?.commitPendingProposalTimestamp = nil
+            conversation?.commitPendingProposalDate = nil
         }
     }
 
@@ -606,7 +606,7 @@ public final class MLSController: MLSControllerProtocol {
         logger.info("schedule to commit pending proposals in \(groupID) at \(commitDate)")
 
         let conversation = ZMConversation.fetch(with: groupID, in: context)
-        conversation?.commitPendingProposalTimestamp = commitDate
+        conversation?.commitPendingProposalDate = commitDate
     }
 
 }
