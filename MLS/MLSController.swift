@@ -582,6 +582,10 @@ public final class MLSController: MLSControllerProtocol {
     }
 
     func commitPendingProposals(in groupID: MLSGroupID) async throws {
+        guard let context = context else {
+            return
+        }
+
         logger.info("committing pending proposals in: \(groupID)")
 
         let commitBundle: CommitBundle?
@@ -602,8 +606,8 @@ public final class MLSController: MLSControllerProtocol {
             }
         }
 
-        context?.performAndWait {
-            let conversation = ZMConversation.fetch(with: groupID, in: context!)
+        context.performAndWait {
+            let conversation = ZMConversation.fetch(with: groupID, in: context)
             conversation?.commitPendingProposalDate = nil
         }
     }
