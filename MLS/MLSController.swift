@@ -30,7 +30,7 @@ public protocol MLSControllerProtocol {
 
     func encrypt(message: Bytes, for groupID: MLSGroupID) throws -> Bytes
 
-    func decrypt(message: String, for groupID: MLSGroupID) throws -> Data?
+    func decrypt(message: String, for groupID: MLSGroupID, timestamp: Date) throws -> Data?
 
     func addMembersToConversation(with users: [MLSUser], for groupID: MLSGroupID) async throws
 
@@ -39,6 +39,9 @@ public protocol MLSControllerProtocol {
     func addGroupPendingJoin(_ group: MLSGroup)
 
     func joinGroupsStillPending()
+
+    func commitPendingProposals() throws
+}
 
 /// We provide dummy callbacks because our BE is currently enforcing that these
 /// constraints are always true
@@ -446,7 +449,7 @@ public final class MLSController: MLSControllerProtocol {
             return
         }
 
-        guard let conversation = ZMConversation.fetch(with: group.groupID, domain: group.domain, in: context) else {
+        guard let conversation = ZMConversation.fetch(with: group.groupID, in: context) else {
             return
         }
 
@@ -494,6 +497,7 @@ public final class MLSController: MLSControllerProtocol {
     /// - Parameters:
     ///   - message: a base64 encoded encrypted message
     ///   - groupID: the id of the MLS group
+    ///   - timestamp: timestamp of the event which delivered the message
     ///
     /// - Returns:
     ///   The data representing the decrypted message bytes.
@@ -501,7 +505,7 @@ public final class MLSController: MLSControllerProtocol {
     ///
     /// - Throws: `MLSMessageDecryptionError` if the message could not be decrypted
 
-    public func decrypt(message: String, for groupID: MLSGroupID) throws -> Data? {
+    public func decrypt(message: String, for groupID: MLSGroupID, timestamp: Date) throws -> Data? {
         logger.info("decrypting message for group (\(groupID))")
 
         guard let messageBytes = message.base64EncodedBytes else {
@@ -513,11 +517,96 @@ public final class MLSController: MLSControllerProtocol {
                 conversationId: groupID.bytes,
                 payload: messageBytes
             )
+
+            if let commitDelay = decryptedMessage.commitDelay {
+                let commitDate = timestamp + TimeInterval(commitDelay)
+                scheduleCommitPendingProposals(groupID: groupID, at: commitDate)
+            }
+
             return decryptedMessage.message?.data
         } catch {
             logger.warn("failed to decrypt message for group (\(groupID)): \(String(describing: error))")
             throw MLSMessageDecryptionError.failedToDecryptMessage
         }
+    }
+
+    // MARK: - Pending proposals
+
+    public func commitPendingProposals() throws {
+        guard let context = context else {
+            return
+        }
+
+        logger.info("committing any scheduled pending proposals")
+
+        var groupsWithPendingCommits: [(MLSGroupID, Date)]!
+        context.performAndWait {
+            let conversations = ZMConversation.fetchConversationsWithPendingProposals(in: context)
+            groupsWithPendingCommits = conversations.compactMap { conversation in
+                if
+                    let groupID = conversation.mlsGroupID,
+                    let timestamp = conversation.commitPendingProposalTimestamp
+                {
+                    return (groupID, timestamp)
+                } else {
+                    return nil
+                }
+            }
+        }
+
+        logger.info("\(groupsWithPendingCommits.count) groups with scheduled pending proposals")
+
+        let unmutableGroupsWithPendingCommits = groupsWithPendingCommits!
+        Task {
+            for (groupID, timestamp) in unmutableGroupsWithPendingCommits {
+                if timestamp.compare(Date()) != .orderedDescending {
+                    logger.info("commit scheduled in the past, committing...")
+                    try await commitPendingProposals(in: groupID)
+                } else {
+                    logger.info("commit scheduled in the future, waiting...")
+                    try await Task.sleep(nanoseconds: UInt64(timestamp.timeIntervalSinceNow * 1_000 * 1_000 * 1_000))
+                    try? await commitPendingProposals(in: groupID)
+                }
+            }
+        }
+    }
+
+    func commitPendingProposals(in groupID: MLSGroupID) async throws {
+        logger.info("committing pending proposals in: \(groupID)")
+
+        let commitBundle: CommitBundle?
+        do {
+            // TODO wire_commitPendingProposals will return an optional CommitBundle soon in the case
+            // when there are no pending proposals, then we could return early on an error.
+            commitBundle = try coreCrypto.wire_commitPendingProposals(conversationId: groupID.bytes)
+        } catch {
+            logger.info("failed to commit pending proposals in \(groupID): \(String(describing: error))")
+            commitBundle = nil
+        }
+
+        if let commitBundle = commitBundle {
+            try await sendMessage(commitBundle.commit, groupID: groupID)
+
+            if let welcome = commitBundle.welcome {
+                try await sendWelcomeMessage(welcome)
+            }
+        }
+
+        context?.performAndWait {
+            let converation = ZMConversation.fetch(with: groupID, in: context!)
+            converation?.commitPendingProposalTimestamp = nil
+        }
+    }
+
+    func scheduleCommitPendingProposals(groupID: MLSGroupID, at commitDate: Date) {
+        guard let context = context else {
+            return
+        }
+
+        logger.info("schedule to commit pending proposals in \(groupID) at \(commitDate)")
+
+        let conversation = ZMConversation.fetch(with: groupID, in: context)
+        conversation?.commitPendingProposalTimestamp = commitDate
     }
 
 }
