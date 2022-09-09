@@ -39,6 +39,21 @@ public protocol MLSControllerProtocol {
     func addGroupPendingJoin(_ group: MLSGroup)
 
     func joinGroupsStillPending()
+
+/// We provide dummy callbacks because our BE is currently enforcing that these
+/// constraints are always true
+
+class DummyCoreCryptoCallbacks: CoreCryptoCallbacks {
+
+    init() {}
+
+    func authorize(conversationId: [UInt8], clientId: String) -> Bool {
+        return true
+    }
+
+    func isUserInGroup(identity: [UInt8], otherClients: [[UInt8]]) -> Bool {
+        return true
+    }
 }
 
 public final class MLSController: MLSControllerProtocol {
@@ -66,6 +81,12 @@ public final class MLSController: MLSControllerProtocol {
         self.coreCrypto = coreCrypto
         self.conversationEventProcessor = conversationEventProcessor
         self.actionsProvider = actionsProvider
+
+        do {
+            try coreCrypto.wire_setCallbacks(callbacks: DummyCoreCryptoCallbacks())
+        } catch {
+            logger.error("failed to set callbacks: \(String(describing: error))")
+        }
 
         do {
             try generatePublicKeysIfNeeded()
