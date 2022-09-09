@@ -593,8 +593,8 @@ public final class MLSController: MLSControllerProtocol {
         }
 
         context?.performAndWait {
-            let converation = ZMConversation.fetch(with: groupID, in: context!)
-            converation?.commitPendingProposalTimestamp = nil
+            let conversation = ZMConversation.fetch(with: groupID, in: context!)
+            conversation?.commitPendingProposalTimestamp = nil
         }
     }
 
