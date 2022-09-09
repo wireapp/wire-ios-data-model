@@ -18,6 +18,11 @@
 
 import Foundation
 
+public enum MLSDecryptResult {
+    case message(_ messageData: Data)
+    case proposal(_ commitDelay: UInt64)
+}
+
 public protocol MLSControllerProtocol {
 
     func uploadKeyPackagesIfNeeded()
@@ -30,7 +35,7 @@ public protocol MLSControllerProtocol {
 
     func encrypt(message: Bytes, for groupID: MLSGroupID) throws -> Bytes
 
-    func decrypt(message: String, for groupID: MLSGroupID, timestamp: Date) throws -> Data?
+    func decrypt(message: String, for groupID: MLSGroupID) throws -> MLSDecryptResult?
 
     func addMembersToConversation(with users: [MLSUser], for groupID: MLSGroupID) async throws
 
@@ -41,6 +46,8 @@ public protocol MLSControllerProtocol {
     func joinGroupsStillPending()
 
     func commitPendingProposals() throws
+
+    func scheduleCommitPendingProposals(groupID: MLSGroupID, at commitDate: Date)
 }
 
 /// We provide dummy callbacks because our BE is currently enforcing that these
@@ -505,7 +512,7 @@ public final class MLSController: MLSControllerProtocol {
     ///
     /// - Throws: `MLSMessageDecryptionError` if the message could not be decrypted
 
-    public func decrypt(message: String, for groupID: MLSGroupID, timestamp: Date) throws -> Data? {
+    public func decrypt(message: String, for groupID: MLSGroupID) throws -> MLSDecryptResult? {
         logger.info("decrypting message for group (\(groupID))")
 
         guard let messageBytes = message.base64EncodedBytes else {
@@ -519,11 +526,14 @@ public final class MLSController: MLSControllerProtocol {
             )
 
             if let commitDelay = decryptedMessage.commitDelay {
-                let commitDate = timestamp + TimeInterval(commitDelay)
-                scheduleCommitPendingProposals(groupID: groupID, at: commitDate)
+                return MLSDecryptResult.proposal(commitDelay)
             }
 
-            return decryptedMessage.message?.data
+            if let message = decryptedMessage.message {
+                return MLSDecryptResult.message(message.data)
+            }
+
+            return nil
         } catch {
             logger.warn("failed to decrypt message for group (\(groupID)): \(String(describing: error))")
             throw MLSMessageDecryptionError.failedToDecryptMessage
@@ -598,7 +608,7 @@ public final class MLSController: MLSControllerProtocol {
         }
     }
 
-    func scheduleCommitPendingProposals(groupID: MLSGroupID, at commitDate: Date) {
+    public func scheduleCommitPendingProposals(groupID: MLSGroupID, at commitDate: Date) {
         guard let context = context else {
             return
         }
