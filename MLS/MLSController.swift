@@ -559,7 +559,7 @@ public final class MLSController: MLSControllerProtocol {
         let unmutableGroupsWithPendingCommits = groupsWithPendingCommits!
         Task {
             for (groupID, timestamp) in unmutableGroupsWithPendingCommits {
-                if timestamp.compare(Date()) != .orderedDescending {
+                if timestamp.isInThePast {
                     logger.info("commit scheduled in the past, committing...")
                     try await commitPendingProposals(in: groupID)
                 } else {
@@ -665,6 +665,13 @@ public struct MLSGroup: Equatable, Hashable {
 }
 
 // MARK: - Helper Extensions
+
+private extension Date {
+
+    var isInThePast: Bool {
+        return compare(Date()) != .orderedDescending
+    }
+}
 
 private extension String {
 
