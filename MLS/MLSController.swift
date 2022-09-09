@@ -45,7 +45,7 @@ public protocol MLSControllerProtocol {
 
     func joinGroupsStillPending()
 
-    func commitPendingProposals() throws
+    func commitPendingProposals() async throws
 
     func scheduleCommitPendingProposals(groupID: MLSGroupID, at commitDate: Date)
 }
@@ -542,7 +542,13 @@ public final class MLSController: MLSControllerProtocol {
 
     // MARK: - Pending proposals
 
-    public func commitPendingProposals() throws {
+    enum MLSCommitPendingProposalsError: Error {
+
+        case failedToCommitPendingProposals
+
+    }
+
+    public func commitPendingProposals() async throws {
         guard let context = context else {
             return
         }
@@ -566,17 +572,14 @@ public final class MLSController: MLSControllerProtocol {
 
         logger.info("\(groupsWithPendingCommits.count) groups with scheduled pending proposals")
 
-        let unmutableGroupsWithPendingCommits = groupsWithPendingCommits
-        Task {
-            for (groupID, timestamp) in unmutableGroupsWithPendingCommits {
-                if timestamp.isInThePast {
-                    logger.info("commit scheduled in the past, committing...")
-                    try await commitPendingProposals(in: groupID)
-                } else {
-                    logger.info("commit scheduled in the future, waiting...")
-                    try await Task.sleep(nanoseconds: timestamp.timeIntervalSinceNow.nanoseconds)
-                    try await commitPendingProposals(in: groupID)
-                }
+        for (groupID, timestamp) in groupsWithPendingCommits {
+            if timestamp.isInThePast {
+                logger.info("commit scheduled in the past, committing...")
+                try await commitPendingProposals(in: groupID)
+            } else {
+                logger.info("commit scheduled in the future, waiting...")
+                try await Task.sleep(nanoseconds: timestamp.timeIntervalSinceNow.nanoseconds)
+                try await commitPendingProposals(in: groupID)
             }
         }
     }
