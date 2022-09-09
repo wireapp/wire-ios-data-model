@@ -110,9 +110,4 @@ final class StaleMLSKeyDetector: StaleMLSKeyDetectorProtocol {
         return true
     }
 
-    private func numberOfDays(since date: Date) -> Int {
-        let now = Date()
-        return Calendar.current.dateComponents([.day], from: date, to: now).day ?? 0
-    }
-
 }
