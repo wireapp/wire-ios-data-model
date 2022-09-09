@@ -105,7 +105,6 @@ public final class MLSController: MLSControllerProtocol {
         case failedToClaimKeyPackages
         case failedToCreateGroup
         case failedToAddMembers
-        case failedToSendHandshakeMessage
         case failedToSendWelcomeMessage
 
     }
@@ -170,8 +169,12 @@ public final class MLSController: MLSControllerProtocol {
         }
     }
 
+    enum MLSSendMessageError: Error {
+        case failedToSendMessage
+    }
+
     private func sendMessage(_ bytes: Bytes, groupID: MLSGroupID, kind: MessageKind) async throws {
-        logger.info("sending handshake message in group (\(groupID))")
+        logger.info("sending message in group (\(groupID))")
 
         var updateEvents = [ZMUpdateEvent]()
 
@@ -182,8 +185,8 @@ public final class MLSController: MLSControllerProtocol {
                 in: context.notificationContext
             )
         } catch let error {
-            logger.warn("failed to send handshake message in group (\(groupID)): \(String(describing: error))")
-            throw MLSGroupCreationError.failedToSendHandshakeMessage
+            logger.warn("failed to send message in group (\(groupID)): \(String(describing: error))")
+            throw MLSSendMessageError.failedToSendMessage
         }
 
         if kind == .commit {
