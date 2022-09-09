@@ -26,7 +26,7 @@ final class ZMConversationTests_MLS: ZMConversationTestsBase {
         super.tearDown()
     }
 
-    func testThatItFetchesConversationWithGroupID_FederationDisabled() {
+    func testThatItFetchesConversationWithGroupID() {
         syncMOC.performGroupedBlockAndWait { [self] in
             // Given
             APIVersion.isFederationEnabled = false
@@ -35,23 +35,7 @@ final class ZMConversationTests_MLS: ZMConversationTestsBase {
             let conversation = self.createConversation(groupID: groupID, domain: domain)
 
             // When
-            let fetchedConversation = ZMConversation.fetch(with: groupID, domain: domain, in: syncMOC)
-
-            // Then
-            XCTAssertEqual(fetchedConversation, conversation)
-        }
-    }
-
-    func testThatItFetchesConversationWithGroupID_FederationEnabled() {
-        syncMOC.performGroupedBlockAndWait { [self] in
-            // Given
-            APIVersion.isFederationEnabled = true
-            let groupID = MLSGroupID([1, 2, 3])
-            let domain = "example.com"
-            let conversation = self.createConversation(groupID: groupID, domain: domain)
-
-            // When
-            let fetchedConversation = ZMConversation.fetch(with: groupID, domain: domain, in: syncMOC)
+            let fetchedConversation = ZMConversation.fetch(with: groupID, in: syncMOC)
 
             // Then
             XCTAssertEqual(fetchedConversation, conversation)

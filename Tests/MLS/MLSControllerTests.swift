@@ -136,15 +136,15 @@ class MLSControllerTests: ZMConversationTestsBase {
             )
 
             // When
-            var data: Data?
+            var result: MLSDecryptResult?
             do {
-                data = try sut.decrypt(message: messageBytes.data.base64EncodedString(), for: groupID)
+                result = try sut.decrypt(message: messageBytes.data.base64EncodedString(), for: groupID)
             } catch {
                 XCTFail("Unexpected error: \(String(describing: error))")
             }
 
             // Then
-            XCTAssertNil(data)
+            XCTAssertNil(result)
         }
     }
 
@@ -162,15 +162,15 @@ class MLSControllerTests: ZMConversationTestsBase {
             )
 
             // When
-            var data: Data?
+            var result: MLSDecryptResult?
             do {
-                data = try sut.decrypt(message: messageBytes.data.base64EncodedString(), for: groupID)
+                result = try sut.decrypt(message: messageBytes.data.base64EncodedString(), for: groupID)
             } catch {
                 XCTFail("Unexpected error: \(String(describing: error))")
             }
 
             // Then
-            XCTAssertEqual(data, messageBytes.data)
+            XCTAssertEqual(result, MLSDecryptResult.message(messageBytes.data))
 
             let decryptMessageCalls = self.mockCoreCrypto.calls.decryptMessage
             XCTAssertEqual(decryptMessageCalls.first?.0, self.groupID.bytes)

@@ -32,7 +32,7 @@ extension ZMConversation {
     static let mlsStatusKey = "mlsStatus"
 
     @objc
-    static let commitPendingProposalTimestampKey = "commitPendingProposalTimestamp"
+    static let commitPendingProposalDateKey = "commitPendingProposalDateKey"
 
     // MARK: - Properties
 
@@ -150,7 +150,7 @@ public extension ZMConversation {
 
         request.predicate = NSPredicate(
             format: "%K != nil",
-            argumentArray: [Self.commitPendingProposalTimestampKey]
+            argumentArray: [Self.commitPendingProposalDateKey]
         )
 
         return context.executeFetchRequestOrAssert(request) as? [ZMConversation] ?? []

@@ -18,7 +18,7 @@
 
 import Foundation
 
-public enum MLSDecryptResult {
+public enum MLSDecryptResult: Equatable {
     case message(_ messageData: Data)
     case proposal(_ commitDelay: UInt64)
 }

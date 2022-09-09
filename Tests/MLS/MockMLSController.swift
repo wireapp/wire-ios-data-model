@@ -41,6 +41,8 @@ class MockMLSController: MLSControllerProtocol {
         var removeMembersFromConversation = [([MLSClientID], MLSGroupID)]()
         var addGroupsPendingJoin = [MLSGroup]()
         var joinGroupsStillPending: [Void] = []
+        var commitPendingProposals: [Void] = []
+        var scheduleCommitPendingProposals: [(MLSGroupID, Date)] = []
 
     }
 
@@ -97,11 +99,11 @@ class MockMLSController: MLSControllerProtocol {
 
     // MARK: - Decrypt
 
-    typealias DecryptMock = (String, MLSGroupID) throws -> Data?
+    typealias DecryptMock = (String, MLSGroupID) throws -> MLSDecryptResult?
 
     var decryptMock: DecryptMock?
 
-    func decrypt(message: String, for groupID: MLSGroupID) throws -> Data? {
+    func decrypt(message: String, for groupID: MLSGroupID) throws -> MLSDecryptResult? {
         calls.decrypt.append((message, groupID))
         guard let mock = decryptMock else { throw MockError.unmockedMethodCalled }
         return try mock(message, groupID)
@@ -127,6 +129,16 @@ class MockMLSController: MLSControllerProtocol {
 
     func joinGroupsStillPending() {
         calls.joinGroupsStillPending.append(())
+    }
+
+    // MARK: - Pending Proposals
+
+    func commitPendingProposals() {
+        calls.commitPendingProposals.append(())
+    }
+
+    func scheduleCommitPendingProposals(groupID: MLSGroupID, at commitDate: Date) {
+        calls.scheduleCommitPendingProposals.append((groupID, commitDate))
     }
 
 }
