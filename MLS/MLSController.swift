@@ -565,7 +565,7 @@ public final class MLSController: MLSControllerProtocol {
                 } else {
                     logger.info("commit scheduled in the future, waiting...")
                     try await Task.sleep(nanoseconds: timestamp.timeIntervalSinceNow.nanoseconds)
-                    try? await commitPendingProposals(in: groupID)
+                    try await commitPendingProposals(in: groupID)
                 }
             }
         }
