@@ -415,6 +415,7 @@ public final class MLSController: MLSControllerProtocol {
     }
 
     // MARK: - Joining conversations
+    // Technically the two methods below could migrate to a different part of the code
 
     /// TODO
     /// - Parameter group: TODO
@@ -425,60 +426,64 @@ public final class MLSController: MLSControllerProtocol {
     /// TODO
     public func joinGroupsStillPending() {
         while !groupsPendingJoin.isEmpty {
-            joinGroupIfNeeded(groupsPendingJoin.removeFirst())
-        }
-    }
+            let groupID = groupsPendingJoin.removeFirst()
 
-    private func joinGroupIfNeeded(_ groupID: MLSGroupID) {
-        logger.info("Requesting to join group (\(groupID)")
-
-        guard let context = context else { return }
-
-        guard let conversation = ZMConversation.fetch(with: groupID, in: context) else {
-            return logger.warn("Conversation not found for group (\(groupID)")
-        }
-
-        guard let status = conversation.mlsStatus else {
-            return logger.warn("No `mlsStatus` for group (\(groupID))")
-        }
-
-        guard status == .pendingJoin else {
-            return logger.info("Group (\(groupID)) doesn't need to be joined. (status: \(status)")
-        }
-
-        Task {
             do {
-                var epoch: UInt64 = 0
-                context.performAndWait {
-                    epoch = conversation.epoch
-                }
-
-                try await sendExternalAddProposal(groupID, epoch: epoch)
-
-                logger.info("Successfully requested to join group (\(groupID)")
-            } catch {
+                try joinGroupIfNeeded(groupID)
+            } catch let error {
                 logger.warn(
-                    "MLS Controller failed to request to join group (\(groupID)). Error: \(String(describing: error))"
+                    "failed to request to join group (\(groupID)). error: \(String(describing: error))"
                 )
             }
         }
     }
 
-    // MARK: - External Add Proposal
+    enum MLSJoinGroupError: Error {
 
-    public enum MLSExternalAddProposalError: Error {
-
-        case failedToCreateProposal
+        case conversationNotFound
+        case missingMlsStatus
+        case missingContext
 
     }
 
-    private func sendExternalAddProposal(_ groupID: MLSGroupID, epoch: UInt64) async throws {
+    // I can test that it throws the right errors
+    func joinGroupIfNeeded(_ groupID: MLSGroupID) throws {
+        logger.info("requesting to join group (\(groupID)")
+
+        guard let context = context else {
+            throw MLSJoinGroupError.missingContext
+        }
+
+        guard let conversation = ZMConversation.fetch(with: groupID, in: context) else {
+            throw MLSJoinGroupError.conversationNotFound
+        }
+
+        guard let status = conversation.mlsStatus else {
+            throw MLSJoinGroupError.missingMlsStatus
+        }
+
+        guard status == .pendingJoin else {
+            // Not an error, so we just log
+            return logger.info("group (\(groupID)) doesn't need to be joined. (status: \(status)")
+        }
+
+        let epoch = conversation.epoch
+
+        Task {
+            await sendExternalAddProposal(groupID, epoch: epoch)
+        }
+    }
+
+    // Here I can test the async method using async tests and await to check that it calls the right methods
+    func sendExternalAddProposal(_ groupID: MLSGroupID, epoch: UInt64) async {
         do {
             let proposal = try coreCrypto.wire_newExternalAddProposal(conversationId: groupID.bytes, epoch: epoch)
             try await sendMessage(proposal, groupID: groupID, kind: .proposal)
-        } catch let error where error is CryptoError {
-            logger.warn("CoreCrypto failed to create external proposal \(String(describing: error))")
-            throw MLSExternalAddProposalError.failedToCreateProposal
+            logger.info("success: requested to join group (\(groupID)")
+        } catch {
+            logger.warn(
+                "failed to send external add proposal. group: (\(groupID)). error: \(String(describing: error))"
+            )
         }
     }
 
