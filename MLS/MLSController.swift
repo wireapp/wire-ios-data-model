@@ -539,7 +539,7 @@ public final class MLSController: MLSControllerProtocol {
 
         logger.info("committing any scheduled pending proposals")
 
-        var groupsWithPendingCommits: [(MLSGroupID, Date)]!
+        var groupsWithPendingCommits: [(MLSGroupID, Date)] = []
         context.performAndWait {
             let conversations = ZMConversation.fetchConversationsWithPendingProposals(in: context)
             groupsWithPendingCommits = conversations.compactMap { conversation in
@@ -556,7 +556,7 @@ public final class MLSController: MLSControllerProtocol {
 
         logger.info("\(groupsWithPendingCommits.count) groups with scheduled pending proposals")
 
-        let unmutableGroupsWithPendingCommits = groupsWithPendingCommits!
+        let unmutableGroupsWithPendingCommits = groupsWithPendingCommits
         Task {
             for (groupID, timestamp) in unmutableGroupsWithPendingCommits {
                 if timestamp.isInThePast {
