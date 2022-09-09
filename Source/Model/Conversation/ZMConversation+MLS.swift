@@ -32,7 +32,7 @@ extension ZMConversation {
     static let mlsStatusKey = "mlsStatus"
 
     @objc
-    static let commitPendingProposalDateKey = "commitPendingProposalDateKey"
+    static let commitPendingProposalDateKey = "commitPendingProposalDate"
 
     // MARK: - Properties
 
