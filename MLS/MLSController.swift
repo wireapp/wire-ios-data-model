@@ -564,7 +564,7 @@ public final class MLSController: MLSControllerProtocol {
                     try await commitPendingProposals(in: groupID)
                 } else {
                     logger.info("commit scheduled in the future, waiting...")
-                    try await Task.sleep(nanoseconds: UInt64(timestamp.timeIntervalSinceNow * 1_000 * 1_000 * 1_000))
+                    try await Task.sleep(nanoseconds: timestamp.timeIntervalSinceNow.nanoseconds)
                     try? await commitPendingProposals(in: groupID)
                 }
             }
@@ -666,11 +666,20 @@ public struct MLSGroup: Equatable, Hashable {
 
 // MARK: - Helper Extensions
 
+private extension TimeInterval  {
+
+    var nanoseconds: UInt64 {
+        UInt64(self * 1_000_000_000)
+    }
+
+}
+
 private extension Date {
 
     var isInThePast: Bool {
         return compare(Date()) != .orderedDescending
     }
+
 }
 
 private extension String {
