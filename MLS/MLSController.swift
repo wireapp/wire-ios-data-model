@@ -632,11 +632,15 @@ public final class MLSController: MLSControllerProtocol {
     }
 
     func commitPendingProposals(in groupID: MLSGroupID) async throws {
-        guard let context = context else {
+        guard context != nil else {
             return
         }
 
         logger.info("committing pending proposals in: \(groupID)")
+
+        defer {
+            clearPendingPropsalCommitDate(for: groupID)
+        }
 
         do {
             // TODO wire_commitPendingProposals will return an optional CommitBundle soon in the case
@@ -650,6 +654,13 @@ public final class MLSController: MLSControllerProtocol {
 
         } catch {
             logger.info("failed to commit pending proposals in \(groupID): \(String(describing: error))")
+            throw MLSCommitPendingProposalsError.failedToCommitPendingProposals
+        }
+    }
+
+    private func clearPendingPropsalCommitDate(for groupID: MLSGroupID) {
+        guard let context = context else {
+            return
         }
 
         context.performAndWait {
