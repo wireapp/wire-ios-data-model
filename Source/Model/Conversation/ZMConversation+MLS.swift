@@ -31,6 +31,9 @@ extension ZMConversation {
     @objc
     static let mlsStatusKey = "mlsStatus"
 
+    @objc
+    static let epochKey = #keyPath(epoch)
+
     // MARK: - Properties
 
     @NSManaged public var epoch: UInt64
