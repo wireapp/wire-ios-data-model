@@ -431,9 +431,14 @@ public final class MLSController: MLSControllerProtocol {
             do {
                 try joinGroupIfNeeded(groupID)
             } catch let error {
-                logger.warn(
-                    "failed to request to join group (\(groupID)). error: \(String(describing: error))"
-                )
+                switch error {
+                case MLSJoinGroupError.notPendingJoin:
+                    logger.info("group (\(groupID)) status isn't `.pendingJoin`")
+                default:
+                    logger.warn(
+                        "failed to request to join group (\(groupID)). error: \(String(describing: error))"
+                    )
+                }
             }
         }
     }
@@ -443,6 +448,7 @@ public final class MLSController: MLSControllerProtocol {
         case conversationNotFound
         case missingMlsStatus
         case missingContext
+        case notPendingJoin
 
     }
 
@@ -463,8 +469,7 @@ public final class MLSController: MLSControllerProtocol {
         }
 
         guard status == .pendingJoin else {
-            // Not an error, so we just log
-            return logger.info("group (\(groupID)) doesn't need to be joined. (status: \(status)")
+            throw MLSJoinGroupError.notPendingJoin
         }
 
         let epoch = conversation.epoch
