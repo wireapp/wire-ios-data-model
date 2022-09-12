@@ -170,7 +170,10 @@ public final class MLSController: MLSControllerProtocol {
     }
 
     enum MLSSendMessageError: Error {
-        case failedToSendMessage
+
+        case failedToSendCommit
+        case failedToSendProposal
+
     }
 
     private func sendMessage(_ bytes: Bytes, groupID: MLSGroupID, kind: MessageKind) async throws {
@@ -185,8 +188,8 @@ public final class MLSController: MLSControllerProtocol {
                 in: context.notificationContext
             )
         } catch let error {
-            logger.warn("failed to send message in group (\(groupID)): \(String(describing: error))")
-            throw MLSSendMessageError.failedToSendMessage
+            logger.warn("failed to send \(String(describing: kind)) message in group (\(groupID)): \(String(describing: error))")
+            throw MLSSendMessageError(from: kind)
         }
 
         if kind == .commit {
@@ -452,7 +455,6 @@ public final class MLSController: MLSControllerProtocol {
 
     }
 
-    // I can test that it throws the right errors
     func joinGroupIfNeeded(_ groupID: MLSGroupID) throws {
         logger.info("requesting to join group (\(groupID)")
 
@@ -479,7 +481,6 @@ public final class MLSController: MLSControllerProtocol {
         }
     }
 
-    // Here I can test the async method using async tests and await to check that it calls the right methods
     func sendExternalAddProposal(_ groupID: MLSGroupID, epoch: UInt64) async {
         do {
             let proposal = try coreCrypto.wire_newExternalAddProposal(conversationId: groupID.bytes, epoch: epoch)
@@ -594,11 +595,39 @@ extension MLSUser: CustomStringConvertible {
 }
 
 enum MessageKind {
+
     case commit
     case proposal
+
+}
+
+extension MessageKind: CustomStringConvertible {
+
+    var description: String {
+        switch self {
+        case .commit:
+            return "commit"
+        case .proposal:
+            return "proposal"
+        }
+    }
+
 }
 
 // MARK: - Helper Extensions
+
+private extension MLSController.MLSSendMessageError {
+
+    init(from messageKind: MessageKind) {
+        switch messageKind {
+        case .commit:
+            self = .failedToSendCommit
+        case .proposal:
+            self = .failedToSendProposal
+        }
+    }
+
+}
 
 private extension String {
 

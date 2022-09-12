@@ -326,7 +326,7 @@ class MLSControllerTests: ZMConversationTestsBase {
         XCTAssertTrue(mockCoreCrypto.calls.commitAccepted.isEmpty)
     }
 
-    func test_AddingMembersToConversation_ThrowsFailedToSendMessage() async {
+    func test_AddingMembersToConversation_ThrowsFailedToSendCommit() async {
         // Given
         let domain = "example.com"
         let id = UUID.create()
@@ -356,7 +356,7 @@ class MLSControllerTests: ZMConversationTestsBase {
         )
 
         // when / then
-        await assertItThrows(error: MLSController.MLSSendMessageError.failedToSendMessage) {
+        await assertItThrows(error: MLSController.MLSSendMessageError.failedToSendCommit) {
             try await sut.addMembersToConversation(with: mlsUser, for: mlsGroupID)
         }
 
@@ -489,7 +489,7 @@ class MLSControllerTests: ZMConversationTestsBase {
         XCTAssertTrue(mockCoreCrypto.calls.commitAccepted.isEmpty)
     }
 
-    func test_RemovingMembersToConversation_FailsToSendMessage() async {
+    func test_RemovingMembersToConversation_FailsToSendCommit() async {
         // Given
         let domain = "example.com"
         let id = UUID.create().uuidString
@@ -505,7 +505,7 @@ class MLSControllerTests: ZMConversationTestsBase {
         )
 
         // When / Then
-        await assertItThrows(error: MLSController.MLSSendMessageError.failedToSendMessage) {
+        await assertItThrows(error: MLSController.MLSSendMessageError.failedToSendCommit) {
             try await sut.removeMembersFromConversation(with: [mlsClientID], for: mlsGroupID)
         }
 
