@@ -566,11 +566,11 @@ public final class MLSController: MLSControllerProtocol {
 
     // MARK: - Pending proposals
 
-    enum MLSCommitPendingProposalsError: Error {
-
-        case failedToCommitPendingProposals
-
-    }
+    /// Schedule a date to commit all pending proposals for a group.
+    ///
+    /// - Parameters:
+    ///   - groupID: The group in which the propsal(s) should be commited.
+    ///   - commitDate: The date at which to commit the pending proposals.
 
     public func scheduleCommitPendingProposals(groupID: MLSGroupID, at commitDate: Date) {
         guard let context = context else {
@@ -582,6 +582,16 @@ public final class MLSController: MLSControllerProtocol {
         let conversation = ZMConversation.fetch(with: groupID, in: context)
         conversation?.commitPendingProposalDate = commitDate
     }
+
+    enum MLSCommitPendingProposalsError: Error {
+
+        case failedToCommitPendingProposals
+
+    }
+
+    /// Commit all pending proposals for all groups.
+    ///
+    /// - Throws: `MLSCommitPendingProposalsError` if proposals couldn't be commited.
 
     public func commitPendingProposals() async throws {
         guard context != nil else {
