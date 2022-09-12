@@ -572,27 +572,25 @@ public final class MLSController: MLSControllerProtocol {
 
     }
 
-    public func commitPendingProposals() async throws {
+    public func scheduleCommitPendingProposals(groupID: MLSGroupID, at commitDate: Date) {
         guard let context = context else {
+            return
+        }
+
+        logger.info("schedule to commit pending proposals in \(groupID) at \(commitDate)")
+
+        let conversation = ZMConversation.fetch(with: groupID, in: context)
+        conversation?.commitPendingProposalDate = commitDate
+    }
+
+    public func commitPendingProposals() async throws {
+        guard context != nil else {
             return
         }
 
         logger.info("committing any scheduled pending proposals")
 
-        var groupsWithPendingCommits: [(MLSGroupID, Date)] = []
-        context.performAndWait {
-            let conversations = ZMConversation.fetchConversationsWithPendingProposals(in: context)
-            groupsWithPendingCommits = conversations.compactMap { conversation in
-                if
-                    let groupID = conversation.mlsGroupID,
-                    let timestamp = conversation.commitPendingProposalDate
-                {
-                    return (groupID, timestamp)
-                } else {
-                    return nil
-                }
-            }
-        }
+        let groupsWithPendingCommits = self.groupsWithPendingCommits()
 
         logger.info("\(groupsWithPendingCommits.count) groups with scheduled pending proposals")
 
@@ -608,6 +606,31 @@ public final class MLSController: MLSControllerProtocol {
         }
     }
 
+    private func groupsWithPendingCommits() -> [(MLSGroupID, Date)] {
+        guard let context = context else {
+            return []
+        }
+
+        var result: [(MLSGroupID, Date)] = []
+
+        context.performAndWait {
+            let conversations = ZMConversation.fetchConversationsWithPendingProposals(in: context)
+
+            result = conversations.compactMap { conversation in
+                guard
+                    let groupID = conversation.mlsGroupID,
+                    let timestamp = conversation.commitPendingProposalDate
+                else {
+                    return nil
+                }
+
+                return (groupID, timestamp)
+            }
+        }
+
+        return result
+    }
+
     func commitPendingProposals(in groupID: MLSGroupID) async throws {
         guard let context = context else {
             return
@@ -615,39 +638,24 @@ public final class MLSController: MLSControllerProtocol {
 
         logger.info("committing pending proposals in: \(groupID)")
 
-        let commitBundle: CommitBundle?
         do {
             // TODO wire_commitPendingProposals will return an optional CommitBundle soon in the case
             // when there are no pending proposals, then we could return early on an error.
-            commitBundle = try coreCrypto.wire_commitPendingProposals(conversationId: groupID.bytes)
-        } catch {
-            logger.info("failed to commit pending proposals in \(groupID): \(String(describing: error))")
-            commitBundle = nil
-        }
-
-        if let commitBundle = commitBundle {
+            let commitBundle = try coreCrypto.wire_commitPendingProposals(conversationId: groupID.bytes)
             try await sendMessage(commitBundle.commit, groupID: groupID)
 
             if let welcome = commitBundle.welcome {
                 try await sendWelcomeMessage(welcome)
             }
+
+        } catch {
+            logger.info("failed to commit pending proposals in \(groupID): \(String(describing: error))")
         }
 
         context.performAndWait {
             let conversation = ZMConversation.fetch(with: groupID, in: context)
             conversation?.commitPendingProposalDate = nil
         }
-    }
-
-    public func scheduleCommitPendingProposals(groupID: MLSGroupID, at commitDate: Date) {
-        guard let context = context else {
-            return
-        }
-
-        logger.info("schedule to commit pending proposals in \(groupID) at \(commitDate)")
-
-        let conversation = ZMConversation.fetch(with: groupID, in: context)
-        conversation?.commitPendingProposalDate = commitDate
     }
 
 }
