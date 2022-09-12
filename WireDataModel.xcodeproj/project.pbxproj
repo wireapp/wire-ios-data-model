@@ -526,6 +526,8 @@
 		EEC3BC742888403000BFDC35 /* MockCoreCrypto.swift in Sources */ = {isa = PBXBuildFile; fileRef = EEC3BC732888403000BFDC35 /* MockCoreCrypto.swift */; };
 		EEC3BC76288855C000BFDC35 /* MockMLSActionsProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = EEC3BC75288855C000BFDC35 /* MockMLSActionsProvider.swift */; };
 		EEC47ED627A81EF60020B599 /* Feature+ClassifiedDomains.swift in Sources */ = {isa = PBXBuildFile; fileRef = EEC47ED527A81EF60020B599 /* Feature+ClassifiedDomains.swift */; };
+		EEC8064A28CF4BAD00DD58E9 /* FetchBackendMLSPublicKeysAction.swift in Sources */ = {isa = PBXBuildFile; fileRef = EEC8064928CF4BAD00DD58E9 /* FetchBackendMLSPublicKeysAction.swift */; };
+		EEC8064C28CF4BBF00DD58E9 /* BackendMLSPublicKeys.swift in Sources */ = {isa = PBXBuildFile; fileRef = EEC8064B28CF4BBF00DD58E9 /* BackendMLSPublicKeys.swift */; };
 		EECFAA3826D52EB700D9E100 /* Feature.SelfDeletingMessages.swift in Sources */ = {isa = PBXBuildFile; fileRef = EECFAA3726D52EB700D9E100 /* Feature.SelfDeletingMessages.swift */; };
 		EEDA9C0E2510F3D5003A5B27 /* ZMConversation+EncryptionAtRest.swift in Sources */ = {isa = PBXBuildFile; fileRef = EEDA9C0D2510F3D5003A5B27 /* ZMConversation+EncryptionAtRest.swift */; };
 		EEDA9C1225121277003A5B27 /* NSManagedObjectContextTests+EncryptionAtRest.swift in Sources */ = {isa = PBXBuildFile; fileRef = EEDA9C1125121277003A5B27 /* NSManagedObjectContextTests+EncryptionAtRest.swift */; };
@@ -1349,6 +1351,8 @@
 		EEC3BC732888403000BFDC35 /* MockCoreCrypto.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MockCoreCrypto.swift; sourceTree = "<group>"; };
 		EEC3BC75288855C000BFDC35 /* MockMLSActionsProvider.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MockMLSActionsProvider.swift; sourceTree = "<group>"; };
 		EEC47ED527A81EF60020B599 /* Feature+ClassifiedDomains.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Feature+ClassifiedDomains.swift"; sourceTree = "<group>"; };
+		EEC8064928CF4BAD00DD58E9 /* FetchBackendMLSPublicKeysAction.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = FetchBackendMLSPublicKeysAction.swift; sourceTree = "<group>"; };
+		EEC8064B28CF4BBF00DD58E9 /* BackendMLSPublicKeys.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = BackendMLSPublicKeys.swift; sourceTree = "<group>"; };
 		EECFAA3726D52EB700D9E100 /* Feature.SelfDeletingMessages.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Feature.SelfDeletingMessages.swift; sourceTree = "<group>"; };
 		EEDA9C0D2510F3D5003A5B27 /* ZMConversation+EncryptionAtRest.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "ZMConversation+EncryptionAtRest.swift"; sourceTree = "<group>"; };
 		EEDA9C1125121277003A5B27 /* NSManagedObjectContextTests+EncryptionAtRest.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "NSManagedObjectContextTests+EncryptionAtRest.swift"; sourceTree = "<group>"; };
@@ -1890,6 +1894,7 @@
 				7AFC6A2C2876E9BF000FF1A1 /* SendMLSMessageAction.swift */,
 				7AFC6A282876E9BF000FF1A1 /* SendMLSWelcomeAction.swift */,
 				7AFC6A292876E9BF000FF1A1 /* UploadSelfMLSKeyPackagesAction.swift */,
+				EEC8064928CF4BAD00DD58E9 /* FetchBackendMLSPublicKeysAction.swift */,
 			);
 			path = Actions;
 			sourceTree = "<group>";
@@ -1999,6 +2004,7 @@
 				EE002F1D2878308F0027D63A /* MLSGroupID.swift */,
 				7ABAD027287D92BF002071A1 /* MLSQualifiedClientID.swift */,
 				EE9BC5CB287C6D5000AF9AEE /* MLSClientID.swift */,
+				EEC8064B28CF4BBF00DD58E9 /* BackendMLSPublicKeys.swift */,
 				63D5654A28B4D18D00BDFB49 /* MLSGroupStatus.swift */,
 				EE002F1F2878312F0027D63A /* MessageProtocol.swift */,
 				63DA33402869C39D00818C3C /* CoreCryptoKeyProvider.swift */,
@@ -3486,6 +3492,7 @@
 				F9331C841CB4191B00139ECC /* NSPredicate+ZMSearch.m in Sources */,
 				BFCD502D21511D58008CD845 /* DraftMessage.swift in Sources */,
 				F9A706BD1CAEE01D00C2F5FE /* CryptoBox.swift in Sources */,
+				EEC8064C28CF4BBF00DD58E9 /* BackendMLSPublicKeys.swift in Sources */,
 				EE3EFE9725305A84009499E5 /* ModifiedObjects+Mergeable.swift in Sources */,
 				EE42938A252C437900E70670 /* Notification.Name+ManagedObjectObservation.swift in Sources */,
 				16AD86BA1F75426C00E4C797 /* NSManagedObjectContext+NotificationContext.swift in Sources */,
@@ -3694,6 +3701,7 @@
 				5473CC731E14245C00814C03 /* NSManagedObjectContext+Debugging.swift in Sources */,
 				BF46662A1DCB71B0007463FF /* V3Asset.swift in Sources */,
 				F9A706991CAEE01D00C2F5FE /* ZMManagedObject.m in Sources */,
+				EEC8064A28CF4BAD00DD58E9 /* FetchBackendMLSPublicKeysAction.swift in Sources */,
 				F1FDF2F821B152BC00E037A1 /* GenericMessage+Hashing.swift in Sources */,
 				BF491CE41F063EDB0055EE44 /* Account.swift in Sources */,
 				EEDA9C0E2510F3D5003A5B27 /* ZMConversation+EncryptionAtRest.swift in Sources */,
