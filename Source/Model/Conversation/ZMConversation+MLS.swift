@@ -106,10 +106,8 @@ extension ZMConversation {
         }
 
         set {
-            guard let status = newValue else { return }
-
             willChangeValue(forKey: Self.mlsStatusKey)
-            primitiveMlsStatus = NSNumber(value: status.rawValue)
+            primitiveMlsStatus = newValue.map { NSNumber(value: $0.rawValue) }
             didChangeValue(forKey: Self.mlsStatusKey)
         }
     }
