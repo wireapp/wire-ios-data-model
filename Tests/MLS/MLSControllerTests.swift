@@ -26,6 +26,7 @@ class MLSControllerTests: ZMConversationTestsBase {
     var mockCoreCrypto: MockCoreCrypto!
     var mockActionsProvider: MockMLSActionsProvider!
     var mockConversationEventProcessor: MockConversationEventProcessor!
+    var mockStaleMLSKeyDetector: MockStaleMLSKeyDetector!
 
     let groupID = MLSGroupID([1, 2, 3])
 
@@ -34,11 +35,13 @@ class MLSControllerTests: ZMConversationTestsBase {
         mockCoreCrypto = MockCoreCrypto()
         mockActionsProvider = MockMLSActionsProvider()
         mockConversationEventProcessor = MockConversationEventProcessor()
+        mockStaleMLSKeyDetector = MockStaleMLSKeyDetector()
 
         sut = MLSController(
             context: uiMOC,
             coreCrypto: mockCoreCrypto,
             conversationEventProcessor: mockConversationEventProcessor,
+            staleKeyMaterialDetector: mockStaleMLSKeyDetector,
             actionsProvider: mockActionsProvider
         )
     }
@@ -47,6 +50,7 @@ class MLSControllerTests: ZMConversationTestsBase {
         sut = nil
         mockCoreCrypto = nil
         mockActionsProvider = nil
+        mockStaleMLSKeyDetector = nil
         super.tearDown()
     }
 
@@ -65,6 +69,7 @@ class MLSControllerTests: ZMConversationTestsBase {
             context: uiMOC,
             coreCrypto: mockCoreCrypto,
             conversationEventProcessor: mockConversationEventProcessor,
+            staleKeyMaterialDetector: mockStaleMLSKeyDetector,
             actionsProvider: mockActionsProvider
         )
 
