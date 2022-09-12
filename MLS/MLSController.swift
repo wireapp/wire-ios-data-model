@@ -529,7 +529,6 @@ public final class MLSController: MLSControllerProtocol {
     /// - Parameters:
     ///   - message: a base64 encoded encrypted message
     ///   - groupID: the id of the MLS group
-    ///   - timestamp: timestamp of the event which delivered the message
     ///
     /// - Returns:
     ///   The data representing the decrypted message bytes.
