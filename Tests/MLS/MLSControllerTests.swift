@@ -611,6 +611,9 @@ class MLSControllerTests: ZMConversationTestsBase {
             [4, 5, 6]
         ]
 
+        // we need more than half the target number to have a sufficient amount
+        let unsufficientKeyPackagesAmount = sut.targetUnclaimedKeyPackageCount / 3
+
         // expectation
         let countUnclaimedKeyPackages = self.expectation(description: "Count unclaimed key packages")
         let uploadKeyPackages = self.expectation(description: "Upload key packages")
@@ -619,17 +622,17 @@ class MLSControllerTests: ZMConversationTestsBase {
         userDefaultsTestSuite.test_setLastKeyPackageCountDate(Date())
 
         // mock that we don't have enough unclaimed kp locally
-        mockCoreCrypto.mockResultForClientValidKeypackagesCount = 25
+        mockCoreCrypto.mockResultForClientValidKeypackagesCount = UInt64(unsufficientKeyPackagesAmount)
 
         // mock keyPackages returned by core cryto
         mockCoreCrypto.mockResultForClientKeypackages = keyPackages
 
-        // mock return value for unclaimed key packages count.
+        // mock return value for unclaimed key packages count
         mockActionsProvider.countUnclaimedKeyPackagesMocks.append { cid in
             XCTAssertEqual(cid, clientID)
             countUnclaimedKeyPackages.fulfill()
 
-            return 0
+            return unsufficientKeyPackagesAmount
         }
 
         mockActionsProvider.uploadKeyPackagesMocks.append { cid, kp in
@@ -648,7 +651,7 @@ class MLSControllerTests: ZMConversationTestsBase {
         XCTAssertTrue(waitForCustomExpectations(withTimeout: 0.5))
         let clientKeypackagesCalls = mockCoreCrypto.calls.clientKeypackages
         XCTAssertEqual(clientKeypackagesCalls.count, 1)
-        XCTAssertEqual(clientKeypackagesCalls.first, 100)
+        XCTAssertEqual(clientKeypackagesCalls.first, UInt32(sut.targetUnclaimedKeyPackageCount))
     }
 
     func test_UploadKeyPackages_DoesntCountUnclaimedKeyPackages_WhenNotNeeded() {
@@ -663,7 +666,7 @@ class MLSControllerTests: ZMConversationTestsBase {
         userDefaultsTestSuite.test_setLastKeyPackageCountDate(Date())
 
         // mock that there are enough kp locally
-        mockCoreCrypto.mockResultForClientValidKeypackagesCount = 100
+        mockCoreCrypto.mockResultForClientValidKeypackagesCount = UInt64(sut.targetUnclaimedKeyPackageCount)
 
         mockActionsProvider.countUnclaimedKeyPackagesMocks.append { _ in
             countUnclaimedKeyPackages.fulfill()
@@ -681,6 +684,9 @@ class MLSControllerTests: ZMConversationTestsBase {
         // Given
         createSelfClient(onMOC: uiMOC)
 
+        // we need more than half the target number to have a sufficient amount
+        let unsufficientKeyPackagesAmount = sut.targetUnclaimedKeyPackageCount / 3
+
         // expectation
         let countUnclaimedKeyPackages = XCTestExpectation(description: "Count unclaimed key packages")
         let uploadKeyPackages = XCTestExpectation(description: "Upload key packages")
@@ -690,12 +696,12 @@ class MLSControllerTests: ZMConversationTestsBase {
         userDefaultsTestSuite.test_setLastKeyPackageCountDate(.distantPast)
 
         // mock that we don't have enough unclaimed kp locally
-        mockCoreCrypto.mockResultForClientValidKeypackagesCount = 25
+        mockCoreCrypto.mockResultForClientValidKeypackagesCount = UInt64(unsufficientKeyPackagesAmount)
 
         // mock return value for unclaimed key packages count
         mockActionsProvider.countUnclaimedKeyPackagesMocks.append { _ in
             countUnclaimedKeyPackages.fulfill()
-            return 100
+            return self.sut.targetUnclaimedKeyPackageCount
         }
 
         mockActionsProvider.uploadKeyPackagesMocks.append { _, _ in
