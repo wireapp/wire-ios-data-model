@@ -398,7 +398,7 @@ public final class MLSController: MLSControllerProtocol {
             )
 
         } catch let error {
-            self.logger.warn("failed to count unclaimed key packages with error: \(String(describing: error))")
+            self.logger.warn("failed to fetch unclaimed key packages count with error: \(String(describing: error))")
             throw MLSKeyPackagesError.failedToCountUnclaimedKeyPackages
         }
     }
