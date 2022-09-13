@@ -316,6 +316,7 @@ public final class MLSController: MLSControllerProtocol {
     enum MLSKeyPackagesError: Error {
 
         case failedToGenerateKeyPackages
+        case failedToUploadKeyPackages
         case failedToCountUnclaimedKeyPackages
 
     }
@@ -328,33 +329,53 @@ public final class MLSController: MLSControllerProtocol {
     public func uploadKeyPackagesIfNeeded() {
         logger.info("uploading key packages if needed")
 
-        // TODO: Get actual key packages count from CoreCrypto once updated to latest. For now using a mock value of 50.
-        let estimatedLocalKeyPackageCount  = 50
-        let shouldCountRemainingKeyPackages = estimatedLocalKeyPackageCount < targetUnclaimedKeyPackageCount / 2
-        let lastCheckWasMoreThen24Hours = userDefaults.hasMoreThan24HoursPassedSinceLastCheck
+        func logWarn(abortedWithReason reason: String) {
+            logger.warn("aborting key packages upload: \(reason)")
+        }
 
-        // Check if need to query the backend
-        guard lastCheckWasMoreThen24Hours || shouldCountRemainingKeyPackages else { return }
+        guard shouldQueryUnclaimedKeyPackagesCount else {
+            return logger.info("enough unclaimed key packages. not uploading.")
+        }
 
-        guard
-            let context = context,
-            let clientID = ZMUser.selfUser(in: context).selfClient()?.remoteIdentifier
-        else {
-            return
+        guard let context = context else {
+            return logWarn(abortedWithReason: "missing context")
+        }
+
+        guard let clientID = ZMUser.selfUser(in: context).selfClient()?.remoteIdentifier else {
+            return logWarn(abortedWithReason: "failed to get client ID")
         }
 
         Task {
-            let unclaimedKeyPackageCount = try await countUnclaimedKeyPackages(clientID: clientID, context: context.notificationContext)
-            logger.info("there are \(unclaimedKeyPackageCount) unclaimed key packages")
+            do {
+                let unclaimedKeyPackageCount = try await countUnclaimedKeyPackages(clientID: clientID, context: context.notificationContext)
+                logger.info("there are \(unclaimedKeyPackageCount) unclaimed key packages")
 
-            userDefaults.lastKeyPackageCountDate = Date()
+                userDefaults.lastKeyPackageCountDate = Date()
 
-            guard unclaimedKeyPackageCount <= targetUnclaimedKeyPackageCount / 2 else { return }
+                guard unclaimedKeyPackageCount <= halfOfTargetUnclaimedKeyPackageCount else {
+                    return logger.info("enough unclaimed key packages. not uploading.")
+                }
 
-            let amount = UInt32(targetUnclaimedKeyPackageCount - unclaimedKeyPackageCount)
-            let keyPackages = try generateKeyPackages(amountRequested: amount)
-            try await uploadKeyPackages(clientID: clientID, keyPackages: keyPackages, context: context.notificationContext)
+                let amount = UInt32(targetUnclaimedKeyPackageCount)
+                let keyPackages = try generateKeyPackages(amountRequested: amount)
+                try await uploadKeyPackages(clientID: clientID, keyPackages: keyPackages, context: context.notificationContext)
+                logger.info("success: uploaded key packages for client \(clientID)")
+            } catch let error {
+                logger.warn("failed to upload key packages for client \(clientID). \(String(describing: error))")
+            }
         }
+    }
+
+    private var shouldQueryUnclaimedKeyPackagesCount: Bool {
+        let estimatedLocalKeyPackageCount = coreCrypto.wire_clientValidKeypackagesCount()
+        let shouldCountRemainingKeyPackages = estimatedLocalKeyPackageCount < halfOfTargetUnclaimedKeyPackageCount
+        let lastCheckWasMoreThan24Hours = userDefaults.hasMoreThan24HoursPassedSinceLastCheck
+
+        return lastCheckWasMoreThan24Hours || shouldCountRemainingKeyPackages
+    }
+
+    private var halfOfTargetUnclaimedKeyPackageCount: Int {
+        targetUnclaimedKeyPackageCount / 2
     }
 
     private func countUnclaimedKeyPackages(
@@ -409,7 +430,7 @@ public final class MLSController: MLSControllerProtocol {
 
         } catch let error {
             logger.warn("failed to upload key packages for client (\(clientID)): \(String(describing: error))")
-            throw MLSKeyPackagesError.failedToGenerateKeyPackages
+            throw MLSKeyPackagesError.failedToUploadKeyPackages
         }
     }
 
