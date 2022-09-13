@@ -333,9 +333,7 @@ public final class MLSController: MLSControllerProtocol {
             logger.warn("aborting key packages upload: \(reason)")
         }
 
-        guard shouldQueryUnclaimedKeyPackagesCount else {
-            return logger.info("enough unclaimed key packages. not uploading.")
-        }
+        guard shouldQueryUnclaimedKeyPackagesCount() else { return }
 
         guard let context = context else {
             return logWarn(abortedWithReason: "missing context")
@@ -345,7 +343,7 @@ public final class MLSController: MLSControllerProtocol {
             return logWarn(abortedWithReason: "failed to get client ID")
         }
 
-        Task {
+        Task { () -> Void in
             do {
                 let unclaimedKeyPackageCount = try await countUnclaimedKeyPackages(clientID: clientID, context: context.notificationContext)
                 logger.info("there are \(unclaimedKeyPackageCount) unclaimed key packages")
@@ -366,12 +364,23 @@ public final class MLSController: MLSControllerProtocol {
         }
     }
 
-    private var shouldQueryUnclaimedKeyPackagesCount: Bool {
-        let estimatedLocalKeyPackageCount = coreCrypto.wire_clientValidKeypackagesCount()
-        let shouldCountRemainingKeyPackages = estimatedLocalKeyPackageCount < halfOfTargetUnclaimedKeyPackageCount
-        let lastCheckWasMoreThan24Hours = userDefaults.hasMoreThan24HoursPassedSinceLastCheck
+    private func shouldQueryUnclaimedKeyPackagesCount() -> Bool {
+        do {
+            let estimatedLocalKeyPackageCount = try coreCrypto.wire_clientValidKeypackagesCount()
+            let shouldCountRemainingKeyPackages = estimatedLocalKeyPackageCount < halfOfTargetUnclaimedKeyPackageCount
+            let lastCheckWasMoreThan24Hours = userDefaults.hasMoreThan24HoursPassedSinceLastCheck
 
-        return lastCheckWasMoreThan24Hours || shouldCountRemainingKeyPackages
+            guard lastCheckWasMoreThan24Hours || shouldCountRemainingKeyPackages else {
+                logger.info("last check was recent and there are enough unclaimed key packages. not uploading.")
+                return false
+            }
+
+            return true
+
+        } catch let error {
+            logger.warn("failed to get valid key packages count with error: \(String(describing: error))")
+            return false // maybe return true if we want to query the backend even though core crypto threw an error
+        }
     }
 
     private var halfOfTargetUnclaimedKeyPackageCount: Int {
