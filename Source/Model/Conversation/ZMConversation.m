@@ -75,7 +75,6 @@ NSString *const ZMConversationRemoteIdentifierDataKey = @"remoteIdentifier_data"
 NSString *const SecurityLevelKey = @"securityLevel";
 NSString *const ZMConversationLabelsKey = @"labels";
 NSString *const ZMConversationDomainKey = @"domain";
-NSString *const ZMConversationIsPendingWelcomeMessageKey = @"isPendingWelcomeMessage";
 
 static NSString *const ConnectedUserKey = @"connectedUser";
 static NSString *const CreatorKey = @"creator";
@@ -104,11 +103,11 @@ static NSString *const ClearedEventIDDataKey = @"clearedEventID_data";
 static NSString *const ArchivedEventIDDataKey = @"archivedEventID_data";
 static NSString *const LastReadEventIDDataKey = @"lastReadEventID_data";
 
-static NSString *const TeamKey = @"team";
+NSString *const TeamKey = @"team";
 
 static NSString *const AccessModeStringsKey = @"accessModeStrings";
 static NSString *const AccessRoleStringKey = @"accessRoleString";
-static NSString *const AccessRoleStringsKeyV2 = @"accessRoleStringsV2";
+NSString *const AccessRoleStringsKeyV2 = @"accessRoleStringsV2";
 
 
 NSTimeInterval ZMConversationDefaultLastReadTimestampSaveDelay = 3.0;
@@ -352,9 +351,9 @@ const NSUInteger ZMConversationMaxTextMessageLength = ZMConversationMaxEncodedTe
             @"isSelfAnActiveMember", // DEPRECATED
             @"lastServerSyncedActiveParticipants", // DEPRECATED
             ZMConversationDomainKey,
-            ZMConversationIsPendingWelcomeMessageKey,
             ZMConversation.messageProtocolKey,
-            ZMConversation.mlsGroupID
+            ZMConversation.mlsGroupIdKey,
+            ZMConversation.mlsStatusKey
         };
         
         NSSet *additionalKeys = [NSSet setWithObjects:KeysIgnoredForTrackingModifications count:(sizeof(KeysIgnoredForTrackingModifications) / sizeof(*KeysIgnoredForTrackingModifications))];

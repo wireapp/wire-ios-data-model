@@ -20,7 +20,7 @@ import Foundation
 
 /// Represents the identifer for an MLS group.
 
-public struct MLSGroupID: Equatable {
+public struct MLSGroupID: Equatable, Hashable {
 
     // MARK: - Properties
 
@@ -58,3 +58,10 @@ public struct MLSGroupID: Equatable {
 
 }
 
+extension MLSGroupID: CustomStringConvertible {
+
+    public var description: String {
+        return base64EncodedString
+    }
+
+}
