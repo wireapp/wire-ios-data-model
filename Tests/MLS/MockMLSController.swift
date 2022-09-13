@@ -51,7 +51,7 @@ class MockMLSController: MLSControllerProtocol {
     // MARK: - Key packages
 
     func uploadKeyPackagesIfNeeded() {
-
+        calls.uploadKeyPackagesIfNeeded.append(())
     }
 
     // MARK: - Create group
