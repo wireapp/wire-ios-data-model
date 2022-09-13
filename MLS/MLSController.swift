@@ -776,7 +776,7 @@ private extension UserDefaults {
 
     var lastKeyPackageCountDate: Date? {
 
-        get { UserDefaults.standard.object(forKey: Keys.keyPackageQueriedTime) as? Date }
+        get { object(forKey: Keys.keyPackageQueriedTime) as? Date }
         set { set(newValue, forKey: Keys.keyPackageQueriedTime) }
 
     }
@@ -791,5 +791,11 @@ private extension UserDefaults {
             return false
         }
 
+    }
+}
+
+extension UserDefaults {
+    func test_setLastKeyPackageCountDate(_ date: Date) {
+        lastKeyPackageCountDate = date
     }
 }

@@ -603,7 +603,7 @@ class MLSControllerTests: ZMConversationTestsBase {
 
     // MARK: - Key Packages
 
-    func test_upload_100_KeyPackages_successfully() {
+    func test_UploadKeyPackages_IsSuccessfull() {
         // Given
         let clientID = self.createSelfClient(onMOC: uiMOC).remoteIdentifier
         let keyPackages: [Bytes] = [
@@ -615,10 +615,16 @@ class MLSControllerTests: ZMConversationTestsBase {
         let countUnclaimedKeyPackages = self.expectation(description: "Count unclaimed key packages")
         let uploadKeyPackages = self.expectation(description: "Upload key packages")
 
-        mockCoreCrypto.mockResultForClientKeypackages = keyPackages
-        mockCoreCrypto.mockResultForClientValidKeypackagesCount = 50
+        // mock that we queried kp count recently
+        userDefaultsTestSuite.test_setLastKeyPackageCountDate(Date())
 
-        // Mock return value for unclaimed key packages count.
+        // mock that we don't have enough unclaimed kp locally
+        mockCoreCrypto.mockResultForClientValidKeypackagesCount = 25
+
+        // mock keyPackages returned by core cryto
+        mockCoreCrypto.mockResultForClientKeypackages = keyPackages
+
+        // mock return value for unclaimed key packages count.
         mockActionsProvider.countUnclaimedKeyPackagesMocks.append { cid in
             XCTAssertEqual(cid, clientID)
             countUnclaimedKeyPackages.fulfill()
@@ -643,5 +649,64 @@ class MLSControllerTests: ZMConversationTestsBase {
         let clientKeypackagesCalls = mockCoreCrypto.calls.clientKeypackages
         XCTAssertEqual(clientKeypackagesCalls.count, 1)
         XCTAssertEqual(clientKeypackagesCalls.first, 100)
+    }
+
+    func test_UploadKeyPackages_DoesntCountUnclaimedKeyPackages_WhenNotNeeded() {
+        // Given
+        createSelfClient(onMOC: uiMOC)
+
+        // expectation
+        let countUnclaimedKeyPackages = XCTestExpectation(description: "Count unclaimed key packages")
+        countUnclaimedKeyPackages.isInverted = true
+
+        // mock that we queried kp count recently
+        userDefaultsTestSuite.test_setLastKeyPackageCountDate(Date())
+
+        // mock that there are enough kp locally
+        mockCoreCrypto.mockResultForClientValidKeypackagesCount = 100
+
+        mockActionsProvider.countUnclaimedKeyPackagesMocks.append { _ in
+            countUnclaimedKeyPackages.fulfill()
+            return 0
+        }
+
+        // When
+        sut.uploadKeyPackagesIfNeeded()
+
+        // Then
+        wait(for: [countUnclaimedKeyPackages], timeout: 0.5)
+    }
+
+    func test_UploadKeyPackages_DoesntUploadKeyPackages_WhenNotNeeded() {
+        // Given
+        createSelfClient(onMOC: uiMOC)
+
+        // expectation
+        let countUnclaimedKeyPackages = XCTestExpectation(description: "Count unclaimed key packages")
+        let uploadKeyPackages = XCTestExpectation(description: "Upload key packages")
+        uploadKeyPackages.isInverted = true
+
+        // mock that we didn't query kp count recently
+        userDefaultsTestSuite.test_setLastKeyPackageCountDate(.distantPast)
+
+        // mock that we don't have enough unclaimed kp locally
+        mockCoreCrypto.mockResultForClientValidKeypackagesCount = 25
+
+        // mock return value for unclaimed key packages count
+        mockActionsProvider.countUnclaimedKeyPackagesMocks.append { _ in
+            countUnclaimedKeyPackages.fulfill()
+            return 100
+        }
+
+        mockActionsProvider.uploadKeyPackagesMocks.append { _, _ in
+            uploadKeyPackages.fulfill()
+        }
+
+        // When
+        sut.uploadKeyPackagesIfNeeded()
+
+        // Then
+        wait(for: [countUnclaimedKeyPackages, uploadKeyPackages], timeout: 0.5)
+        XCTAssertEqual(mockCoreCrypto.calls.clientKeypackages.count, 0)
     }
 }
