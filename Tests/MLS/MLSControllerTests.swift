@@ -613,7 +613,7 @@ class MLSControllerTests: ZMConversationTestsBase {
         let countUnclaimedKeyPackages = self.expectation(description: "Count unclaimed key packages")
         let uploadKeyPackages = self.expectation(description: "Upload key packages")
 
-        mockCoreCrypto.mockClientKeyPackages = keyPackages
+        mockCoreCrypto.mockResultForClientKeypackages = keyPackages
 
         // Mock return value for unclaimed key packages count.
         mockActionsProvider.countUnclaimedKeyPackagesMocks.append { cid in
