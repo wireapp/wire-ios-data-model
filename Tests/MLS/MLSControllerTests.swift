@@ -601,6 +601,8 @@ class MLSControllerTests: ZMConversationTestsBase {
         XCTAssertTrue(mockCoreCrypto.calls.commitAccepted.isEmpty)
     }
 
+    // MARK: - Key Packages
+
     func test_upload_100_KeyPackages_successfully() {
         // Given
         let clientID = self.createSelfClient(onMOC: uiMOC).remoteIdentifier
@@ -614,6 +616,7 @@ class MLSControllerTests: ZMConversationTestsBase {
         let uploadKeyPackages = self.expectation(description: "Upload key packages")
 
         mockCoreCrypto.mockResultForClientKeypackages = keyPackages
+        mockCoreCrypto.mockResultForClientValidKeypackagesCount = 50
 
         // Mock return value for unclaimed key packages count.
         mockActionsProvider.countUnclaimedKeyPackagesMocks.append { cid in
@@ -636,9 +639,9 @@ class MLSControllerTests: ZMConversationTestsBase {
         sut.uploadKeyPackagesIfNeeded()
 
         // Then
-        XCTAssertTrue(waitForCustomExpectations(withTimeout: 5))
+        XCTAssertTrue(waitForCustomExpectations(withTimeout: 0.5))
         let clientKeypackagesCalls = mockCoreCrypto.calls.clientKeypackages
         XCTAssertEqual(clientKeypackagesCalls.count, 1)
-        XCTAssertEqual(clientKeypackagesCalls[0], 100)
+        XCTAssertEqual(clientKeypackagesCalls.first, 100)
     }
 }
