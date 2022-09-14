@@ -351,7 +351,7 @@ public final class MLSController: MLSControllerProtocol {
                 userDefaults.lastKeyPackageCountDate = Date()
 
                 guard unclaimedKeyPackageCount <= halfOfTargetUnclaimedKeyPackageCount else {
-                    logger.info("enough unclaimed key packages. not uploading.")
+                    logger.info("no need to upload new key packages yet")
                     return
                 }
 
@@ -380,7 +380,7 @@ public final class MLSController: MLSControllerProtocol {
 
         } catch let error {
             logger.warn("failed to get valid key packages count with error: \(String(describing: error))")
-            return false // maybe return true if we want to query the backend even though core crypto threw an error
+            return true
         }
     }
 
