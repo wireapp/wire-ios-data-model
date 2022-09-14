@@ -343,7 +343,7 @@ public final class MLSController: MLSControllerProtocol {
             return logWarn(abortedWithReason: "failed to get client ID")
         }
 
-        Task { () -> Void in
+        Task {
             do {
                 let unclaimedKeyPackageCount = try await countUnclaimedKeyPackages(clientID: clientID, context: context.notificationContext)
                 logger.info("there are \(unclaimedKeyPackageCount) unclaimed key packages")
@@ -351,7 +351,8 @@ public final class MLSController: MLSControllerProtocol {
                 userDefaults.lastKeyPackageCountDate = Date()
 
                 guard unclaimedKeyPackageCount <= halfOfTargetUnclaimedKeyPackageCount else {
-                    return logger.info("enough unclaimed key packages. not uploading.")
+                    logger.info("enough unclaimed key packages. not uploading.")
+                    return
                 }
 
                 let amount = UInt32(targetUnclaimedKeyPackageCount)
