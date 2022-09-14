@@ -715,4 +715,19 @@ class MLSControllerTests: ZMConversationTestsBase {
         wait(for: [countUnclaimedKeyPackages, uploadKeyPackages], timeout: 0.5)
         XCTAssertEqual(mockCoreCrypto.calls.clientKeypackages.count, 0)
     }
+
+    // MARK: - Welcome message
+
+    func test_ProcessWelcomeMessage_ChecksIfKeyPackagesNeedToBeUploaded() throws {
+        // Given
+        let message = Bytes.random().base64EncodedString
+        mockCoreCrypto.mockResultForProcessWelcomeMessage = .random()
+        mockCoreCrypto.mockResultForClientValidKeypackagesCount = UInt64(sut.targetUnclaimedKeyPackageCount)
+
+        // When
+        _ = try sut.processWelcomeMessage(welcomeMessage: message)
+
+        // Then
+        XCTAssertEqual(mockCoreCrypto.calls.clientValidKeypackagesCount.count, 1)
+    }
 }
