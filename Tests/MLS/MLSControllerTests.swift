@@ -806,23 +806,3 @@ class MLSControllerTests: ZMConversationTestsBase, MLSControllerDelegate {
     }
 
 }
-
-extension ZMTBaseTest {
-
-    func wait(timeout: TimeInterval = 0.5, forAsyncBlock block: @escaping () async throws -> Void) {
-        let expectation = self.expectation(description: "isDone")
-
-        Task {
-            do {
-                try await block()
-            } catch {
-                XCTFail("test failed: \(String(describing: error))")
-            }
-
-            expectation.fulfill()
-        }
-
-        XCTAssert(waitForCustomExpectations(withTimeout: timeout))
-    }
-
-}
