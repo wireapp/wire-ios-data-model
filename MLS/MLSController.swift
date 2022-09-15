@@ -446,14 +446,17 @@ public final class MLSController: MLSControllerProtocol {
 
     typealias PendingJoin = (groupID: MLSGroupID, epoch: UInt64)
 
-    /// TODO
-    /// - Parameter group: TODO
+    /// Registers a group to be joined via external add proposal once the app has finished processing events
+    /// - Parameter groupID: the identifier for the MLS group
     public func registerPendingJoin(_ groupID: MLSGroupID) {
         groupsPendingJoin.insert(groupID)
     }
 
 
-    /// TODO
+    /// Request to join groups still pending
+    ///
+    /// Generates a list of groups for which the `mlsStatus` is `pendingJoin`
+    /// and sends external add proposals for these groups
     public func performPendingJoins() {
         guard let context = context else {
             return
