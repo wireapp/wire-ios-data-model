@@ -33,15 +33,22 @@ extension NSManagedObjectContext {
 
     public func initializeMLSController(
         coreCrypto: CoreCryptoProtocol,
-        conversationEventProcessor: ConversationEventProcessorProtocol
+        conversationEventProcessor: ConversationEventProcessorProtocol,
+        debugConfiguration: MLSController.DebugConfiguration?
     ) {
         precondition(zm_isSyncContext, "MLSController should only be accessed on the sync context")
 
-        userInfo[Self.mlsControllerUserInfoKey] = MLSController(
+        let mlsController = MLSController(
             context: self,
             coreCrypto: coreCrypto,
             conversationEventProcessor: conversationEventProcessor
         )
+
+        if let debugConfiguration = debugConfiguration {
+            mlsController.setDebugConfiguration(debugConfiguration)
+        }
+
+        userInfo[Self.mlsControllerUserInfoKey] = mlsController
     }
 
     /// Test helper for setting a mock controller.

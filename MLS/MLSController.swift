@@ -54,7 +54,7 @@ public final class MLSController: MLSControllerProtocol {
 
     var backendPublicKeys = BackendMLSPublicKeys()
 
-    let targetUnclaimedKeyPackageCount = 100
+    var targetUnclaimedKeyPackageCount = 100
     let actionsProvider: MLSActionsProviderProtocol
 
     // MARK: - Life cycle
