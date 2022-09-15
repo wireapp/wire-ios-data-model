@@ -27,10 +27,13 @@ class MockMLSActionsProvider: MLSActionsProviderProtocol {
 
     }
 
-    var mockReturnValueForFetchBackendPublicKeys: BackendMLSPublicKeys?
+    typealias FetchBackendPublicKeysMock = () -> BackendMLSPublicKeys
+    var fetchBackendPublicKeysMocks = [FetchBackendPublicKeysMock]()
 
     func fetchBackendPublicKeys(in context: NotificationContext) async throws -> BackendMLSPublicKeys {
-        return mockReturnValueForFetchBackendPublicKeys ?? BackendMLSPublicKeys()
+        guard let mock = fetchBackendPublicKeysMocks.first else { throw MockError.unmockedMethodInvoked }
+        fetchBackendPublicKeysMocks.removeFirst()
+        return mock()
     }
 
     typealias CountUnclaimedKeyPackagesMock = (String) -> Int

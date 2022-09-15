@@ -61,7 +61,13 @@ class MLSControllerTests: ZMConversationTestsBase {
             removal: .init(ed25519: Data([1, 2, 3]))
         )
 
-        mockActionsProvider.mockReturnValueForFetchBackendPublicKeys = keys
+        // expectation
+        let expectation = XCTestExpectation(description: "Fetch backend public keys")
+
+        mockActionsProvider.fetchBackendPublicKeysMocks.append({
+            expectation.fulfill()
+            return keys
+        })
 
         // When
         let sut = MLSController(
@@ -72,6 +78,7 @@ class MLSControllerTests: ZMConversationTestsBase {
         )
 
         // Then
+        wait(for: [expectation], timeout: 0.5)
         XCTAssertEqual(sut.backendPublicKeys, keys)
     }
 
