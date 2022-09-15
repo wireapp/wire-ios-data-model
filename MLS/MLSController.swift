@@ -36,9 +36,9 @@ public protocol MLSControllerProtocol {
 
     func removeMembersFromConversation(with clientIds: [MLSClientID], for groupID: MLSGroupID) async throws
 
-    func addGroupPendingJoin(_ group: MLSGroupID)
+    func registerPendingJoin(_ group: MLSGroupID)
 
-    func joinGroupsStillPending()
+    func performPendingJoins()
 }
 
 public final class MLSController: MLSControllerProtocol {
@@ -443,77 +443,61 @@ public final class MLSController: MLSControllerProtocol {
     }
 
     // MARK: - Joining conversations
-    // Technically the two methods below could migrate to a different part of the code
+
+    typealias PendingJoin = (groupID: MLSGroupID, epoch: UInt64)
 
     /// TODO
     /// - Parameter group: TODO
-    public func addGroupPendingJoin(_ groupID: MLSGroupID) {
+    public func registerPendingJoin(_ groupID: MLSGroupID) {
         groupsPendingJoin.insert(groupID)
     }
 
-    /// TODO
-    public func joinGroupsStillPending() {
-        while !groupsPendingJoin.isEmpty {
-            let groupID = groupsPendingJoin.removeFirst()
 
-            do {
-                try joinGroupIfNeeded(groupID)
-            } catch let error {
-                switch error {
-                case MLSJoinGroupError.notPendingJoin:
-                    logger.info("group (\(groupID)) status isn't `.pendingJoin`")
-                default:
-                    logger.warn(
-                        "failed to request to join group (\(groupID)). error: \(String(describing: error))"
-                    )
-                }
+    /// TODO
+    public func performPendingJoins() {
+        guard let context = context else {
+            return
+        }
+
+        generatePendingJoins(in: context).forEach { pendingJoin in
+            Task {
+                await sendExternalAddProposal(pendingJoin.groupID, epoch: pendingJoin.epoch)
             }
         }
+
+        groupsPendingJoin.removeAll()
     }
 
-    enum MLSJoinGroupError: Error {
+    private func generatePendingJoins(in context: NSManagedObjectContext) -> [PendingJoin] {
+        logger.info("generating list of groups pending join")
 
-        case conversationNotFound
-        case missingMlsStatus
-        case missingContext
-        case notPendingJoin
+        return groupsPendingJoin.compactMap { groupID in
 
+            guard let conversation = ZMConversation.fetch(with: groupID, in: context) else {
+                logger.warn("conversation not found for group (\(groupID))")
+                return nil
+            }
+
+            guard let status = conversation.mlsStatus, status == .pendingJoin else {
+                logger.warn("group (\(groupID)) status is not pending join")
+                return nil
+            }
+
+            return (groupID, conversation.epoch)
+
+        }
     }
 
-    func joinGroupIfNeeded(_ groupID: MLSGroupID) throws {
+    private func sendExternalAddProposal(_ groupID: MLSGroupID, epoch: UInt64) async {
         logger.info("requesting to join group (\(groupID)")
 
-        guard let context = context else {
-            throw MLSJoinGroupError.missingContext
-        }
-
-        guard let conversation = ZMConversation.fetch(with: groupID, in: context) else {
-            throw MLSJoinGroupError.conversationNotFound
-        }
-
-        guard let status = conversation.mlsStatus else {
-            throw MLSJoinGroupError.missingMlsStatus
-        }
-
-        guard status == .pendingJoin else {
-            throw MLSJoinGroupError.notPendingJoin
-        }
-
-        let epoch = conversation.epoch
-
-        Task {
-            await sendExternalAddProposal(groupID, epoch: epoch)
-        }
-    }
-
-    func sendExternalAddProposal(_ groupID: MLSGroupID, epoch: UInt64) async {
         do {
             let proposal = try coreCrypto.wire_newExternalAddProposal(conversationId: groupID.bytes, epoch: epoch)
             try await sendMessage(proposal, groupID: groupID, kind: .proposal)
             logger.info("success: requested to join group (\(groupID)")
         } catch {
             logger.warn(
-                "failed to send external add proposal. group: (\(groupID)). error: \(String(describing: error))"
+                "failed to request join for group (\(groupID)): \(String(describing: error))"
             )
         }
     }
