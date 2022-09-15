@@ -544,83 +544,77 @@ class MLSControllerTests: ZMConversationTestsBase {
 
     // MARK: Joining conversations
 
-    func test_JoinGroupIfNeeded_Throws_ConversationNotFound() {
-        // given
-        let groupID = MLSGroupID(.random())
-
-        // when / then
-        assertItThrows(error: MLSController.MLSJoinGroupError.conversationNotFound) {
-            try sut.joinGroupIfNeeded(groupID)
-        }
-    }
-
-    func test_JoinGroupIfNeeded_Throws_MissingMLSStatus() {
-        // given
+    func test_PerformPendingJoins_IsSuccessful() {
+        // Given
         let groupID = MLSGroupID(.random())
 
         let conversation = ZMConversation.insertNewObject(in: uiMOC)
         conversation.mlsGroupID = groupID
-        conversation.mlsStatus = nil
+        conversation.mlsStatus = .pendingJoin
+        conversation.epoch = 1
 
-        // when / then
-        assertItThrows(error: MLSController.MLSJoinGroupError.missingMlsStatus) {
-            try sut.joinGroupIfNeeded(groupID)
-        }
+        let addProposal = Bytes.random()
+
+        // register the group to be joined
+        sut.registerPendingJoin(groupID)
+
+        // expectation
+        let expectation = XCTestExpectation(description: "Send Message")
+
+        // mock the external add proposal returned by core crypto
+        mockCoreCrypto.mockResultForNewExternalAddProposal = addProposal
+
+        // mock the action for sending the proposal & fulfill expectation
+        mockActionsProvider.sendMessageMocks.append({ message in
+            XCTAssertEqual(addProposal.data, message)
+
+            expectation.fulfill()
+
+            return []
+        })
+
+        // When
+        sut.performPendingJoins()
+
+        // Then
+        wait(for: [expectation], timeout: 0.5)
+
+        let addProposalCalls = mockCoreCrypto.calls.newExternalAddProposal
+        XCTAssertEqual(addProposalCalls.count, 1)
+        XCTAssertEqual(addProposalCalls.first?.conversationId, groupID.bytes)
+        XCTAssertEqual(addProposalCalls.first?.epoch, conversation.epoch)
     }
 
-    func test_JoinGroupIfNeeded_Throws_NotPendingJoin() {
-        // given
+    func test_PerformPendingJoins_DoesntJoinGroupNotPending() {
+        // Given
         let groupID = MLSGroupID(.random())
 
         let conversation = ZMConversation.insertNewObject(in: uiMOC)
         conversation.mlsGroupID = groupID
         conversation.mlsStatus = .ready
 
-        // when / then
-        assertItThrows(error: MLSController.MLSJoinGroupError.notPendingJoin) {
-            try sut.joinGroupIfNeeded(groupID)
-        }
-    }
+        // register the group to be joined
+        sut.registerPendingJoin(groupID)
 
-    func test_JoinGroupIfNeeded_IsSuccessful() {
-        // given
-        let groupID = MLSGroupID(.random())
+        // expectation
+        let expectation = XCTestExpectation(description: "Send Message")
+        expectation.isInverted = true
 
-        let conversation = ZMConversation.insertNewObject(in: uiMOC)
-        conversation.mlsGroupID = groupID
-        conversation.mlsStatus = .pendingJoin
-
+        // mock the external add proposal returned by core crypto
         mockCoreCrypto.mockResultForNewExternalAddProposal = .random()
 
-        // when / Then
-        do {
-            try sut.joinGroupIfNeeded(groupID)
-        } catch let error {
-            XCTFail("Unexpected error: \(String(describing: error))")
-        }
-    }
-
-    func test_SendExternalAddProposal_IsSuccessful() async {
-        // given
-        let groupID = MLSGroupID(.random())
-        let epoch: UInt64 = 1
-
-        let proposal = Bytes.random()
-        mockCoreCrypto.mockResultForNewExternalAddProposal = proposal
-        mockActionsProvider.sendMessageMocks.append({ message in
-            // then
-            XCTAssertEqual(message, proposal.data)
+        // mock the action for sending the proposal & fulfill expectation
+        mockActionsProvider.sendMessageMocks.append({ _ in
+            expectation.fulfill()
             return []
         })
 
-        // when
-        await sut.sendExternalAddProposal(groupID, epoch: epoch)
+        // When
+        sut.performPendingJoins()
 
-        // then
-        let newExternalAddProposalCalls = mockCoreCrypto.calls.newExternalAddProposal
-        XCTAssertEqual(newExternalAddProposalCalls.count, 1)
-        XCTAssertEqual(newExternalAddProposalCalls.first?.conversationId, groupID.bytes)
-        XCTAssertEqual(newExternalAddProposalCalls.first?.epoch, epoch)
+        // Then
+        wait(for: [expectation], timeout: 0.5)
+        XCTAssertEqual(mockCoreCrypto.calls.newExternalAddProposal.count, 0)
     }
 
 }
