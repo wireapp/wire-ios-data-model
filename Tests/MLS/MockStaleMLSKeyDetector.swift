@@ -33,7 +33,7 @@ class MockStaleMLSKeyDetector: StaleMLSKeyDetectorProtocol {
 
     // MARK: - Properties
 
-    var keyLifetimeInDays: UInt = 90
+    var refreshIntervalInDays: UInt = 90
     var groupsWithStaleKeyingMaterial: Set<MLSGroupID> = Set()
 
     // MARK: - Methods

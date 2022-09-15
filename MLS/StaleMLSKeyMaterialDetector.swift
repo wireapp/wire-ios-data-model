@@ -22,7 +22,7 @@ protocol StaleMLSKeyDetectorProtocol {
 
     /// The number of days before a key is considered stale.
 
-    var keyLifetimeInDays: UInt { get set }
+    var refreshIntervalInDays: UInt { get set }
 
     /// All group IDs for groups requiring a key update.
 
@@ -41,16 +41,16 @@ final class StaleMLSKeyDetector: StaleMLSKeyDetectorProtocol {
 
     // MARK: - Properties
 
-    var keyLifetimeInDays: UInt
+    var refreshIntervalInDays: UInt
     let context: NSManagedObjectContext
 
     // MARK: - Life cycle
 
     init(
-        keyLifetimeInDays: UInt,
+        refreshIntervalInDays: UInt,
         context: NSManagedObjectContext
     ) {
-        self.keyLifetimeInDays = keyLifetimeInDays
+        self.refreshIntervalInDays = refreshIntervalInDays
         self.context = context
     }
 
@@ -102,7 +102,7 @@ final class StaleMLSKeyDetector: StaleMLSKeyDetectorProtocol {
             return true
         }
 
-        guard lastUpdateDate.ageInDays > keyLifetimeInDays else {
+        guard lastUpdateDate.ageInDays > refreshIntervalInDays else {
             return false
         }
 

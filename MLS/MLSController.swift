@@ -60,6 +60,23 @@ public final class MLSController: MLSControllerProtocol {
     var lastKeyMaterialUpdateCheck = Date.distantPast
     private var keyMaterialUpdateCheckTimer: Timer?
 
+
+    // The number of days to wait until refreshing the key material for a group.
+
+    private static var keyMaterialRefreshIntervalInDays: UInt {
+        // To ensure that a group's key material does not exceed its maximum age,
+        // refresh pre-emptively so that it doesn't go stale while the user is offline.
+        return keyMaterialMaximumAgeInDays - backendMessageHoldTimeInDays
+    }
+
+    // The maximum age of a group's key material before it's considered stale.
+
+    private static let keyMaterialMaximumAgeInDays: UInt = 90
+
+    // The number of days the backend will hold a message.
+
+    private static let backendMessageHoldTimeInDays: UInt = 28
+
     // MARK: - Life cycle
 
     convenience init(
@@ -71,7 +88,10 @@ public final class MLSController: MLSControllerProtocol {
             context: context,
             coreCrypto: coreCrypto,
             conversationEventProcessor: conversationEventProcessor,
-            staleKeyMaterialDetector: StaleMLSKeyDetector(keyLifetimeInDays: 90, context: context),
+            staleKeyMaterialDetector: StaleMLSKeyDetector(
+                refreshIntervalInDays: Self.keyMaterialRefreshIntervalInDays,
+                context: context
+            ),
             actionsProvider: MLSActionsProvider()
         )
     }
