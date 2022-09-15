@@ -66,6 +66,12 @@ class DummyCoreCryptoCallbacks: CoreCryptoCallbacks {
     }
 }
 
+public protocol MLSControllerDelegate: AnyObject {
+
+    func mlsControllerDidCommitPendingProposal(groupID: MLSGroupID)
+
+}
+
 public final class MLSController: MLSControllerProtocol {
 
     // MARK: - Properties
@@ -77,9 +83,12 @@ public final class MLSController: MLSControllerProtocol {
     private var groupsPendingJoin = Set<MLSGroup>()
 
     var backendPublicKeys = BackendMLSPublicKeys()
+    var pendingProposalCommitTimers = [MLSGroupID: Timer]()
 
     let targetUnclaimedKeyPackageCount = 100
     let actionsProvider: MLSActionsProviderProtocol
+
+    weak var delegate: MLSControllerDelegate?
 
     // MARK: - Life cycle
 
@@ -609,9 +618,13 @@ public final class MLSController: MLSControllerProtocol {
                 logger.info("commit scheduled in the past, committing...")
                 try await commitPendingProposals(in: groupID)
             } else {
-                logger.info("commit scheduled in the future, waiting...")
-                try await Task.sleep(nanoseconds: timestamp.timeIntervalSinceNow.nanoseconds)
-                try await commitPendingProposals(in: groupID)
+                // Wrap in another task so we don't block the loop.
+                Task {
+                    logger.info("commit scheduled in the future, waiting...")
+                    try await Task.sleep(nanoseconds: timestamp.timeIntervalSinceNow.nanoseconds)
+                    logger.info("scheduled commit is ready, committing...")
+                    try await commitPendingProposals(in: groupID)
+                }
             }
         }
     }
@@ -648,10 +661,6 @@ public final class MLSController: MLSControllerProtocol {
 
         logger.info("committing pending proposals in: \(groupID)")
 
-        defer {
-            clearPendingPropsalCommitDate(for: groupID)
-        }
-
         do {
             // TODO wire_commitPendingProposals will return an optional CommitBundle soon in the case
             // when there are no pending proposals, then we could return early on an error.
@@ -662,10 +671,15 @@ public final class MLSController: MLSControllerProtocol {
                 try await sendWelcomeMessage(welcome)
             }
 
+            clearPendingPropsalCommitDate(for: groupID)
+
         } catch {
             logger.info("failed to commit pending proposals in \(groupID): \(String(describing: error))")
+            clearPendingPropsalCommitDate(for: groupID)
             throw MLSCommitPendingProposalsError.failedToCommitPendingProposals
         }
+
+        delegate?.mlsControllerDidCommitPendingProposal(groupID: groupID)
     }
 
     private func clearPendingPropsalCommitDate(for groupID: MLSGroupID) {
