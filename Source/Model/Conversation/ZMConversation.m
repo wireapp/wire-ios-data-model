@@ -354,7 +354,8 @@ const NSUInteger ZMConversationMaxTextMessageLength = ZMConversationMaxEncodedTe
             ZMConversation.messageProtocolKey,
             ZMConversation.mlsGroupIdKey,
             ZMConversation.mlsStatusKey,
-            ZMConversation.commitPendingProposalDateKey
+            ZMConversation.commitPendingProposalDateKey,
+            ZMConversation.epochKey
         };
         
         NSSet *additionalKeys = [NSSet setWithObjects:KeysIgnoredForTrackingModifications count:(sizeof(KeysIgnoredForTrackingModifications) / sizeof(*KeysIgnoredForTrackingModifications))];

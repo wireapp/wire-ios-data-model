@@ -34,7 +34,12 @@ extension ZMConversation {
     @objc
     static let commitPendingProposalDateKey = "commitPendingProposalDate"
 
+    @objc
+    static let epochKey = #keyPath(epoch)
+
     // MARK: - Properties
+
+    @NSManaged public var epoch: UInt64
 
     @NSManaged private var primitiveMessageProtocol: NSNumber
 
@@ -107,10 +112,8 @@ extension ZMConversation {
         }
 
         set {
-            guard let status = newValue else { return }
-
             willChangeValue(forKey: Self.mlsStatusKey)
-            primitiveMlsStatus = NSNumber(value: status.rawValue)
+            primitiveMlsStatus = newValue.map { NSNumber(value: $0.rawValue) }
             didChangeValue(forKey: Self.mlsStatusKey)
         }
     }

@@ -252,15 +252,9 @@ class MLSControllerTests: ZMConversationTestsBase, MLSControllerDelegate {
         let groupID = MLSGroupID(Data([1, 2, 3]))
         mockCoreCrypto.mockErrorForCreateConversation = CryptoError.MalformedIdentifier(message: "bad id")
 
-        // When
-        XCTAssertThrowsError(try sut.createGroup(for: groupID)) { error in
-            switch error {
-            case MLSController.MLSGroupCreationError.failedToCreateGroup:
-                break
-
-            default:
-                XCTFail("Unexpected error: \(String(describing: error))")
-            }
+        // when / then
+        assertItThrows(error: MLSController.MLSGroupCreationError.failedToCreateGroup) {
+            try sut.createGroup(for: groupID)
         }
 
         // Then
@@ -352,19 +346,9 @@ class MLSControllerTests: ZMConversationTestsBase, MLSControllerDelegate {
         let mlsGroupID = MLSGroupID(Data([1, 2, 3]))
         let mlsUser = [MLSUser]()
 
-        do {
-            // When
+        // when / then
+        await assertItThrows(error: MLSController.MLSGroupCreationError.noParticipantsToAdd) {
             try await sut.addMembersToConversation(with: mlsUser, for: mlsGroupID)
-
-        } catch let error {
-            // Then
-            switch error {
-            case MLSController.MLSGroupCreationError.noParticipantsToAdd:
-                break
-
-            default:
-                XCTFail("Unexpected error: \(String(describing: error))")
-            }
         }
 
         XCTAssertTrue(mockCoreCrypto.calls.commitAccepted.isEmpty)
@@ -395,7 +379,7 @@ class MLSControllerTests: ZMConversationTestsBase, MLSControllerDelegate {
         XCTAssertTrue(mockCoreCrypto.calls.commitAccepted.isEmpty)
     }
 
-    func test_AddingMembersToConversation_ThrowsFailedToSendHandshakeMessage() async {
+    func test_AddingMembersToConversation_ThrowsFailedToSendCommit() async {
         // Given
         let domain = "example.com"
         let id = UUID.create()
@@ -424,19 +408,9 @@ class MLSControllerTests: ZMConversationTestsBase, MLSControllerDelegate {
             publicGroupState: []
         )
 
-        do {
-            // When
+        // when / then
+        await assertItThrows(error: MLSController.MLSSendMessageError.failedToSendCommit) {
             try await sut.addMembersToConversation(with: mlsUser, for: mlsGroupID)
-
-        } catch let error {
-            // Then
-            switch error {
-            case MLSController.MLSGroupCreationError.failedToSendHandshakeMessage:
-                break
-
-            default:
-                XCTFail("Unexpected error: \(String(describing: error))")
-            }
         }
 
         XCTAssertTrue(mockCoreCrypto.calls.commitAccepted.isEmpty)
@@ -488,24 +462,14 @@ class MLSControllerTests: ZMConversationTestsBase, MLSControllerDelegate {
             return [updateEvent]
         })
 
-        do {
-            // When
+        // When / Then
+        await assertItThrows(error: MLSController.MLSGroupCreationError.failedToSendWelcomeMessage) {
             try await sut.addMembersToConversation(with: mlsUser, for: mlsGroupID)
-
-        } catch let error {
-            // Then
-            switch error {
-            case MLSController.MLSGroupCreationError.failedToSendWelcomeMessage:
-
-                let processConversationEventsCalls = self.mockConversationEventProcessor.calls.processConversationEvents
-                XCTAssertEqual(processConversationEventsCalls.count, 1)
-                XCTAssertEqual(processConversationEventsCalls[0], [updateEvent])
-
-            default:
-                XCTFail("Unexpected error: \(String(describing: error))")
-            }
         }
 
+        let processConversationEventsCalls = self.mockConversationEventProcessor.calls.processConversationEvents
+        XCTAssertEqual(processConversationEventsCalls.count, 1)
+        XCTAssertEqual(processConversationEventsCalls[0], [updateEvent])
         XCTAssertEqual(mockCoreCrypto.calls.commitAccepted, [mlsGroupID.bytes])
     }
 
@@ -570,25 +534,15 @@ class MLSControllerTests: ZMConversationTestsBase, MLSControllerDelegate {
         // Given
         let mlsGroupID = MLSGroupID(Data([1, 2, 3]))
 
-        do {
-            // When
+        // When / Then
+        await assertItThrows(error: MLSController.MLSRemoveParticipantsError.noClientsToRemove) {
             try await sut.removeMembersFromConversation(with: [], for: mlsGroupID)
-
-        } catch let error {
-            // Then
-            switch error {
-            case MLSController.MLSRemoveParticipantsError.noClientsToRemove:
-                break
-
-            default:
-                XCTFail("Unexpected error: \(String(describing: error))")
-            }
         }
 
         XCTAssertTrue(mockCoreCrypto.calls.commitAccepted.isEmpty)
     }
 
-    func test_RemovingMembersToConversation_FailsToSendHandShakeMessage() async {
+    func test_RemovingMembersToConversation_FailsToSendCommit() async {
         // Given
         let domain = "example.com"
         let id = UUID.create().uuidString
@@ -603,25 +557,15 @@ class MLSControllerTests: ZMConversationTestsBase, MLSControllerDelegate {
             publicGroupState: []
         )
 
-        do {
-            // When
+        // When / Then
+        await assertItThrows(error: MLSController.MLSSendMessageError.failedToSendCommit) {
             try await sut.removeMembersFromConversation(with: [mlsClientID], for: mlsGroupID)
-
-        } catch let error {
-            // Then
-            switch error {
-            case MLSController.MLSGroupCreationError.failedToSendHandshakeMessage:
-                break
-
-            default:
-                XCTFail("Unexpected error: \(String(describing: error))")
-            }
         }
 
         XCTAssertTrue(mockCoreCrypto.calls.commitAccepted.isEmpty)
     }
 
-    // MARK: - Pending propsoals
+    // MARK: - Pending proposals
 
     func test_SchedulePendingProposalCommit() throws {
         // Given
@@ -813,6 +757,81 @@ class MLSControllerTests: ZMConversationTestsBase, MLSControllerDelegate {
         XCTAssertEqual(groupID, conversation2.mlsGroupID?.bytes)
         XCTAssertEqual(commitedTimestamp.timeIntervalSinceNow, futureCommitDate.timeIntervalSinceNow, accuracy: 0.1)
         XCTAssertNil(conversation2.commitPendingProposalDate)
+    }
+
+    // MARK: Joining conversations
+
+    func test_PerformPendingJoins_IsSuccessful() {
+        // Given
+        let groupID = MLSGroupID(.random())
+
+        let conversation = ZMConversation.insertNewObject(in: uiMOC)
+        conversation.mlsGroupID = groupID
+        conversation.mlsStatus = .pendingJoin
+        conversation.epoch = 1
+
+        let addProposal = Bytes.random()
+
+        // register the group to be joined
+        sut.registerPendingJoin(groupID)
+
+        // expectation
+        let expectation = XCTestExpectation(description: "Send Message")
+
+        // mock the external add proposal returned by core crypto
+        mockCoreCrypto.mockResultForNewExternalAddProposal = addProposal
+
+        // mock the action for sending the proposal & fulfill expectation
+        mockActionsProvider.sendMessageMocks.append({ message in
+            XCTAssertEqual(addProposal.data, message)
+
+            expectation.fulfill()
+
+            return []
+        })
+
+        // When
+        sut.performPendingJoins()
+
+        // Then
+        wait(for: [expectation], timeout: 0.5)
+
+        let addProposalCalls = mockCoreCrypto.calls.newExternalAddProposal
+        XCTAssertEqual(addProposalCalls.count, 1)
+        XCTAssertEqual(addProposalCalls.first?.conversationId, groupID.bytes)
+        XCTAssertEqual(addProposalCalls.first?.epoch, conversation.epoch)
+    }
+
+    func test_PerformPendingJoins_DoesntJoinGroupNotPending() {
+        // Given
+        let groupID = MLSGroupID(.random())
+
+        let conversation = ZMConversation.insertNewObject(in: uiMOC)
+        conversation.mlsGroupID = groupID
+        conversation.mlsStatus = .ready
+
+        // register the group to be joined
+        sut.registerPendingJoin(groupID)
+
+        // expectation
+        let expectation = XCTestExpectation(description: "Send Message")
+        expectation.isInverted = true
+
+        // mock the external add proposal returned by core crypto
+        mockCoreCrypto.mockResultForNewExternalAddProposal = .random()
+
+        // mock the action for sending the proposal & fulfill expectation
+        mockActionsProvider.sendMessageMocks.append({ _ in
+            expectation.fulfill()
+            return []
+        })
+
+        // When
+        sut.performPendingJoins()
+
+        // Then
+        wait(for: [expectation], timeout: 0.5)
+        XCTAssertEqual(mockCoreCrypto.calls.newExternalAddProposal.count, 0)
     }
 
     // MARK: - Key Packages
