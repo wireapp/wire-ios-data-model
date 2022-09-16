@@ -70,7 +70,6 @@ final class StaleMLSKeyDetector: StaleMLSKeyDetectorProtocol {
         context.perform {
             guard let conversation = ZMConversation.fetch(
                 with: groupID,
-                domain: "",
                 in: self.context
             ) else {
                 Logging.mls.warn("Can't upload key material for group (\(groupID)): conversation not found in db")

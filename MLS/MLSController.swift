@@ -209,7 +209,7 @@ public final class MLSController: MLSControllerProtocol {
         do {
             Logging.mls.info("updating key material for group (\(groupID))")
             let commit = try coreCrypto.wire_updateKeyingMaterial(conversationId: groupID.bytes)
-            try await sendMessage(commit.commit, groupID: groupID)
+            try await sendMessage(commit.commit, groupID: groupID, kind: .commit)
             staleKeyMaterialDetector.keyingMaterialUpdated(for: groupID)
         } catch {
             Logging.mls.warn("failed to update key material for group (\(groupID)): \(String(describing: error))")
