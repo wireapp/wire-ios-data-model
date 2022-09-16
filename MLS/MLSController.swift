@@ -716,18 +716,18 @@ public final class MLSController: MLSControllerProtocol {
                 try await sendWelcomeMessage(welcome)
             }
 
-            clearPendingPropsalCommitDate(for: groupID)
+            clearPendingProposalCommitDate(for: groupID)
 
         } catch {
             logger.info("failed to commit pending proposals in \(groupID): \(String(describing: error))")
-            clearPendingPropsalCommitDate(for: groupID)
+            clearPendingProposalCommitDate(for: groupID)
             throw MLSCommitPendingProposalsError.failedToCommitPendingProposals
         }
 
         delegate?.mlsControllerDidCommitPendingProposal(groupID: groupID)
     }
 
-    private func clearPendingPropsalCommitDate(for groupID: MLSGroupID) {
+    private func clearPendingProposalCommitDate(for groupID: MLSGroupID) {
         guard let context = context else {
             return
         }
