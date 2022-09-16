@@ -63,7 +63,6 @@
         <attribute name="internalIsArchived" attributeType="Boolean" defaultValueString="NO" usesScalarValueType="NO" syncable="YES"/>
         <attribute name="isSelfAnActiveMember" attributeType="Boolean" defaultValueString="YES" usesScalarValueType="NO" syncable="YES"/>
         <attribute name="language" optional="YES" attributeType="String" syncable="YES"/>
-        <attribute name="lastMLSKeyMaterialUpdateDate" optional="YES" attributeType="Date" usesScalarValueType="NO" syncable="YES"/>
         <attribute name="lastModifiedDate" optional="YES" attributeType="Date" usesScalarValueType="NO" syncable="YES"/>
         <attribute name="lastReadServerTimeStamp" optional="YES" attributeType="Date" usesScalarValueType="NO" syncable="YES"/>
         <attribute name="lastServerTimeStamp" optional="YES" attributeType="Date" usesScalarValueType="NO" syncable="YES"/>
@@ -197,6 +196,10 @@
         <attribute name="type" attributeType="Integer 16" defaultValueString="0" usesScalarValueType="NO" syncable="YES"/>
         <relationship name="message" maxCount="1" deletionRule="Nullify" destinationEntity="Message" inverseName="confirmations" inverseEntity="Message" syncable="YES"/>
         <relationship name="user" optional="YES" maxCount="1" deletionRule="Nullify" destinationEntity="User" syncable="YES"/>
+    </entity>
+    <entity name="MLSGroup" representedClassName="MLSGroup" syncable="YES">
+        <attribute name="id" optional="YES" attributeType="Binary" syncable="YES"/>
+        <attribute name="lastKeyMaterialUpdate" optional="YES" attributeType="Date" usesScalarValueType="NO" syncable="YES"/>
     </entity>
     <entity name="ParticipantRole" representedClassName=".ParticipantRole" syncable="YES">
         <attribute name="modifiedKeys" optional="YES" attributeType="Transformable" valueTransformerName="ExtendedSecureUnarchiveFromData" syncable="YES"/>
@@ -365,5 +368,6 @@
         <element name="TextMessage" positionX="-153" positionY="-117" width="128" height="60"/>
         <element name="User" positionX="-111.3671875" positionY="-41.015625" width="128" height="704"/>
         <element name="UserClient" positionX="552.40625" positionY="439.9453125" width="128" height="569"/>
+        <element name="MLSGroup" positionX="-81" positionY="-234" width="128" height="59"/>
     </elements>
 </model>

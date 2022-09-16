@@ -56,9 +56,9 @@ final class StaleMLSKeyDetector: StaleMLSKeyDetectorProtocol {
 
     // TODO: test
     var groupsWithStaleKeyingMaterial: Set<MLSGroupID> {
-        let result = fetchMLSConversations().lazy
+        let result = MLSGroup.fetchAllObjects(in: context).lazy
             .filter(isKeyingMaterialStale)
-            .compactMap(\.mlsGroupID)
+            .map(\.id)
 
         return Set(result)
     }
@@ -67,37 +67,19 @@ final class StaleMLSKeyDetector: StaleMLSKeyDetectorProtocol {
     func keyingMaterialUpdated(for groupID: MLSGroupID) {
         Logging.mls.info("Tracking key material update date for group (\(groupID))")
 
-        context.perform {
-            guard let conversation = ZMConversation.fetch(
-                with: groupID,
-                in: self.context
-            ) else {
-                Logging.mls.warn("Can't upload key material for group (\(groupID)): conversation not found in db")
-                return
-            }
-
-            conversation.lastMLSKeyMaterialUpdateDate = Date()
-            self.context.enqueueDelayedSave()
+        MLSGroup.updateOrCreate(
+            id: groupID,
+            inSyncContext: context
+        ) {
+            $0.lastKeyMaterialUpdate = Date()
         }
     }
 
     // MARK: - Helpers
 
-    private func fetchMLSConversations() -> Set<ZMConversation> {
-        let request = NSFetchRequest<ZMConversation>(entityName: ZMConversation.entityName())
-
-        request.predicate = NSPredicate(
-            format: "%@ == %@",
-            ZMConversation.messageProtocolKey, MessageProtocol.mls.rawValue
-        )
-
-        let mlsConversations = context.fetchOrAssert(request: request)
-        return Set(mlsConversations)
-    }
-
-    private func isKeyingMaterialStale(for conversation: ZMConversation) -> Bool {
-        guard let lastUpdateDate = conversation.lastMLSKeyMaterialUpdateDate else {
-            Logging.mls.info("last key material update date for group (\(String(describing: conversation.mlsGroupID)) doesn't exist... considering stale")
+    private func isKeyingMaterialStale(for group: MLSGroup) -> Bool {
+        guard let lastUpdateDate = group.lastKeyMaterialUpdate else {
+            Logging.mls.info("last key material update date for group (\(String(describing: group.id)) doesn't exist... considering stale")
             return true
         }
 
@@ -105,7 +87,7 @@ final class StaleMLSKeyDetector: StaleMLSKeyDetectorProtocol {
             return false
         }
 
-        Logging.mls.info("key material for group (\(String(describing: conversation.mlsGroupID))) is stale")
+        Logging.mls.info("key material for group (\(String(describing: group.id))) is stale")
         return true
     }
 

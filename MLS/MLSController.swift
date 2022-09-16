@@ -580,8 +580,6 @@ public final class MLSController: MLSControllerProtocol {
             let groupIDBytes = try coreCrypto.wire_processWelcomeMessage(welcomeMessage: messageBytes)
             let groupID = MLSGroupID(groupIDBytes)
             uploadKeyPackagesIfNeeded()
-            // TODO: but the conversation may not exist yet... maybe we should update the key material
-            // when we transition from not ready to ready.
             // TODO: assert
             staleKeyMaterialDetector.keyingMaterialUpdated(for: groupID)
             return groupID
