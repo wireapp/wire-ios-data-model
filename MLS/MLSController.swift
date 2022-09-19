@@ -39,6 +39,8 @@ public protocol MLSControllerProtocol {
     func registerPendingJoin(_ group: MLSGroupID)
 
     func performPendingJoins()
+
+    func wipeGroup(_ groupID: MLSGroupID)
 }
 
 public final class MLSController: MLSControllerProtocol {
@@ -317,6 +319,18 @@ public final class MLSController: MLSControllerProtocol {
         } catch let error {
             logger.warn("failed to remove members from group (\(id)): \(String(describing: error))")
             throw MLSRemoveParticipantsError.failedToRemoveMembers
+        }
+    }
+
+    // MARK: - Remove group
+
+    public func wipeGroup(_ groupID: MLSGroupID) {
+        logger.info("wiping group (\(groupID))")
+
+        do {
+            try coreCrypto.wire_wipeConversation(conversationId: groupID.bytes)
+        } catch {
+            logger.warn("failed to wipe group (\(groupID)): \(String(describing: error))")
         }
     }
 
