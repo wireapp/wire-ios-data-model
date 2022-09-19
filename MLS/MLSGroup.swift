@@ -36,7 +36,7 @@ public class MLSGroup: ZMManagedObject {
         get {
             willAccessValue(forKey: Self.idKey)
 
-            guard let value = primitiveID else {
+            guard let value = primitiveId else {
                 // log
                 fatalError("trying to access MLSGroup ID before setting it")
             }
@@ -47,7 +47,7 @@ public class MLSGroup: ZMManagedObject {
 
         set {
             willChangeValue(forKey: Self.idKey)
-            primitiveID = newValue.data
+            primitiveId = newValue.data
             didChangeValue(forKey: Self.idKey)
         }
     }
@@ -56,7 +56,7 @@ public class MLSGroup: ZMManagedObject {
     static let idKey = "id"
 
     @NSManaged
-    private var primitiveID: Data?
+    private var primitiveId: Data?
 
     @NSManaged
     public var lastKeyMaterialUpdate: Date?

@@ -54,7 +54,6 @@ final class StaleMLSKeyDetector: StaleMLSKeyDetectorProtocol {
         self.context = context
     }
 
-    // TODO: test
     var groupsWithStaleKeyingMaterial: Set<MLSGroupID> {
         let result = MLSGroup.fetchAllObjects(in: context).lazy
             .filter(isKeyingMaterialStale)
