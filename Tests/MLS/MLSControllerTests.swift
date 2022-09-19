@@ -62,12 +62,17 @@ class MLSControllerTests: ZMConversationTestsBase, MLSControllerDelegate {
     // MARK: - MLSControllerDelegate
 
     var pendingProposalCommitExpectations = [MLSGroupID: XCTestExpectation]()
+    var keyMaterialUpdatedExpectation: XCTestExpectation?
 
     // Since SUT may schedule timers to commit pending proposals, we create expectations
     // and fulfill them when SUT informs us the commit was made.
 
-    func mlsControllerDidCommitPendingProposal(groupID: MLSGroupID) {
+    func mlsControllerDidCommitPendingProposal(for: MLSGroupID) {
         pendingProposalCommitExpectations[groupID]?.fulfill()
+    }
+
+    func mlsControllerDidUpdateKeyMaterialForAllGroups() {
+        keyMaterialUpdatedExpectation?.fulfill()
     }
 
     // MARK: - Public keys

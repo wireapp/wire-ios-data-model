@@ -68,7 +68,8 @@ class DummyCoreCryptoCallbacks: CoreCryptoCallbacks {
 
 public protocol MLSControllerDelegate: AnyObject {
 
-    func mlsControllerDidCommitPendingProposal(groupID: MLSGroupID)
+    func mlsControllerDidCommitPendingProposal(for groupID: MLSGroupID)
+    func mlsControllerDidUpdateKeyMaterialForAllGroups()
 
 }
 
@@ -230,6 +231,7 @@ public final class MLSController: MLSControllerProtocol {
         Task {
             await updateKeyMaterialForAllStaleGroups()
             lastKeyMaterialUpdateCheck = Date()
+            delegate?.mlsControllerDidUpdateKeyMaterialForAllGroups()
         }
     }
 
@@ -868,7 +870,7 @@ public final class MLSController: MLSControllerProtocol {
             throw MLSCommitPendingProposalsError.failedToCommitPendingProposals
         }
 
-        delegate?.mlsControllerDidCommitPendingProposal(groupID: groupID)
+        delegate?.mlsControllerDidCommitPendingProposal(for: groupID)
     }
 
     private func clearPendingProposalCommitDate(for groupID: MLSGroupID) {
