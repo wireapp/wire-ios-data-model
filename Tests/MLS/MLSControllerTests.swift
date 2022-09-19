@@ -627,6 +627,20 @@ class MLSControllerTests: ZMConversationTestsBase {
         XCTAssertEqual(mockCoreCrypto.calls.newExternalAddProposal.count, 0)
     }
 
+    // MARK: - Wipe Groups
+
+    func test_WipeGroup_IsSuccessfull() {
+        // Given
+        let groupID = MLSGroupID(.random())
+
+        // When
+        sut.wipeGroup(groupID)
+
+        // Then
+        XCTAssertEqual(mockCoreCrypto.calls.wipeConversation.count, 1)
+        XCTAssertEqual(mockCoreCrypto.calls.wipeConversation.first, groupID.bytes)
+    }
+
     // MARK: - Key Packages
 
     func test_UploadKeyPackages_IsSuccessfull() {

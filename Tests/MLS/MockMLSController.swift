@@ -41,6 +41,7 @@ class MockMLSController: MLSControllerProtocol {
         var removeMembersFromConversation = [([MLSClientID], MLSGroupID)]()
         var registerPendingJoin = [MLSGroupID]()
         var performPendingJoins: [Void] = []
+        var wipeGroup = [MLSGroupID]()
 
     }
 
@@ -127,6 +128,12 @@ class MockMLSController: MLSControllerProtocol {
 
     func performPendingJoins() {
         calls.performPendingJoins.append(())
+    }
+
+    // MARK: - Wiping group
+
+    func wipeGroup(_ groupID: MLSGroupID) {
+        calls.wipeGroup.append(groupID)
     }
 
 }
