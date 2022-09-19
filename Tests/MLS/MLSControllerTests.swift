@@ -255,6 +255,7 @@ class MLSControllerTests: ZMConversationTestsBase, MLSControllerDelegate {
             ciphersuite: .mls128Dhkemx25519Aes128gcmSha256Ed25519,
             externalSenders: [removalKey.bytes]
         ))
+        XCTAssertEqual(mockStaleMLSKeyDetector.calls.keyingMaterialUpdated, [groupID])
     }
 
     func test_CreateGroup_ThrowsError() throws {
@@ -961,10 +962,13 @@ class MLSControllerTests: ZMConversationTestsBase, MLSControllerDelegate {
 
     // MARK: - Welcome message
 
-    func test_ProcessWelcomeMessage_ChecksIfKeyPackagesNeedToBeUploaded() throws {
+    func test_ProcessWelcomeMessage_Sucess() throws {
         // Given
+        let groupID = MLSGroupID(.random())
         let message = Bytes.random().base64EncodedString
-        mockCoreCrypto.mockResultForProcessWelcomeMessage = .random()
+
+        // Mock
+        mockCoreCrypto.mockResultForProcessWelcomeMessage = groupID.bytes
         mockCoreCrypto.mockResultForClientValidKeypackagesCount = UInt64(sut.targetUnclaimedKeyPackageCount)
 
         // When
@@ -972,6 +976,79 @@ class MLSControllerTests: ZMConversationTestsBase, MLSControllerDelegate {
 
         // Then
         XCTAssertEqual(mockCoreCrypto.calls.clientValidKeypackagesCount.count, 1)
+        XCTAssertEqual(mockStaleMLSKeyDetector.calls.keyingMaterialUpdated, [groupID])
+    }
+
+    // MARK: - Update key material
+
+    func test_UpdateKeyMaterial_WhenInitializing() throws {
+        // Given
+        let group1 = MLSGroupID(.random())
+        let group2 = MLSGroupID(.random())
+
+        // Expectation
+        let expectation = XCTestExpectation(description: "did update all keys")
+        keyMaterialUpdatedExpectation = expectation
+
+        // Mock
+        mockStaleMLSKeyDetector.groupsWithStaleKeyingMaterial = [group1, group2]
+
+        let commit = Bytes.random()
+
+        mockCoreCrypto.mockResultForUpdateKeyingMaterial = CommitBundle(
+            welcome: nil,
+            commit: commit,
+            publicGroupState: .random())
+
+        // For the first group.
+        mockActionsProvider.sendMessageMocks.append({ message in
+            XCTAssertEqual(message.bytes, commit)
+            return []
+        })
+
+        // For the second group.
+        mockActionsProvider.sendMessageMocks.append({ message in
+            XCTAssertEqual(message.bytes, commit)
+            return []
+        })
+
+        // When
+        let sut = MLSController(
+            context: uiMOC,
+            coreCrypto: mockCoreCrypto,
+            conversationEventProcessor: mockConversationEventProcessor,
+            staleKeyMaterialDetector: mockStaleMLSKeyDetector,
+            actionsProvider: mockActionsProvider,
+            delegate: self
+        )
+
+        // Then
+        wait(for: [expectation], timeout: 5)
+
+        XCTAssertEqual(
+            Set(mockCoreCrypto.calls.updateKeyingMaterial),
+            Set([group1.bytes, group2.bytes])
+        )
+
+        XCTAssertEqual(
+            Set(mockStaleMLSKeyDetector.calls.keyingMaterialUpdated),
+            Set([group1, group2])
+        )
+
+        XCTAssertEqual(
+            sut.lastKeyMaterialUpdateCheck.timeIntervalSinceNow,
+            Date().timeIntervalSinceNow,
+            accuracy: 0.1
+        )
+
+        let timer = try XCTUnwrap(sut.keyMaterialUpdateCheckTimer)
+        XCTAssertTrue(timer.isValid)
+
+        XCTAssertEqual(
+            timer.fireDate.timeIntervalSinceNow,
+            Date().addingTimeInterval(.oneDay).timeIntervalSinceNow,
+            accuracy: 0.1
+        )
     }
 
 }

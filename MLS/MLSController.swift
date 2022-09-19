@@ -92,7 +92,7 @@ public final class MLSController: MLSControllerProtocol {
     let actionsProvider: MLSActionsProviderProtocol
 
     var lastKeyMaterialUpdateCheck = Date.distantPast
-    private var keyMaterialUpdateCheckTimer: Timer?
+    var keyMaterialUpdateCheckTimer: Timer?
 
 
     // The number of days to wait until refreshing the key material for a group.
@@ -138,7 +138,8 @@ public final class MLSController: MLSControllerProtocol {
         conversationEventProcessor: ConversationEventProcessorProtocol,
         staleKeyMaterialDetector: StaleMLSKeyDetectorProtocol,
         actionsProvider: MLSActionsProviderProtocol = MLSActionsProvider(),
-        userDefaults: UserDefaults = UserDefaults(suiteName: "com.wire.mls")!
+        userDefaults: UserDefaults = UserDefaults(suiteName: "com.wire.mls")!,
+        delegate: MLSControllerDelegate? = nil
     ) {
         self.context = context
         self.coreCrypto = coreCrypto
@@ -146,6 +147,7 @@ public final class MLSController: MLSControllerProtocol {
         self.staleKeyMaterialDetector = staleKeyMaterialDetector
         self.actionsProvider = actionsProvider
         self.userDefaults = userDefaults
+        self.delegate = delegate
 
         do {
             try coreCrypto.wire_setCallbacks(callbacks: DummyCoreCryptoCallbacks())
@@ -155,11 +157,7 @@ public final class MLSController: MLSControllerProtocol {
 
         generateClientPublicKeysIfNeeded()
         fetchBackendPublicKeys()
-
-        // TODO: assert
         updateKeyMaterialForAllStaleGroupsIfNeeded()
-
-        // TODO: assert
         schedulePeriodicKeyMaterialUpdateCheck()
     }
 
@@ -214,8 +212,6 @@ public final class MLSController: MLSControllerProtocol {
     // MARK: - Update key material
 
     private func schedulePeriodicKeyMaterialUpdateCheck() {
-        // TODO: But do timers fire in the background? if they don't, will they fire as soon as you go to the foreground?
-        // Will need to do some experiments.
         keyMaterialUpdateCheckTimer?.invalidate()
         keyMaterialUpdateCheckTimer = Timer.scheduledTimer(
             withTimeInterval: .oneDay,
@@ -296,7 +292,6 @@ public final class MLSController: MLSControllerProtocol {
             throw MLSGroupCreationError.failedToCreateGroup
         }
 
-        // TODO: assert
         staleKeyMaterialDetector.keyingMaterialUpdated(for: groupID)
     }
 
@@ -622,7 +617,6 @@ public final class MLSController: MLSControllerProtocol {
             let groupIDBytes = try coreCrypto.wire_processWelcomeMessage(welcomeMessage: messageBytes)
             let groupID = MLSGroupID(groupIDBytes)
             uploadKeyPackagesIfNeeded()
-            // TODO: assert
             staleKeyMaterialDetector.keyingMaterialUpdated(for: groupID)
             return groupID
 
