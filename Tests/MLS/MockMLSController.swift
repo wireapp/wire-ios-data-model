@@ -118,8 +118,14 @@ class MockMLSController: MLSControllerProtocol {
 
     // MARK: - Remove members
 
+    typealias RemoveMembersMock = ([MLSClientID], MLSGroupID) throws -> Void
+
+    var removeMembersMock: RemoveMembersMock?
+
     func removeMembersFromConversation(with clientIds: [MLSClientID], for groupID: MLSGroupID) throws {
         calls.removeMembersFromConversation.append((clientIds, groupID))
+        guard let mock = removeMembersMock else { throw MockError.unmockedMethodCalled }
+        try mock(clientIds, groupID)
     }
 
     // MARK: - Joining groups
