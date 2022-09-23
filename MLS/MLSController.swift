@@ -57,13 +57,14 @@ class DummyCoreCryptoCallbacks: CoreCryptoCallbacks {
 
     init() {}
 
-    func authorize(conversationId: [UInt8], clientId: String) -> Bool {
+    func authorize(conversationId: [UInt8], clientId: [UInt8]) -> Bool {
         return true
     }
 
-    func isUserInGroup(identity: [UInt8], otherClients: [[UInt8]]) -> Bool {
+    func clientIdBelongsToOneOf(clientId: [UInt8], otherClients: [[UInt8]]) -> Bool {
         return true
     }
+
 }
 
 public protocol MLSControllerDelegate: AnyObject {
@@ -792,9 +793,12 @@ public final class MLSController: MLSControllerProtocol {
             return
         }
 
+        // Maybe we can split this... overdue.. .commit immediately.
+        // future... collect them all, find the newest, and try again
+
         logger.info("committing any scheduled pending proposals")
 
-        let groupsWithPendingCommits = self.groupsWithPendingCommits()
+        let groupsWithPendingCommits = self.sortedGroupsWithPendingCommits()
 
         logger.info("\(groupsWithPendingCommits.count) groups with scheduled pending proposals")
 
@@ -803,18 +807,15 @@ public final class MLSController: MLSControllerProtocol {
                 logger.info("commit scheduled in the past, committing...")
                 try await commitPendingProposals(in: groupID)
             } else {
-                // Wrap in another task so we don't block the loop.
-                Task {
-                    logger.info("commit scheduled in the future, waiting...")
-                    try await Task.sleep(nanoseconds: timestamp.timeIntervalSinceNow.nanoseconds)
-                    logger.info("scheduled commit is ready, committing...")
-                    try await commitPendingProposals(in: groupID)
-                }
+                logger.info("commit scheduled in the future, waiting...")
+                try await Task.sleep(nanoseconds: timestamp.timeIntervalSinceNow.nanoseconds)
+                logger.info("scheduled commit is ready, committing...")
+                try await commitPendingProposals(in: groupID)
             }
         }
     }
 
-    private func groupsWithPendingCommits() -> [(MLSGroupID, Date)] {
+    private func sortedGroupsWithPendingCommits() -> [(MLSGroupID, Date)] {
         guard let context = context else {
             return []
         }
@@ -836,7 +837,10 @@ public final class MLSController: MLSControllerProtocol {
             }
         }
 
-        return result
+        return result.sorted { lhs, rhs in
+            let (lhsCommitDate, rhsCommitDate) = (lhs.1, rhs.1)
+            return lhsCommitDate <= rhsCommitDate
+        }
     }
 
     func commitPendingProposals(in groupID: MLSGroupID) async throws {
@@ -847,23 +851,22 @@ public final class MLSController: MLSControllerProtocol {
         logger.info("committing pending proposals in: \(groupID)")
 
         do {
-            // TODO wire_commitPendingProposals will return an optional CommitBundle soon in the case
-            // when there are no pending proposals, then we could return early on an error.
-            let commitBundle = try coreCrypto.wire_commitPendingProposals(conversationId: groupID.bytes)
-            try await sendMessage(commitBundle.commit, groupID: groupID, kind: .commit)
+            if let commitBundle = try coreCrypto.wire_commitPendingProposals(conversationId: groupID.bytes) {
+                try await sendMessage(commitBundle.commit, groupID: groupID, kind: .commit)
 
-            if let welcome = commitBundle.welcome {
-                try await sendWelcomeMessage(welcome)
+                if let welcome = commitBundle.welcome {
+                    try await sendWelcomeMessage(welcome)
+                }
+            } else {
+                logger.warn("no pending proposals to commit")
             }
-
-            clearPendingProposalCommitDate(for: groupID)
-
         } catch {
             logger.info("failed to commit pending proposals in \(groupID): \(String(describing: error))")
             clearPendingProposalCommitDate(for: groupID)
             throw MLSCommitPendingProposalsError.failedToCommitPendingProposals
         }
 
+        clearPendingProposalCommitDate(for: groupID)
         delegate?.mlsControllerDidCommitPendingProposal(for: groupID)
     }
 
