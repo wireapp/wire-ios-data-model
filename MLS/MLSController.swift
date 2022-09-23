@@ -45,6 +45,8 @@ public protocol MLSControllerProtocol {
 
     func performPendingJoins()
 
+    func wipeGroup(_ groupID: MLSGroupID)
+
     func commitPendingProposals() async throws
 
     func scheduleCommitPendingProposals(groupID: MLSGroupID, at commitDate: Date)
@@ -69,7 +71,8 @@ class DummyCoreCryptoCallbacks: CoreCryptoCallbacks {
 
 public protocol MLSControllerDelegate: AnyObject {
 
-    func mlsControllerDidCommitPendingProposal(groupID: MLSGroupID)
+    func mlsControllerDidCommitPendingProposal(for groupID: MLSGroupID)
+    func mlsControllerDidUpdateKeyMaterialForAllGroups()
 
 }
 
@@ -80,6 +83,8 @@ public final class MLSController: MLSControllerProtocol {
     private weak var context: NSManagedObjectContext?
     private let coreCrypto: CoreCryptoProtocol
     private let conversationEventProcessor: ConversationEventProcessorProtocol
+    private let staleKeyMaterialDetector: StaleMLSKeyDetectorProtocol
+    private let userDefaults: UserDefaults
     private let logger = Logging.mls
     private var groupsPendingJoin = Set<MLSGroupID>()
 
@@ -88,24 +93,66 @@ public final class MLSController: MLSControllerProtocol {
 
     let targetUnclaimedKeyPackageCount = 100
     let actionsProvider: MLSActionsProviderProtocol
-    let userDefaults: UserDefaults
+
+    var lastKeyMaterialUpdateCheck = Date.distantPast
+    var keyMaterialUpdateCheckTimer: Timer?
+
+
+    // The number of days to wait until refreshing the key material for a group.
+
+    private static var keyMaterialRefreshIntervalInDays: UInt {
+        // To ensure that a group's key material does not exceed its maximum age,
+        // refresh pre-emptively so that it doesn't go stale while the user is offline.
+        return keyMaterialMaximumAgeInDays - backendMessageHoldTimeInDays
+    }
+
+    // The maximum age of a group's key material before it's considered stale.
+
+    private static let keyMaterialMaximumAgeInDays: UInt = 90
+
+    // The number of days the backend will hold a message.
+
+    private static let backendMessageHoldTimeInDays: UInt = 28
 
     weak var delegate: MLSControllerDelegate?
 
     // MARK: - Life cycle
 
+    convenience init(
+        context: NSManagedObjectContext,
+        coreCrypto: CoreCryptoProtocol,
+        conversationEventProcessor: ConversationEventProcessorProtocol,
+        userDefaults: UserDefaults
+    ) {
+        self.init(
+            context: context,
+            coreCrypto: coreCrypto,
+            conversationEventProcessor: conversationEventProcessor,
+            staleKeyMaterialDetector: StaleMLSKeyDetector(
+                refreshIntervalInDays: Self.keyMaterialRefreshIntervalInDays,
+                context: context
+            ),
+            userDefaults: userDefaults,
+            actionsProvider: MLSActionsProvider()
+        )
+    }
+
     init(
         context: NSManagedObjectContext,
         coreCrypto: CoreCryptoProtocol,
         conversationEventProcessor: ConversationEventProcessorProtocol,
+        staleKeyMaterialDetector: StaleMLSKeyDetectorProtocol,
         userDefaults: UserDefaults,
-        actionsProvider: MLSActionsProviderProtocol = MLSActionsProvider()
+        actionsProvider: MLSActionsProviderProtocol = MLSActionsProvider(),
+        delegate: MLSControllerDelegate? = nil
     ) {
         self.context = context
         self.coreCrypto = coreCrypto
         self.conversationEventProcessor = conversationEventProcessor
+        self.staleKeyMaterialDetector = staleKeyMaterialDetector
         self.actionsProvider = actionsProvider
         self.userDefaults = userDefaults
+        self.delegate = delegate
 
         do {
             try coreCrypto.wire_setCallbacks(callbacks: DummyCoreCryptoCallbacks())
@@ -115,6 +162,12 @@ public final class MLSController: MLSControllerProtocol {
 
         generateClientPublicKeysIfNeeded()
         fetchBackendPublicKeys()
+        updateKeyMaterialForAllStaleGroupsIfNeeded()
+        schedulePeriodicKeyMaterialUpdateCheck()
+    }
+
+    deinit {
+        keyMaterialUpdateCheckTimer?.invalidate()
     }
 
     // MARK: - Public keys
@@ -161,6 +214,51 @@ public final class MLSController: MLSControllerProtocol {
         }
     }
 
+    // MARK: - Update key material
+
+    private func schedulePeriodicKeyMaterialUpdateCheck() {
+        keyMaterialUpdateCheckTimer?.invalidate()
+        keyMaterialUpdateCheckTimer = Timer.scheduledTimer(
+            withTimeInterval: .oneDay,
+            repeats: true
+        ) { [weak self] _ in
+            self?.updateKeyMaterialForAllStaleGroupsIfNeeded()
+        }
+    }
+
+    private func updateKeyMaterialForAllStaleGroupsIfNeeded() {
+        guard lastKeyMaterialUpdateCheck.ageInDays >= 1 else { return }
+
+        Task {
+            await updateKeyMaterialForAllStaleGroups()
+            lastKeyMaterialUpdateCheck = Date()
+            delegate?.mlsControllerDidUpdateKeyMaterialForAllGroups()
+        }
+    }
+
+    private func updateKeyMaterialForAllStaleGroups() async {
+        Logging.mls.info("beginning to update key material for all stale groups")
+
+        let staleGroups = staleKeyMaterialDetector.groupsWithStaleKeyingMaterial
+
+        Logging.mls.info("found \(staleGroups.count) groups with stale key material")
+
+        for staleGroup in staleGroups {
+            await updateKeyMaterial(for: staleGroup)
+        }
+    }
+
+    private func updateKeyMaterial(for groupID: MLSGroupID) async {
+        do {
+            Logging.mls.info("updating key material for group (\(groupID))")
+            let commit = try coreCrypto.wire_updateKeyingMaterial(conversationId: groupID.bytes)
+            try await sendMessage(commit.commit, groupID: groupID, kind: .commit)
+            staleKeyMaterialDetector.keyingMaterialUpdated(for: groupID)
+        } catch {
+            Logging.mls.warn("failed to update key material for group (\(groupID)): \(String(describing: error))")
+        }
+    }
+
     // MARK: - Group creation
 
     enum MLSGroupCreationError: Error {
@@ -198,6 +296,8 @@ public final class MLSController: MLSControllerProtocol {
             logger.warn("failed to create group (\(groupID)): \(String(describing: error))")
             throw MLSGroupCreationError.failedToCreateGroup
         }
+
+        staleKeyMaterialDetector.keyingMaterialUpdated(for: groupID)
     }
 
     private func claimKeyPackages(for users: [MLSUser]) async throws -> [KeyPackage] {
@@ -361,6 +461,18 @@ public final class MLSController: MLSControllerProtocol {
         }
     }
 
+    // MARK: - Remove group
+
+    public func wipeGroup(_ groupID: MLSGroupID) {
+        logger.info("wiping group (\(groupID))")
+
+        do {
+            try coreCrypto.wire_wipeConversation(conversationId: groupID.bytes)
+        } catch {
+            logger.warn("failed to wipe group (\(groupID)): \(String(describing: error))")
+        }
+    }
+
     // MARK: - Key packages
 
     enum MLSKeyPackagesError: Error {
@@ -519,9 +631,12 @@ public final class MLSController: MLSControllerProtocol {
         }
 
         do {
-            let groupID = try coreCrypto.wire_processWelcomeMessage(welcomeMessage: messageBytes)
+            let groupIDBytes = try coreCrypto.wire_processWelcomeMessage(welcomeMessage: messageBytes)
+            let groupID = MLSGroupID(groupIDBytes)
             uploadKeyPackagesIfNeeded()
-            return MLSGroupID(groupID)
+            staleKeyMaterialDetector.keyingMaterialUpdated(for: groupID)
+            return groupID
+
         } catch {
             logger.error("failed to process welcome message: \(String(describing: error))")
             throw MLSWelcomeMessageProcessingError.failedToProcessMessage
@@ -694,9 +809,12 @@ public final class MLSController: MLSControllerProtocol {
             return
         }
 
+        // Maybe we can split this... overdue.. .commit immediately.
+        // future... collect them all, find the newest, and try again
+
         logger.info("committing any scheduled pending proposals")
 
-        let groupsWithPendingCommits = self.groupsWithPendingCommits()
+        let groupsWithPendingCommits = self.sortedGroupsWithPendingCommits()
 
         logger.info("\(groupsWithPendingCommits.count) groups with scheduled pending proposals")
 
@@ -705,18 +823,15 @@ public final class MLSController: MLSControllerProtocol {
                 logger.info("commit scheduled in the past, committing...")
                 try await commitPendingProposals(in: groupID)
             } else {
-                // Wrap in another task so we don't block the loop.
-                Task {
-                    logger.info("commit scheduled in the future, waiting...")
-                    try await Task.sleep(nanoseconds: timestamp.timeIntervalSinceNow.nanoseconds)
-                    logger.info("scheduled commit is ready, committing...")
-                    try await commitPendingProposals(in: groupID)
-                }
+                logger.info("commit scheduled in the future, waiting...")
+                try await Task.sleep(nanoseconds: timestamp.timeIntervalSinceNow.nanoseconds)
+                logger.info("scheduled commit is ready, committing...")
+                try await commitPendingProposals(in: groupID)
             }
         }
     }
 
-    private func groupsWithPendingCommits() -> [(MLSGroupID, Date)] {
+    private func sortedGroupsWithPendingCommits() -> [(MLSGroupID, Date)] {
         guard let context = context else {
             return []
         }
@@ -738,7 +853,10 @@ public final class MLSController: MLSControllerProtocol {
             }
         }
 
-        return result
+        return result.sorted { lhs, rhs in
+            let (lhsCommitDate, rhsCommitDate) = (lhs.1, rhs.1)
+            return lhsCommitDate <= rhsCommitDate
+        }
     }
 
     func commitPendingProposals(in groupID: MLSGroupID) async throws {
@@ -765,7 +883,7 @@ public final class MLSController: MLSControllerProtocol {
         }
 
         clearPendingProposalCommitDate(for: groupID)
-        delegate?.mlsControllerDidCommitPendingProposal(groupID: groupID)
+        delegate?.mlsControllerDidCommitPendingProposal(for: groupID)
     }
 
     private func clearPendingProposalCommitDate(for groupID: MLSGroupID) {
