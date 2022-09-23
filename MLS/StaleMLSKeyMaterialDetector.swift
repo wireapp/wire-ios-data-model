@@ -62,7 +62,6 @@ final class StaleMLSKeyDetector: StaleMLSKeyDetectorProtocol {
         return Set(result)
     }
 
-    // TODO: test
     func keyingMaterialUpdated(for groupID: MLSGroupID) {
         Logging.mls.info("Tracking key material update date for group (\(groupID))")
 
