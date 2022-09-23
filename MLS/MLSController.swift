@@ -52,31 +52,6 @@ public protocol MLSControllerProtocol {
     func scheduleCommitPendingProposals(groupID: MLSGroupID, at commitDate: Date)
 }
 
-class CoreCryptoCallbacksImpl: CoreCryptoCallbacks {
-
-    init() {}
-
-    func authorize(conversationId: [UInt8], clientId: [UInt8]) -> Bool {
-        return true
-    }
-
-    func clientIdBelongsToOneOf(clientId: [UInt8], otherClients: [[UInt8]]) -> Bool {
-        guard let mlsClientID = MLSClientID(data: clientId.data) else {
-            return false
-        }
-
-        let otherMLSClientIDs = otherClients.compactMap {
-            MLSClientID(data: $0.data)
-        }
-
-        return otherMLSClientIDs.contains {
-            // Does otherClients contain a client belonging to the same owner of `clientId`?
-            $0.userID == mlsClientID.userID && $0.domain == mlsClientID.domain
-        }
-    }
-
-}
-
 public protocol MLSControllerDelegate: AnyObject {
 
     func mlsControllerDidCommitPendingProposal(for groupID: MLSGroupID)
