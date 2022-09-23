@@ -946,12 +946,17 @@ class MLSControllerTests: ZMConversationTestsBase, MLSControllerDelegate {
         // Given
         let groupID = MLSGroupID(.random())
 
+        var count = 0
+        mockCoreCrypto.mockWipeConversation = { (id: ConversationId) in
+            count += 1
+            XCTAssertEqual(id, groupID.bytes)
+        }
+
         // When
         sut.wipeGroup(groupID)
 
         // Then
-        XCTAssertEqual(mockCoreCrypto.calls.wipeConversation.count, 1)
-        XCTAssertEqual(mockCoreCrypto.calls.wipeConversation.first, groupID.bytes)
+        XCTAssertEqual(count, 1)
     }
 
     // MARK: - Key Packages
