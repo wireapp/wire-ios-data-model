@@ -41,8 +41,8 @@ class MLSControllerTests: ZMConversationTestsBase, MLSControllerDelegate {
             context: uiMOC,
             coreCrypto: mockCoreCrypto,
             conversationEventProcessor: mockConversationEventProcessor,
-            actionsProvider: mockActionsProvider,
-            userDefaults: userDefaultsTestSuite
+            userDefaults: userDefaultsTestSuite,
+            actionsProvider: mockActionsProvider
         )
 
         sut.delegate = self
@@ -87,6 +87,7 @@ class MLSControllerTests: ZMConversationTestsBase, MLSControllerDelegate {
             context: uiMOC,
             coreCrypto: mockCoreCrypto,
             conversationEventProcessor: mockConversationEventProcessor,
+            userDefaults: userDefaultsTestSuite,
             actionsProvider: mockActionsProvider
         )
 

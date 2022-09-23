@@ -80,7 +80,6 @@ public final class MLSController: MLSControllerProtocol {
     private weak var context: NSManagedObjectContext?
     private let coreCrypto: CoreCryptoProtocol
     private let conversationEventProcessor: ConversationEventProcessorProtocol
-    private let userDefaults: UserDefaults
     private let logger = Logging.mls
     private var groupsPendingJoin = Set<MLSGroupID>()
 
@@ -89,6 +88,7 @@ public final class MLSController: MLSControllerProtocol {
 
     let targetUnclaimedKeyPackageCount = 100
     let actionsProvider: MLSActionsProviderProtocol
+    let userDefaults: UserDefaults
 
     weak var delegate: MLSControllerDelegate?
 
@@ -98,8 +98,8 @@ public final class MLSController: MLSControllerProtocol {
         context: NSManagedObjectContext,
         coreCrypto: CoreCryptoProtocol,
         conversationEventProcessor: ConversationEventProcessorProtocol,
-        actionsProvider: MLSActionsProviderProtocol = MLSActionsProvider(),
-        userDefaults: UserDefaults = UserDefaults(suiteName: "com.wire.mls")!
+        userDefaults: UserDefaults,
+        actionsProvider: MLSActionsProviderProtocol = MLSActionsProvider()
     ) {
         self.context = context
         self.coreCrypto = coreCrypto
