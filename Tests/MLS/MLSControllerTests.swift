@@ -1196,6 +1196,7 @@ class MLSControllerTests: ZMConversationTestsBase, MLSControllerDelegate {
             coreCrypto: mockCoreCrypto,
             conversationEventProcessor: mockConversationEventProcessor,
             staleKeyMaterialDetector: mockStaleMLSKeyDetector,
+            userDefaults: userDefaultsTestSuite,
             actionsProvider: mockActionsProvider,
             delegate: self
         )
