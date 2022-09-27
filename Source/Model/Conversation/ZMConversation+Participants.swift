@@ -175,6 +175,10 @@ extension ZMConversation {
 
             let mlsUsers = users.compactMap(MLSUser.init(from:))
 
+            // If we don't copy the id here (contexts thread), then the app will
+            // crash if we try to use it in the task (not on the contexts thread).
+            let qualifiedID = self.qualifiedID
+
             Task {
                 do {
                     try await mlsController.addMembersToConversation(with: mlsUsers, for: mlsGroupID)
@@ -184,7 +188,7 @@ extension ZMConversation {
                     }
 
                 } catch {
-                    Logging.mls.error("failed to add members to conversation (\(qualifiedID)): \(String(describing: error))")
+                    Logging.mls.error("failed to add members to conversation (\(String(describing: qualifiedID))): \(String(describing: error))")
 
                     context.perform {
                         completion(.failure(.failedToAddMLSMembers))
