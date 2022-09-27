@@ -155,7 +155,7 @@ extension ZMConversation {
             action.send(in: context.notificationContext)
 
         case .mls:
-            Logging.mls.info("adding \(participants.count) participants to conversation (\(qualifiedID))")
+            Logging.mls.info("adding \(participants.count) participants to conversation (\(String(describing: qualifiedID)))")
 
             var mlsController: MLSControllerProtocol?
 
@@ -168,7 +168,7 @@ extension ZMConversation {
                 let groupID = mlsGroupID?.base64EncodedString,
                 let mlsGroupID = MLSGroupID(base64Encoded: groupID)
             else {
-                Logging.mls.warn("failed to add participants to conversation (\(qualifiedID)): invalid operation")
+                Logging.mls.warn("failed to add participants to conversation (\(String(describing: qualifiedID))): invalid operation")
                 completion(.failure(.invalidOperation))
                 return
             }
