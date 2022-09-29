@@ -19,7 +19,7 @@
 import Foundation
 
 public enum MLSDecryptResult: Equatable {
-    case message(_ messageData: Data)
+    case message(_ messageData: Data, _ senderClientID: String)
     case proposal(_ commitDelay: UInt64)
 }
 
@@ -747,8 +747,11 @@ public final class MLSController: MLSControllerProtocol {
                 return MLSDecryptResult.proposal(commitDelay)
             }
 
-            if let message = decryptedMessage.message {
-                return MLSDecryptResult.message(message.data)
+            if let message = decryptedMessage.message,
+               let senderClientID = decryptedMessage.senderClientId,
+               let mlsClientID = MLSClientID(data: senderClientID.data)
+            {
+                return MLSDecryptResult.message(message.data, mlsClientID.clientID)
             }
 
             return nil
