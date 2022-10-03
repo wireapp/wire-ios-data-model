@@ -346,8 +346,6 @@ public final class MLSController: MLSControllerProtocol {
             logger.info("preempively commiting pending proposals in group (\(groupID))")
             try await commitPendingProposals(in: groupID)
         }
-
-        try await sendMessage(message, groupID: groupID, kind: kind)
     }
 
     private func existsPendingPropsals(in groupID: MLSGroupID) -> Bool {
@@ -364,28 +362,23 @@ public final class MLSController: MLSControllerProtocol {
         return groupHasPendingProposals
     }
 
-    private func sendMessage(_ bytes: Bytes, groupID: MLSGroupID, kind: MessageKind) async throws {
-        logger.info("sending message in group (\(groupID))")
-
-        var updateEvents = [ZMUpdateEvent]()
-
+    private func sendProposal(_ bytes: Bytes, groupID: MLSGroupID) async throws {
         do {
+            logger.info("sending proposal in group (\(groupID))")
+
             guard let context = context else { return }
-            updateEvents = try await actionsProvider.sendMessage(
+
+            let updateEvents = try await actionsProvider.sendMessage(
                 bytes.data,
                 in: context.notificationContext
             )
+
+            conversationEventProcessor.processConversationEvents(updateEvents)
+
         } catch let error {
-            logger.warn("failed to send \(String(describing: kind)) message in group (\(groupID)): \(String(describing: error))")
-            throw MLSSendMessageError(from: kind)
+            logger.warn("failed to send proposal in group (\(groupID)): \(String(describing: error))")
+            throw MLSSendMessageError.failedToSendProposal
         }
-
-        if kind == .commit {
-            logger.info("commit accepted in group (\(groupID)")
-            try coreCrypto.wire_commitAccepted(conversationId: groupID.bytes)
-        }
-
-        conversationEventProcessor.processConversationEvents(updateEvents)
     }
 
     private func sendWelcomeMessage(_ bytes:  Bytes) async throws {
@@ -703,7 +696,7 @@ public final class MLSController: MLSControllerProtocol {
 
         do {
             let proposal = try coreCrypto.wire_newExternalAddProposal(conversationId: groupID.bytes, epoch: epoch)
-            try await sendMessage(proposal, groupID: groupID, kind: .proposal)
+            try await sendProposal(proposal, groupID: groupID)
             logger.info("success: requested to join group (\(groupID)")
         } catch {
             logger.warn(
