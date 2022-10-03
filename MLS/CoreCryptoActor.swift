@@ -24,6 +24,7 @@ actor CoreCryptoActor {
 
     enum Commit {
 
+        case addMembers([Invitee])
         case removeClients([ClientId])
 
     }
@@ -32,6 +33,7 @@ actor CoreCryptoActor {
 
         case failedToGenerateCommit
         case failedToSendCommit
+        case failedToSendWelcome
         case failedToMergeCommit
         case failedToClearCommit
 
@@ -57,6 +59,24 @@ actor CoreCryptoActor {
 
     // MARK: - Methods
 
+    func addMembers(_ invitees: [Invitee], to groupID: MLSGroupID) async throws -> [ZMUpdateEvent] {
+        do {
+            let bundle = try createCommit(.addMembers(invitees), in: groupID)
+            let events = try await sendCommit(bundle.commit)
+            try mergeCommit(in: groupID)
+
+            if let welcome = bundle.welcome {
+                try await sendWelcome(welcome)
+            }
+
+            return events
+
+        } catch CoreCryptoActor.failedToSendCommit {
+            try clearPendingCommit(in: groupID)
+            throw CoreCryptoActor.failedToSendCommit
+        }
+    }
+
     func removeClients(_ clients: [ClientId], from groupID: MLSGroupID) async throws -> [ZMUpdateEvent] {
         do {
             let commit = try createCommit(.removeClients(clients), in: groupID)
@@ -74,6 +94,18 @@ actor CoreCryptoActor {
     private func createCommit(_ commit: Commit, in groupID: MLSGroupID) throws -> CommitBundle {
         do {
             switch commit {
+            case .addMembers(let clients):
+                let memberAddMessages = try coreCrypto.wire_addClientsToConversation(
+                    conversationId: groupID.bytes,
+                    clients: clients
+                )
+
+                return CommitBundle(
+                    welcome: memberAddMessages.welcome,
+                    commit: memberAddMessages.commit,
+                    publicGroupState: memberAddMessages.publicGroupState
+                )
+
             case .removeClients(let clients):
                 return try coreCrypto.wire_removeClientsFromConversation(
                     conversationId: groupID.bytes,
@@ -100,6 +132,16 @@ actor CoreCryptoActor {
         return events
     }
 
+    private func sendWelcome(_ message: Bytes) async throws {
+        do {
+            try await actionsProvider.sendWelcomeMessage(
+                message.data,
+                in: context.notificationContext
+            )
+        } catch {
+            throw CoreCryptoActor.failedToSendWelcome
+        }
+    }
 
     private func mergeCommit(in groupID: MLSGroupID) throws {
         do {

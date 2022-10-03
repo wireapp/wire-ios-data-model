@@ -408,9 +408,17 @@ public final class MLSController: MLSControllerProtocol {
         }
     }
 
-    // MARK: - Add participants to mls group
+    // MARK: - Add member
+
+    enum MLSAddMembersError: Error {
+
+        case noMembersToAdd
+        case failedToAddMembers
+
+    }
 
     /// Add users to MLS group in the given conversation.
+    /// 
     /// - Parameters:
     ///   - users: Users represents the MLS group to be added.
     ///   - groupID: Represents the MLS conversation group ID in which users to be added
@@ -419,36 +427,18 @@ public final class MLSController: MLSControllerProtocol {
         logger.info("adding members to group (\(groupID)) with users: \(users)")
 
         guard !users.isEmpty else {
-            throw MLSGroupCreationError.noParticipantsToAdd
+            throw MLSAddMembersError.noMembersToAdd
         }
 
-        let keyPackages = try await claimKeyPackages(for: users)
-        let invitees = keyPackages.map(Invitee.init(from:))
-        let messagesToSend = try addMembers(id: groupID, invitees: invitees)
-
-        guard let messagesToSend = messagesToSend else { return }
-
-        try await sendMessageAfterCommitingPendingProposals(
-            message: messagesToSend.commit,
-            in: groupID,
-            kind: .commit
-        )
-
-        try await sendWelcomeMessage(messagesToSend.welcome)
-    }
-
-    private func addMembers(
-        id: MLSGroupID,
-        invitees: [Invitee]
-    ) throws -> MemberAddedMessages? {
         do {
-            return try coreCrypto.wire_addClientsToConversation(
-                conversationId: id.bytes,
-                clients: invitees
-            )
-        } catch let error {
-            logger.warn("failed to add members to group (\(id)): \(String(describing: error))")
-            throw MLSGroupCreationError.failedToAddMembers
+            // TODO: commit pending proposals
+            let keyPackages = try await claimKeyPackages(for: users)
+            let invitees = keyPackages.map(Invitee.init(from:))
+            let events = try await coreCryptoActor.addMembers(invitees, to: groupID)
+            conversationEventProcessor.processConversationEvents(events)
+        } catch {
+            logger.warn("failed to add members to group (\(groupID)): \(String(describing: error))")
+            throw MLSAddMembersError.failedToAddMembers
         }
     }
 
