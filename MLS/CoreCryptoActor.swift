@@ -22,7 +22,7 @@ actor CoreCryptoActor {
 
     // MARK: - Types
 
-    enum Commit {
+    enum Action {
 
         case addMembers([Invitee])
         case removeClients([ClientId])
@@ -60,72 +60,33 @@ actor CoreCryptoActor {
         self.actionsProvider = actionsProvider
     }
 
-    // MARK: - Methods
+    // MARK: - Actions
 
     func addMembers(_ invitees: [Invitee], to groupID: MLSGroupID) async throws -> [ZMUpdateEvent] {
-        do {
-            let bundle = try createCommit(for: .addMembers(invitees), in: groupID)
-            let events = try await sendCommit(bundle.commit)
-            try mergeCommit(in: groupID)
-
-            if let welcome = bundle.welcome {
-                try await sendWelcome(welcome)
-            }
-
-            return events
-
-        } catch CoreCryptoActorError.failedToSendCommit {
-            try clearPendingCommit(in: groupID)
-            throw CoreCryptoActorError.failedToSendCommit
-        }
+        let bundle = try commitBundle(for: .addMembers(invitees), in: groupID)
+        return try await sendCommitBundle(bundle, for: groupID)
     }
 
     func removeClients(_ clients: [ClientId], from groupID: MLSGroupID) async throws -> [ZMUpdateEvent] {
-        do {
-            let bundle = try createCommit(for: .removeClients(clients), in: groupID)
-            let events = try await sendCommit(bundle.commit)
-            try mergeCommit(in: groupID)
-            return events
-        } catch CoreCryptoActorError.failedToSendCommit {
-            try clearPendingCommit(in: groupID)
-            throw CoreCryptoActorError.failedToSendCommit
-        }
+        let bundle = try commitBundle(for: .removeClients(clients), in: groupID)
+        return try await sendCommitBundle(bundle, for: groupID)
     }
 
     func updateKeyMaterial(for groupID: MLSGroupID) async throws -> [ZMUpdateEvent] {
-        do {
-            let bundle = try createCommit(for: .updateKeyMaterial, in: groupID)
-            let events = try await sendCommit(bundle.commit)
-            try mergeCommit(in: groupID)
-            return events
-        } catch CoreCryptoActorError.failedToSendCommit {
-            try clearPendingCommit(in: groupID)
-            throw CoreCryptoActorError.failedToSendCommit
-        }
+        let bundle = try commitBundle(for: .updateKeyMaterial, in: groupID)
+        return try await sendCommitBundle(bundle, for: groupID)
     }
 
     func commitPendingProposals(in groupID: MLSGroupID) async throws -> [ZMUpdateEvent] {
-        do {
-            let bundle = try createCommit(for: .proposal, in: groupID)
-            let events = try await sendCommit(bundle.commit)
-            try mergeCommit(in: groupID)
-
-            if let welcome = bundle.welcome {
-                try await sendWelcome(welcome)
-            }
-
-            return events
-        } catch CoreCryptoActorError.failedToSendCommit {
-            try clearPendingCommit(in: groupID)
-            throw CoreCryptoActorError.failedToSendCommit
-        }
+        let bundle = try commitBundle(for: .proposal, in: groupID)
+        return try await sendCommitBundle(bundle, for: groupID)
     }
 
-    // MARK: - Helpers
+    // MARK: - Commit generation
 
-    private func createCommit(for commit: Commit, in groupID: MLSGroupID) throws -> CommitBundle {
+    private func commitBundle(for action: Action, in groupID: MLSGroupID) throws -> CommitBundle {
         do {
-            switch commit {
+            switch action {
             case .addMembers(let clients):
                 let memberAddMessages = try coreCrypto.wire_addClientsToConversation(
                     conversationId: groupID.bytes,
@@ -161,6 +122,26 @@ actor CoreCryptoActor {
         }
     }
 
+    // MARK: - Sending messages
+
+    private func sendCommitBundle(_ bundle: CommitBundle, for groupID: MLSGroupID) async throws -> [ZMUpdateEvent] {
+        do {
+            let events = try await sendCommit(bundle.commit)
+            try mergeCommit(in: groupID)
+
+            if let welcome = bundle.welcome {
+                try await sendWelcome(welcome)
+            }
+
+            return events
+
+        } catch CoreCryptoActorError.failedToSendCommit {
+            try clearPendingCommit(in: groupID)
+            throw CoreCryptoActorError.failedToSendCommit
+        }
+    }
+
+
     private func sendCommit(_ bytes: Bytes) async throws -> [ZMUpdateEvent] {
         var events = [ZMUpdateEvent]()
 
@@ -186,6 +167,8 @@ actor CoreCryptoActor {
             throw CoreCryptoActorError.failedToSendWelcome
         }
     }
+
+    // MARK: - Post sending
 
     private func mergeCommit(in groupID: MLSGroupID) throws {
         do {
