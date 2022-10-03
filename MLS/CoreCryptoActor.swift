@@ -27,16 +27,18 @@ actor CoreCryptoActor {
         case addMembers([Invitee])
         case removeClients([ClientId])
         case updateKeyMaterial
+        case proposal
 
     }
 
-    enum CoreCryptoActor: Error {
+    enum CoreCryptoActorError: Error {
 
         case failedToGenerateCommit
         case failedToSendCommit
         case failedToSendWelcome
         case failedToMergeCommit
         case failedToClearCommit
+        case noPendingProposals
 
     }
 
@@ -62,7 +64,7 @@ actor CoreCryptoActor {
 
     func addMembers(_ invitees: [Invitee], to groupID: MLSGroupID) async throws -> [ZMUpdateEvent] {
         do {
-            let bundle = try createCommit(.addMembers(invitees), in: groupID)
+            let bundle = try createCommit(for: .addMembers(invitees), in: groupID)
             let events = try await sendCommit(bundle.commit)
             try mergeCommit(in: groupID)
 
@@ -72,39 +74,56 @@ actor CoreCryptoActor {
 
             return events
 
-        } catch CoreCryptoActor.failedToSendCommit {
+        } catch CoreCryptoActorError.failedToSendCommit {
             try clearPendingCommit(in: groupID)
-            throw CoreCryptoActor.failedToSendCommit
+            throw CoreCryptoActorError.failedToSendCommit
         }
     }
 
     func removeClients(_ clients: [ClientId], from groupID: MLSGroupID) async throws -> [ZMUpdateEvent] {
         do {
-            let commit = try createCommit(.removeClients(clients), in: groupID)
-            let events = try await sendCommit(commit.commit)
+            let bundle = try createCommit(for: .removeClients(clients), in: groupID)
+            let events = try await sendCommit(bundle.commit)
             try mergeCommit(in: groupID)
             return events
-        } catch CoreCryptoActor.failedToSendCommit {
+        } catch CoreCryptoActorError.failedToSendCommit {
             try clearPendingCommit(in: groupID)
-            throw CoreCryptoActor.failedToSendCommit
+            throw CoreCryptoActorError.failedToSendCommit
         }
     }
 
     func updateKeyMaterial(for groupID: MLSGroupID) async throws -> [ZMUpdateEvent] {
         do {
-            let commit = try createCommit(.updateKeyMaterial, in: groupID)
-            let events = try await sendCommit(commit.commit)
+            let bundle = try createCommit(for: .updateKeyMaterial, in: groupID)
+            let events = try await sendCommit(bundle.commit)
             try mergeCommit(in: groupID)
             return events
-        } catch CoreCryptoActor.failedToSendCommit {
+        } catch CoreCryptoActorError.failedToSendCommit {
             try clearPendingCommit(in: groupID)
-            throw CoreCryptoActor.failedToSendCommit
+            throw CoreCryptoActorError.failedToSendCommit
+        }
+    }
+
+    func commitPendingProposals(in groupID: MLSGroupID) async throws -> [ZMUpdateEvent] {
+        do {
+            let bundle = try createCommit(for: .proposal, in: groupID)
+            let events = try await sendCommit(bundle.commit)
+            try mergeCommit(in: groupID)
+
+            if let welcome = bundle.welcome {
+                try await sendWelcome(welcome)
+            }
+
+            return events
+        } catch CoreCryptoActorError.failedToSendCommit {
+            try clearPendingCommit(in: groupID)
+            throw CoreCryptoActorError.failedToSendCommit
         }
     }
 
     // MARK: - Helpers
 
-    private func createCommit(_ commit: Commit, in groupID: MLSGroupID) throws -> CommitBundle {
+    private func createCommit(for commit: Commit, in groupID: MLSGroupID) throws -> CommitBundle {
         do {
             switch commit {
             case .addMembers(let clients):
@@ -127,9 +146,18 @@ actor CoreCryptoActor {
 
             case .updateKeyMaterial:
                 return try coreCrypto.wire_updateKeyingMaterial(conversationId: groupID.bytes)
+
+            case .proposal:
+                guard let bundle = try coreCrypto.wire_commitPendingProposals(
+                    conversationId: groupID.bytes
+                ) else {
+                    throw CoreCryptoActorError.noPendingProposals
+                }
+
+                return bundle
             }
         } catch {
-            throw CoreCryptoActor.failedToGenerateCommit
+            throw CoreCryptoActorError.failedToGenerateCommit
         }
     }
 
@@ -142,7 +170,7 @@ actor CoreCryptoActor {
                 in: context.notificationContext
             )
         } catch {
-            throw CoreCryptoActor.failedToSendCommit
+            throw CoreCryptoActorError.failedToSendCommit
         }
 
         return events
@@ -155,7 +183,7 @@ actor CoreCryptoActor {
                 in: context.notificationContext
             )
         } catch {
-            throw CoreCryptoActor.failedToSendWelcome
+            throw CoreCryptoActorError.failedToSendWelcome
         }
     }
 
@@ -163,7 +191,7 @@ actor CoreCryptoActor {
         do {
             try coreCrypto.wire_commitAccepted(conversationId: groupID.bytes)
         } catch {
-            throw CoreCryptoActor.failedToMergeCommit
+            throw CoreCryptoActorError.failedToMergeCommit
         }
     }
 
@@ -171,7 +199,7 @@ actor CoreCryptoActor {
         do {
             try coreCrypto.wire_clearPendingCommit(conversationId: groupID.bytes)
         } catch {
-            throw CoreCryptoActor.failedToClearCommit
+            throw CoreCryptoActorError.failedToClearCommit
         }
     }
 

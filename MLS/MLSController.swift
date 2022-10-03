@@ -884,23 +884,15 @@ public final class MLSController: MLSControllerProtocol {
         logger.info("committing pending proposals in: \(groupID)")
 
         do {
-            if let commitBundle = try coreCrypto.wire_commitPendingProposals(conversationId: groupID.bytes) {
-                try await sendMessage(commitBundle.commit, groupID: groupID, kind: .commit)
-
-                if let welcome = commitBundle.welcome {
-                    try await sendWelcomeMessage(welcome)
-                }
-            } else {
-                logger.warn("no pending proposals to commit")
-            }
+            let events = try await coreCryptoActor.commitPendingProposals(in: groupID)
+            conversationEventProcessor.processConversationEvents(events)
+            clearPendingProposalCommitDate(for: groupID)
+            delegate?.mlsControllerDidCommitPendingProposal(for: groupID)
         } catch {
             logger.info("failed to commit pending proposals in \(groupID): \(String(describing: error))")
             clearPendingProposalCommitDate(for: groupID)
             throw MLSCommitPendingProposalsError.failedToCommitPendingProposals
         }
-
-        clearPendingProposalCommitDate(for: groupID)
-        delegate?.mlsControllerDidCommitPendingProposal(for: groupID)
     }
 
     private func clearPendingProposalCommitDate(for groupID: MLSGroupID) {
