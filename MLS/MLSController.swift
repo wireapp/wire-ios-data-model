@@ -349,7 +349,7 @@ public final class MLSController: MLSControllerProtocol {
             try coreCrypto.wire_commitAccepted(conversationId: groupID.bytes)
         }
 
-        conversationEventProcessor.processConversationEvents(updateEvents)
+        await conversationEventProcessor.processConversationEvents(updateEvents)
     }
 
     private func sendWelcomeMessage(_ bytes:  Bytes) async throws {
@@ -1110,7 +1110,7 @@ private class MLSActionsProvider: MLSActionsProviderProtocol {
 
 public protocol ConversationEventProcessorProtocol {
 
-    func processConversationEvents(_ events: [ZMUpdateEvent])
+    func processConversationEvents(_ events: [ZMUpdateEvent]) async
 
 }
 
