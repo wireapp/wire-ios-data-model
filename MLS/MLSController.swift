@@ -65,6 +65,7 @@ public final class MLSController: MLSControllerProtocol {
 
     private weak var context: NSManagedObjectContext?
     private let coreCrypto: CoreCryptoProtocol
+    private let coreCryptoActor: CoreCryptoActor
     private let conversationEventProcessor: ConversationEventProcessorProtocol
     private let staleKeyMaterialDetector: StaleMLSKeyDetectorProtocol
     private let userDefaults: UserDefaults
@@ -131,6 +132,11 @@ public final class MLSController: MLSControllerProtocol {
     ) {
         self.context = context
         self.coreCrypto = coreCrypto
+        self.coreCryptoActor = CoreCryptoActor(
+            coreCrypto: coreCrypto,
+            context: context,
+            actionsProvider: actionsProvider
+        )
         self.conversationEventProcessor = conversationEventProcessor
         self.staleKeyMaterialDetector = staleKeyMaterialDetector
         self.actionsProvider = actionsProvider
@@ -464,28 +470,14 @@ public final class MLSController: MLSControllerProtocol {
         guard !clientIds.isEmpty else {
             throw MLSRemoveParticipantsError.noClientsToRemove
         }
-        
-        let clientIds =  clientIds.compactMap { $0.string.utf8Data?.bytes }
-        let messageToSend = try removeMembers(id: groupID, clientIds: clientIds)
 
-        try await sendMessageAfterCommitingPendingProposals(
-            message: messageToSend.commit,
-            in: groupID,
-            kind: .commit
-        )
-    }
-
-    private func removeMembers(
-        id: MLSGroupID,
-        clientIds: [ClientId]
-    ) throws -> CommitBundle {
         do {
-            return try coreCrypto.wire_removeClientsFromConversation(
-                conversationId: id.bytes,
-                clients: clientIds
-            )
-        } catch let error {
-            logger.warn("failed to remove members from group (\(id)): \(String(describing: error))")
+            // TODO: [John] commit any pending proposals first.
+            let clientIds =  clientIds.compactMap { $0.string.utf8Data?.bytes }
+            let events = try await coreCryptoActor.removeClients(clientIds, from: groupID)
+            conversationEventProcessor.processConversationEvents(events)
+        } catch {
+            logger.warn("failed to remove members from group (\(groupID)): \(String(describing: error))")
             throw MLSRemoveParticipantsError.failedToRemoveMembers
         }
     }
@@ -1102,7 +1094,7 @@ protocol MLSActionsProviderProtocol {
 
 }
 
-private class MLSActionsProvider: MLSActionsProviderProtocol {
+class MLSActionsProvider: MLSActionsProviderProtocol {
 
     func fetchBackendPublicKeys(
         in context: NotificationContext
