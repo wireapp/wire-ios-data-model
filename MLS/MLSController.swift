@@ -240,15 +240,10 @@ public final class MLSController: MLSControllerProtocol {
     private func updateKeyMaterial(for groupID: MLSGroupID) async {
         do {
             Logging.mls.info("updating key material for group (\(groupID))")
-            let commit = try coreCrypto.wire_updateKeyingMaterial(conversationId: groupID.bytes)
-
-            try await sendMessageAfterCommitingPendingProposals(
-                message: commit.commit,
-                in: groupID,
-                kind: .commit
-            )
-
+            // TODO: commit pending proposals
+            let events = try await coreCryptoActor.updateKeyMaterial(for: groupID)
             staleKeyMaterialDetector.keyingMaterialUpdated(for: groupID)
+            conversationEventProcessor.processConversationEvents(events)
         } catch {
             Logging.mls.warn("failed to update key material for group (\(groupID)): \(String(describing: error))")
         }
@@ -418,7 +413,7 @@ public final class MLSController: MLSControllerProtocol {
     }
 
     /// Add users to MLS group in the given conversation.
-    /// 
+    ///
     /// - Parameters:
     ///   - users: Users represents the MLS group to be added.
     ///   - groupID: Represents the MLS conversation group ID in which users to be added

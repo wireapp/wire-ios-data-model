@@ -26,6 +26,7 @@ actor CoreCryptoActor {
 
         case addMembers([Invitee])
         case removeClients([ClientId])
+        case updateKeyMaterial
 
     }
 
@@ -89,6 +90,18 @@ actor CoreCryptoActor {
         }
     }
 
+    func updateKeyMaterial(for groupID: MLSGroupID) async throws -> [ZMUpdateEvent] {
+        do {
+            let commit = try createCommit(.updateKeyMaterial, in: groupID)
+            let events = try await sendCommit(commit.commit)
+            try mergeCommit(in: groupID)
+            return events
+        } catch CoreCryptoActor.failedToSendCommit {
+            try clearPendingCommit(in: groupID)
+            throw CoreCryptoActor.failedToSendCommit
+        }
+    }
+
     // MARK: - Helpers
 
     private func createCommit(_ commit: Commit, in groupID: MLSGroupID) throws -> CommitBundle {
@@ -111,6 +124,9 @@ actor CoreCryptoActor {
                     conversationId: groupID.bytes,
                     clients: clients
                 )
+
+            case .updateKeyMaterial:
+                return try coreCrypto.wire_updateKeyingMaterial(conversationId: groupID.bytes)
             }
         } catch {
             throw CoreCryptoActor.failedToGenerateCommit
