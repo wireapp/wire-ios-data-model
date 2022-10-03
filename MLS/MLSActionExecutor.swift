@@ -18,7 +18,7 @@
 
 import Foundation
 
-actor CoreCryptoActor {
+actor MLSActionExecutor {
 
     // MARK: - Types
 
@@ -31,7 +31,7 @@ actor CoreCryptoActor {
 
     }
 
-    enum CoreCryptoActorError: Error {
+    enum MLSActionExecutorError: Error {
 
         case failedToGenerateCommit
         case failedToSendCommit
@@ -112,13 +112,13 @@ actor CoreCryptoActor {
                 guard let bundle = try coreCrypto.wire_commitPendingProposals(
                     conversationId: groupID.bytes
                 ) else {
-                    throw CoreCryptoActorError.noPendingProposals
+                    throw MLSActionExecutorError.noPendingProposals
                 }
 
                 return bundle
             }
         } catch {
-            throw CoreCryptoActorError.failedToGenerateCommit
+            throw MLSActionExecutorError.failedToGenerateCommit
         }
     }
 
@@ -135,9 +135,9 @@ actor CoreCryptoActor {
 
             return events
 
-        } catch CoreCryptoActorError.failedToSendCommit {
+        } catch MLSActionExecutorError.failedToSendCommit {
             try clearPendingCommit(in: groupID)
-            throw CoreCryptoActorError.failedToSendCommit
+            throw MLSActionExecutorError.failedToSendCommit
         }
     }
 
@@ -151,7 +151,7 @@ actor CoreCryptoActor {
                 in: context.notificationContext
             )
         } catch {
-            throw CoreCryptoActorError.failedToSendCommit
+            throw MLSActionExecutorError.failedToSendCommit
         }
 
         return events
@@ -164,7 +164,7 @@ actor CoreCryptoActor {
                 in: context.notificationContext
             )
         } catch {
-            throw CoreCryptoActorError.failedToSendWelcome
+            throw MLSActionExecutorError.failedToSendWelcome
         }
     }
 
@@ -174,7 +174,7 @@ actor CoreCryptoActor {
         do {
             try coreCrypto.wire_commitAccepted(conversationId: groupID.bytes)
         } catch {
-            throw CoreCryptoActorError.failedToMergeCommit
+            throw MLSActionExecutorError.failedToMergeCommit
         }
     }
 
@@ -182,7 +182,7 @@ actor CoreCryptoActor {
         do {
             try coreCrypto.wire_clearPendingCommit(conversationId: groupID.bytes)
         } catch {
-            throw CoreCryptoActorError.failedToClearCommit
+            throw MLSActionExecutorError.failedToClearCommit
         }
     }
 

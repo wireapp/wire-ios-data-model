@@ -65,7 +65,7 @@ public final class MLSController: MLSControllerProtocol {
 
     private weak var context: NSManagedObjectContext?
     private let coreCrypto: CoreCryptoProtocol
-    private let coreCryptoActor: CoreCryptoActor
+    private let mlsActionExecutor: MLSActionExecutor
     private let conversationEventProcessor: ConversationEventProcessorProtocol
     private let staleKeyMaterialDetector: StaleMLSKeyDetectorProtocol
     private let userDefaults: UserDefaults
@@ -132,7 +132,7 @@ public final class MLSController: MLSControllerProtocol {
     ) {
         self.context = context
         self.coreCrypto = coreCrypto
-        self.coreCryptoActor = CoreCryptoActor(
+        self.mlsActionExecutor = MLSActionExecutor(
             coreCrypto: coreCrypto,
             context: context,
             actionsProvider: actionsProvider
@@ -241,7 +241,7 @@ public final class MLSController: MLSControllerProtocol {
         do {
             Logging.mls.info("updating key material for group (\(groupID))")
             // TODO: commit pending proposals
-            let events = try await coreCryptoActor.updateKeyMaterial(for: groupID)
+            let events = try await mlsActionExecutor.updateKeyMaterial(for: groupID)
             staleKeyMaterialDetector.keyingMaterialUpdated(for: groupID)
             conversationEventProcessor.processConversationEvents(events)
         } catch {
@@ -429,7 +429,7 @@ public final class MLSController: MLSControllerProtocol {
             // TODO: commit pending proposals
             let keyPackages = try await claimKeyPackages(for: users)
             let invitees = keyPackages.map(Invitee.init(from:))
-            let events = try await coreCryptoActor.addMembers(invitees, to: groupID)
+            let events = try await mlsActionExecutor.addMembers(invitees, to: groupID)
             conversationEventProcessor.processConversationEvents(events)
         } catch {
             logger.warn("failed to add members to group (\(groupID)): \(String(describing: error))")
@@ -459,7 +459,7 @@ public final class MLSController: MLSControllerProtocol {
         do {
             // TODO: [John] commit any pending proposals first.
             let clientIds =  clientIds.compactMap { $0.string.utf8Data?.bytes }
-            let events = try await coreCryptoActor.removeClients(clientIds, from: groupID)
+            let events = try await mlsActionExecutor.removeClients(clientIds, from: groupID)
             conversationEventProcessor.processConversationEvents(events)
         } catch {
             logger.warn("failed to remove members from group (\(groupID)): \(String(describing: error))")
@@ -884,7 +884,7 @@ public final class MLSController: MLSControllerProtocol {
         logger.info("committing pending proposals in: \(groupID)")
 
         do {
-            let events = try await coreCryptoActor.commitPendingProposals(in: groupID)
+            let events = try await mlsActionExecutor.commitPendingProposals(in: groupID)
             conversationEventProcessor.processConversationEvents(events)
             clearPendingProposalCommitDate(for: groupID)
             delegate?.mlsControllerDidCommitPendingProposal(for: groupID)
