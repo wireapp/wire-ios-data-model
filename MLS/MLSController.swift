@@ -420,6 +420,7 @@ public final class MLSController: MLSControllerProtocol {
 
         do {
             // TODO: commit pending proposals
+
             let keyPackages = try await claimKeyPackages(for: users)
             let invitees = keyPackages.map(Invitee.init(from:))
             let events = try await mlsActionExecutor.addMembers(invitees, to: groupID)
@@ -818,9 +819,6 @@ public final class MLSController: MLSControllerProtocol {
         guard context != nil else {
             return
         }
-
-        // Maybe we can split this... overdue.. .commit immediately.
-        // future... collect them all, find the newest, and try again
 
         logger.info("committing any scheduled pending proposals")
 
