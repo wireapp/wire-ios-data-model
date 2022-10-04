@@ -136,7 +136,8 @@ actor MLSActionExecutor {
             return events
 
         } catch MLSActionExecutorError.failedToSendCommit {
-            try clearPendingCommit(in: groupID)
+            // TODO: [John] implement proper error handling
+            //try clearPendingCommit(in: groupID)
             throw MLSActionExecutorError.failedToSendCommit
         }
     }
