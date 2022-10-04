@@ -240,7 +240,7 @@ public final class MLSController: MLSControllerProtocol {
     private func updateKeyMaterial(for groupID: MLSGroupID) async {
         do {
             Logging.mls.info("updating key material for group (\(groupID))")
-            // TODO: commit pending proposals
+            try await commitPendingProposalsIfNeeded(in: groupID)
             let events = try await mlsActionExecutor.updateKeyMaterial(for: groupID)
             staleKeyMaterialDetector.keyingMaterialUpdated(for: groupID)
             conversationEventProcessor.processConversationEvents(events)
@@ -335,19 +335,6 @@ public final class MLSController: MLSControllerProtocol {
 
     }
 
-    private func sendMessageAfterCommitingPendingProposals(
-        message: Bytes,
-        in groupID: MLSGroupID,
-        kind: MessageKind
-    ) async throws {
-        if existsPendingPropsals(in: groupID) {
-            // Sending a message while there are pending proposals will result in an error,
-            // so commit any first.
-            logger.info("preempively commiting pending proposals in group (\(groupID))")
-            try await commitPendingProposals(in: groupID)
-        }
-    }
-
     private func existsPendingPropsals(in groupID: MLSGroupID) -> Bool {
         guard let context = context else { return false }
 
@@ -419,8 +406,7 @@ public final class MLSController: MLSControllerProtocol {
         }
 
         do {
-            // TODO: commit pending proposals
-
+            try await commitPendingProposalsIfNeeded(in: groupID)
             let keyPackages = try await claimKeyPackages(for: users)
             let invitees = keyPackages.map(Invitee.init(from:))
             let events = try await mlsActionExecutor.addMembers(invitees, to: groupID)
@@ -451,7 +437,7 @@ public final class MLSController: MLSControllerProtocol {
         }
 
         do {
-            // TODO: [John] commit any pending proposals first.
+            try await commitPendingProposalsIfNeeded(in: groupID)
             let clientIds =  clientIds.compactMap { $0.string.utf8Data?.bytes }
             let events = try await mlsActionExecutor.removeClients(clientIds, from: groupID)
             conversationEventProcessor.processConversationEvents(events)
@@ -865,6 +851,15 @@ public final class MLSController: MLSControllerProtocol {
             let (lhsCommitDate, rhsCommitDate) = (lhs.1, rhs.1)
             return lhsCommitDate <= rhsCommitDate
         }
+    }
+
+    private func commitPendingProposalsIfNeeded(in groupID: MLSGroupID) async throws {
+        guard existsPendingPropsals(in: groupID) else { return }
+        // Sending a message while there are pending proposals will result in an error,
+        // so commit any first.
+        logger.info("preempively committing pending proposals in group (\(groupID))")
+        try await commitPendingProposals(in: groupID)
+        logger.info("success: committed pending proposals in group (\(groupID))")
     }
 
     func commitPendingProposals(in groupID: MLSGroupID) async throws {
