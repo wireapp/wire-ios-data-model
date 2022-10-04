@@ -65,7 +65,7 @@ public final class MLSController: MLSControllerProtocol {
 
     private weak var context: NSManagedObjectContext?
     private let coreCrypto: CoreCryptoProtocol
-    private let mlsActionExecutor: MLSActionExecutor
+    private let mlsActionExecutor: MLSActionExecutorProtocol
     private let conversationEventProcessor: ConversationEventProcessorProtocol
     private let staleKeyMaterialDetector: StaleMLSKeyDetectorProtocol
     private let userDefaults: UserDefaults
@@ -124,6 +124,7 @@ public final class MLSController: MLSControllerProtocol {
     init(
         context: NSManagedObjectContext,
         coreCrypto: CoreCryptoProtocol,
+        mlsActionExecutor: MLSActionExecutorProtocol? = nil,
         conversationEventProcessor: ConversationEventProcessorProtocol,
         staleKeyMaterialDetector: StaleMLSKeyDetectorProtocol,
         userDefaults: UserDefaults,
@@ -132,7 +133,7 @@ public final class MLSController: MLSControllerProtocol {
     ) {
         self.context = context
         self.coreCrypto = coreCrypto
-        self.mlsActionExecutor = MLSActionExecutor(
+        self.mlsActionExecutor = mlsActionExecutor ?? MLSActionExecutor(
             coreCrypto: coreCrypto,
             context: context,
             actionsProvider: actionsProvider

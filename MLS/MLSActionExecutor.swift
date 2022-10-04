@@ -18,7 +18,16 @@
 
 import Foundation
 
-actor MLSActionExecutor {
+protocol MLSActionExecutorProtocol {
+
+    func addMembers(_ invitees: [Invitee], to groupID: MLSGroupID) async throws -> [ZMUpdateEvent]
+    func removeClients(_ clients: [ClientId], from groupID: MLSGroupID) async throws -> [ZMUpdateEvent]
+    func updateKeyMaterial(for groupID: MLSGroupID) async throws -> [ZMUpdateEvent]
+    func commitPendingProposals(in groupID: MLSGroupID) async throws -> [ZMUpdateEvent]
+
+}
+
+actor MLSActionExecutor: MLSActionExecutorProtocol {
 
     // MARK: - Types
 
