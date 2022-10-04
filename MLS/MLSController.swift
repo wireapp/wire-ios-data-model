@@ -986,7 +986,7 @@ private extension MLSController.MLSSendMessageError {
 
 }
 
-private extension String {
+extension String {
 
     var utf8Data: Data? {
         return data(using: .utf8)

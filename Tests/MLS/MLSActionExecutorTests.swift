@@ -44,9 +44,18 @@ class MLSActionExecutorTests: ZMBaseManagedObjectTest {
         super.tearDown()
     }
 
-    func mockUpdateEvent() -> ZMUpdateEvent {
+    func mockMemberJoinUpdateEvent() -> ZMUpdateEvent {
         let payload: NSDictionary = [
             "type": "conversation.member-join",
+            "data": "foo"
+        ]
+
+        return ZMUpdateEvent(fromEventStreamPayload: payload, uuid: nil)!
+    }
+
+    func mockMemberLeaveUpdateEvent() -> ZMUpdateEvent {
+        let payload: NSDictionary = [
+            "type": "conversation.member-leave",
             "data": "foo"
         ]
 
@@ -62,7 +71,7 @@ class MLSActionExecutorTests: ZMBaseManagedObjectTest {
 
         let mockCommit = Bytes.random()
         let mockWelcome = Bytes.random()
-        let mockUpdateEvent = mockUpdateEvent()
+        let mockUpdateEvent = mockMemberJoinUpdateEvent()
 
         // Mock add clients.
         var mockAddClientsArguments = [(Bytes, [Invitee])]()
@@ -120,8 +129,199 @@ class MLSActionExecutorTests: ZMBaseManagedObjectTest {
 
     // MARK: - Remove clients
 
+    func test_RemoveClients() async throws {
+        // Given
+        let groupID = MLSGroupID(.random())
+        let mlsClientID = MLSClientID(
+            userID: UUID.create().uuidString,
+            clientID: UUID.create().uuidString,
+            domain: "example.com"
+        )
+
+        let clientIds =  [mlsClientID].compactMap { $0.string.utf8Data?.bytes }
+
+        let mockCommit = Bytes.random()
+        let mockWelcome = Bytes.random()
+        let mockUpdateEvent = mockMemberLeaveUpdateEvent()
+
+        // Mock remove clients.
+        var mockRemoveClientsArguments = [(Bytes, [ClientId])]()
+        mockCoreCrypto.mockRemoveClientsFromConversation = {
+            mockRemoveClientsArguments.append(($0, $1))
+            return CommitBundle(
+                welcome: mockWelcome,
+                commit: mockCommit,
+                publicGroupState: []
+            )
+        }
+
+        // Mock send commit.
+        var mockSendCommitArguments = [Data]()
+        mockActionsProvider.sendMessageMocks.append({
+            mockSendCommitArguments.append($0)
+            return [mockUpdateEvent]
+        })
+
+        // Mock merge commit.
+        var mockCommitAcceptedArguments = [Bytes]()
+        mockCoreCrypto.mockCommitAccepted = {
+            mockCommitAcceptedArguments.append($0)
+        }
+
+        // Mock send welcome message.
+        var mockSendWelcomeArguments = [Data]()
+        mockActionsProvider.sendWelcomeMessageMocks.append({
+            mockSendWelcomeArguments.append($0)
+        })
+
+        // When
+        let updateEvents = try await sut.removeClients(clientIds, from: groupID)
+
+        // Then core crypto removes the members.
+        XCTAssertEqual(mockRemoveClientsArguments.count, 1)
+        XCTAssertEqual(mockRemoveClientsArguments.first?.0, groupID.bytes)
+        XCTAssertEqual(mockRemoveClientsArguments.first?.1, clientIds)
+
+        // Then the commit was sent.
+        XCTAssertEqual(mockSendCommitArguments.count, 1)
+        XCTAssertEqual(mockSendCommitArguments.first, mockCommit.data)
+
+        // Then the commit was merged.
+        XCTAssertEqual(mockCommitAcceptedArguments.count, 1)
+        XCTAssertEqual(mockCommitAcceptedArguments.first, groupID.bytes)
+
+        // Then the welcome was sent.
+        XCTAssertEqual(mockSendWelcomeArguments.count, 1)
+        XCTAssertEqual(mockSendWelcomeArguments.first, mockWelcome.data)
+
+        // Then the update event was returned.
+        XCTAssertEqual(updateEvents, [mockUpdateEvent])
+    }
+
     // MARK: - Update key material
 
+    func test_UpdateKeyMaterial() async throws {
+        // Given
+        let groupID = MLSGroupID(.random())
+
+        let mockCommit = Bytes.random()
+        let mockWelcome = Bytes.random()
+        let mockUpdateEvent = mockMemberJoinUpdateEvent()
+
+        // Mock Update key material.
+        var mockUpdateKeyMaterialArguments = [Bytes]()
+        mockCoreCrypto.mockUpdateKeyingMaterial = {
+            mockUpdateKeyMaterialArguments.append($0)
+            return CommitBundle(
+                welcome: mockWelcome,
+                commit: mockCommit,
+                publicGroupState: []
+            )
+        }
+
+        // Mock send commit.
+        var mockSendCommitArguments = [Data]()
+        mockActionsProvider.sendMessageMocks.append({
+            mockSendCommitArguments.append($0)
+            return [mockUpdateEvent]
+        })
+
+        // Mock merge commit.
+        var mockCommitAcceptedArguments = [Bytes]()
+        mockCoreCrypto.mockCommitAccepted = {
+            mockCommitAcceptedArguments.append($0)
+        }
+
+        // Mock send welcome message.
+        var mockSendWelcomeArguments = [Data]()
+        mockActionsProvider.sendWelcomeMessageMocks.append({
+            mockSendWelcomeArguments.append($0)
+        })
+
+        // When
+        let updateEvents = try await sut.updateKeyMaterial(for: groupID)
+
+        // Then core crypto update key materials.
+        XCTAssertEqual(mockUpdateKeyMaterialArguments.count, 1)
+        XCTAssertEqual(mockUpdateKeyMaterialArguments.first, groupID.bytes)
+
+        // Then the commit was sent.
+        XCTAssertEqual(mockSendCommitArguments.count, 1)
+        XCTAssertEqual(mockSendCommitArguments.first, mockCommit.data)
+
+        // Then the commit was merged.
+        XCTAssertEqual(mockCommitAcceptedArguments.count, 1)
+        XCTAssertEqual(mockCommitAcceptedArguments.first, groupID.bytes)
+
+        // Then the welcome was sent.
+        XCTAssertEqual(mockSendWelcomeArguments.count, 1)
+        XCTAssertEqual(mockSendWelcomeArguments.first, mockWelcome.data)
+
+        // Then the update event was returned.
+        XCTAssertEqual(updateEvents, [mockUpdateEvent])
+    }
+
     // MARK: - Commit pending proposals
+
+    func test_CommitPendingProposals() async throws {
+        // Given
+        let groupID = MLSGroupID(.random())
+
+        let mockCommit = Bytes.random()
+        let mockWelcome = Bytes.random()
+        let mockUpdateEvent = mockMemberLeaveUpdateEvent()
+
+        // Mock Commit pending proposals.
+        var mockCommitPendingProposals = [Bytes]()
+        mockCoreCrypto.mockCommitPendingProposals = {
+            mockCommitPendingProposals.append($0)
+            return CommitBundle(
+                welcome: mockWelcome,
+                commit: mockCommit,
+                publicGroupState: []
+            )
+        }
+
+        // Mock send commit.
+        var mockSendCommitArguments = [Data]()
+        mockActionsProvider.sendMessageMocks.append({
+            mockSendCommitArguments.append($0)
+            return [mockUpdateEvent]
+        })
+
+        // Mock merge commit.
+        var mockCommitAcceptedArguments = [Bytes]()
+        mockCoreCrypto.mockCommitAccepted = {
+            mockCommitAcceptedArguments.append($0)
+        }
+
+        // Mock send welcome message.
+        var mockSendWelcomeArguments = [Data]()
+        mockActionsProvider.sendWelcomeMessageMocks.append({
+            mockSendWelcomeArguments.append($0)
+        })
+
+        // When
+        let updateEvents = try await sut.commitPendingProposals(in: groupID)
+
+        // Then core crypto commit pending proposals.
+        XCTAssertEqual(mockCommitPendingProposals.count, 1)
+        XCTAssertEqual(mockCommitPendingProposals.first, groupID.bytes)
+
+        // Then the commit was sent.
+        XCTAssertEqual(mockSendCommitArguments.count, 1)
+        XCTAssertEqual(mockSendCommitArguments.first, mockCommit.data)
+
+        // Then the commit was merged.
+        XCTAssertEqual(mockCommitAcceptedArguments.count, 1)
+        XCTAssertEqual(mockCommitAcceptedArguments.first, groupID.bytes)
+
+        // Then the welcome was sent.
+        XCTAssertEqual(mockSendWelcomeArguments.count, 1)
+        XCTAssertEqual(mockSendWelcomeArguments.first, mockWelcome.data)
+
+        // Then the update event was returned.
+        XCTAssertEqual(updateEvents, [mockUpdateEvent])
+    }
 
 }
