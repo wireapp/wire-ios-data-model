@@ -141,7 +141,6 @@ class MLSActionExecutorTests: ZMBaseManagedObjectTest {
         let clientIds =  [mlsClientID].compactMap { $0.string.utf8Data?.bytes }
 
         let mockCommit = Bytes.random()
-        let mockWelcome = Bytes.random()
         let mockUpdateEvent = mockMemberLeaveUpdateEvent()
 
         // Mock remove clients.
@@ -149,7 +148,7 @@ class MLSActionExecutorTests: ZMBaseManagedObjectTest {
         mockCoreCrypto.mockRemoveClientsFromConversation = {
             mockRemoveClientsArguments.append(($0, $1))
             return CommitBundle(
-                welcome: mockWelcome,
+                welcome: nil,
                 commit: mockCommit,
                 publicGroupState: []
             )
@@ -190,9 +189,8 @@ class MLSActionExecutorTests: ZMBaseManagedObjectTest {
         XCTAssertEqual(mockCommitAcceptedArguments.count, 1)
         XCTAssertEqual(mockCommitAcceptedArguments.first, groupID.bytes)
 
-        // Then the welcome was sent.
-        XCTAssertEqual(mockSendWelcomeArguments.count, 1)
-        XCTAssertEqual(mockSendWelcomeArguments.first, mockWelcome.data)
+        // Then no welcome was sent.
+        XCTAssertEqual(mockSendWelcomeArguments.count, 0)
 
         // Then the update event was returned.
         XCTAssertEqual(updateEvents, [mockUpdateEvent])
@@ -204,8 +202,7 @@ class MLSActionExecutorTests: ZMBaseManagedObjectTest {
         // Given
         let groupID = MLSGroupID(.random())
 
-        let mockCommit = Bytes.random()
-        let mockWelcome = Bytes.random()
+        let mockCommit = Bytes.random())
         let mockUpdateEvent = mockMemberJoinUpdateEvent()
 
         // Mock Update key material.
@@ -213,7 +210,7 @@ class MLSActionExecutorTests: ZMBaseManagedObjectTest {
         mockCoreCrypto.mockUpdateKeyingMaterial = {
             mockUpdateKeyMaterialArguments.append($0)
             return CommitBundle(
-                welcome: mockWelcome,
+                welcome: nil,
                 commit: mockCommit,
                 publicGroupState: []
             )
@@ -253,9 +250,8 @@ class MLSActionExecutorTests: ZMBaseManagedObjectTest {
         XCTAssertEqual(mockCommitAcceptedArguments.count, 1)
         XCTAssertEqual(mockCommitAcceptedArguments.first, groupID.bytes)
 
-        // Then the welcome was sent.
-        XCTAssertEqual(mockSendWelcomeArguments.count, 1)
-        XCTAssertEqual(mockSendWelcomeArguments.first, mockWelcome.data)
+        // Then no welcome was sent.
+        XCTAssertEqual(mockSendWelcomeArguments.count, 0)
 
         // Then the update event was returned.
         XCTAssertEqual(updateEvents, [mockUpdateEvent])
