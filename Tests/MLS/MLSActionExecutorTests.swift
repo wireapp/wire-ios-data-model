@@ -203,7 +203,6 @@ class MLSActionExecutorTests: ZMBaseManagedObjectTest {
         let groupID = MLSGroupID(.random())
 
         let mockCommit = Bytes.random())
-        let mockUpdateEvent = mockMemberJoinUpdateEvent()
 
         // Mock Update key material.
         var mockUpdateKeyMaterialArguments = [Bytes]()
@@ -220,7 +219,7 @@ class MLSActionExecutorTests: ZMBaseManagedObjectTest {
         var mockSendCommitArguments = [Data]()
         mockActionsProvider.sendMessageMocks.append({
             mockSendCommitArguments.append($0)
-            return [mockUpdateEvent]
+            return []
         })
 
         // Mock merge commit.
@@ -253,8 +252,8 @@ class MLSActionExecutorTests: ZMBaseManagedObjectTest {
         // Then no welcome was sent.
         XCTAssertEqual(mockSendWelcomeArguments.count, 0)
 
-        // Then the update event was returned.
-        XCTAssertEqual(updateEvents, [mockUpdateEvent])
+        // Then no update events were returned.
+        XCTAssertEqual(updateEvents, [])
     }
 
     // MARK: - Commit pending proposals
