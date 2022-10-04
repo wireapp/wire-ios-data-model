@@ -202,7 +202,7 @@ class MLSActionExecutorTests: ZMBaseManagedObjectTest {
         // Given
         let groupID = MLSGroupID(.random())
 
-        let mockCommit = Bytes.random())
+        let mockCommit = Bytes.random()
 
         // Mock Update key material.
         var mockUpdateKeyMaterialArguments = [Bytes]()
