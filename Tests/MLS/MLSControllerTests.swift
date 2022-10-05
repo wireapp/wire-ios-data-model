@@ -510,7 +510,7 @@ class MLSControllerTests: ZMConversationTestsBase, MLSControllerDelegate {
         })
 
         mockMLSActionExecutor.mockAddMembers = { _, _ in
-            throw MLSActionExecutor.MLSActionExecutorError.failedToGenerateCommit
+            throw MLSActionExecutor.Error.failedToGenerateCommit
         }
 
         // when / then
@@ -639,7 +639,7 @@ class MLSControllerTests: ZMConversationTestsBase, MLSControllerDelegate {
 
         // Mock executor error.
         mockMLSActionExecutor.mockRemoveClients = { _, _ in
-            throw MLSActionExecutor.MLSActionExecutorError.failedToSendCommit
+            throw MLSActionExecutor.Error.failedToSendCommit
         }
 
         // When / Then
