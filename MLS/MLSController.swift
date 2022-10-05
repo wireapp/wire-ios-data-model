@@ -864,10 +864,6 @@ public final class MLSController: MLSControllerProtocol {
     }
 
     func commitPendingProposals(in groupID: MLSGroupID) async throws {
-        guard context != nil else {
-            return
-        }
-
         logger.info("committing pending proposals in: \(groupID)")
 
         do {
