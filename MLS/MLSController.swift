@@ -889,6 +889,44 @@ public final class MLSController: MLSControllerProtocol {
         }
     }
 
+    // MARK: - Error recovery
+
+    private func retryOnCommitFailure(
+        for groupID: MLSGroupID,
+        operation: @escaping () async throws -> Void
+    ) async throws {
+        do {
+            try await operation()
+        } catch MLSActionExecutor.Error.failedToSendCommit(recovery: .commitPendingProposalsAfterQuickSync) {
+            logger.warn("failed to send commit, syncing then committing pending proposals...")
+            performQuickSyncThen { [weak self] in
+                try await self?.commitPendingProposals(in: groupID)
+            }
+        } catch MLSActionExecutor.Error.failedToSendCommit(recovery: .retryAfterQuickSync) {
+            logger.warn("failed to send commit, syncing then retrying operation...")
+            performQuickSyncThen(operation)
+        } catch MLSActionExecutor.Error.failedToSendCommit(recovery: .giveUp) {
+            logger.warn("failed to send commit, giving up...")
+            // TODO: inform user
+            throw MLSActionExecutor.Error.failedToSendCommit(recovery: .giveUp)
+        }
+    }
+
+    private func performQuickSyncThen(_ operation: @escaping (() async throws -> Void)) {
+        operationToRetryAfterQuickSync = operation
+        // Request quick sync
+    }
+
+    private var operationToRetryAfterQuickSync: (() async throws -> Void)?
+
+    public func quickSyncDidFinish() {
+        Task {
+            try? await operationToRetryAfterQuickSync?()
+            operationToRetryAfterQuickSync = nil
+        }
+
+    }
+
 }
 
 // MARK: -  Helper types
