@@ -1225,10 +1225,3 @@ extension UserDefaults {
         lastKeyPackageCountDate = date
     }
 }
-
-public protocol SyncStatusProtocol {
-
-    func performQuickSync() async
-
-}
-
