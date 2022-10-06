@@ -460,6 +460,7 @@ public final class MLSController: MLSControllerProtocol {
         for groupID: MLSGroupID
     ) async throws {
         do {
+            logger.info("removing members from group (\(groupID)), members: \(clientIds)")
             guard !clientIds.isEmpty else { throw MLSRemoveParticipantsError.noClientsToRemove }
             let clientIds =  clientIds.compactMap { $0.string.utf8Data?.bytes }
             let events = try await mlsActionExecutor.removeClients(clientIds, from: groupID)
