@@ -938,24 +938,9 @@ public final class MLSController: MLSControllerProtocol {
 
         } catch MLSActionExecutor.Error.failedToSendCommit(recovery: .giveUp) {
             logger.warn("failed to send commit, giving up...")
-            // TODO: inform user
+            // TODO: [John] inform user
             throw MLSActionExecutor.Error.failedToSendCommit(recovery: .giveUp)
         }
-    }
-
-    private func performQuickSyncThen(_ operation: @escaping (() async throws -> Void)) {
-        operationToRetryAfterQuickSync = operation
-        // Request quick sync
-    }
-
-    private var operationToRetryAfterQuickSync: (() async throws -> Void)?
-
-    public func quickSyncDidFinish() {
-        Task {
-            try? await operationToRetryAfterQuickSync?()
-            operationToRetryAfterQuickSync = nil
-        }
-
     }
 
 }
