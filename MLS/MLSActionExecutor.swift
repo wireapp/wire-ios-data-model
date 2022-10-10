@@ -197,7 +197,10 @@ actor MLSActionExecutor: MLSActionExecutorProtocol {
 
                 return bundle
             }
+        } catch Error.noPendingProposals {
+            throw Error.noPendingProposals
         } catch {
+            Logging.mls.warn("failed: generating commit for action (\(String(describing: action))) for group (\(groupID)): \(String(describing: error))")
             throw Error.failedToGenerateCommit
         }
     }
