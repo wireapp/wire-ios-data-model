@@ -901,6 +901,7 @@ public final class MLSController: MLSControllerProtocol {
             delegate?.mlsControllerDidCommitPendingProposal(for: groupID)
         } catch MLSActionExecutor.Error.noPendingProposals {
             logger.info("no proposals to commit in group (\(groupID))...")
+            clearPendingProposalCommitDate(for: groupID)
         } catch {
             logger.info("failed to commit pending proposals in \(groupID): \(String(describing: error))")
             throw error
