@@ -49,6 +49,8 @@ public protocol MLSControllerProtocol {
 
     func commitPendingProposals() async throws
 
+    func commitPendingProposals(in groupID: MLSGroupID) async throws
+
     func scheduleCommitPendingProposals(groupID: MLSGroupID, at commitDate: Date)
 }
 
@@ -725,8 +727,6 @@ public final class MLSController: MLSControllerProtocol {
     }
 
     public func encrypt(message: Bytes, for groupID: MLSGroupID) throws -> Bytes {
-        try await commitPendingProposals(in: groupID)
-
         do {
             logger.info("encrypting message (\(message.count) bytes) for group (\(groupID))")
             return try coreCrypto.wire_encryptMessage(conversationId: groupID.bytes, message: message)
@@ -888,7 +888,7 @@ public final class MLSController: MLSControllerProtocol {
         logger.info("success: committed pending proposals in group (\(groupID))")
     }
 
-    func commitPendingProposals(in groupID: MLSGroupID) async throws {
+    public func commitPendingProposals(in groupID: MLSGroupID) async throws {
         try await retryOnCommitFailure(for: groupID) { [weak self] in
             try await self?.internalCommitPendingProposals(in: groupID)
         }
