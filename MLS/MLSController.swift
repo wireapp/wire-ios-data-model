@@ -725,9 +725,10 @@ public final class MLSController: MLSControllerProtocol {
     }
 
     public func encrypt(message: Bytes, for groupID: MLSGroupID) throws -> Bytes {
-        logger.info("encrypting message (\(message.count) bytes) for group (\(groupID))")
+        try await commitPendingProposals(in: groupID)
 
         do {
+            logger.info("encrypting message (\(message.count) bytes) for group (\(groupID))")
             return try coreCrypto.wire_encryptMessage(conversationId: groupID.bytes, message: message)
         } catch let error {
             logger.warn("failed to encrypt message for group (\(groupID)): \(String(describing: error))")
