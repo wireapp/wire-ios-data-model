@@ -318,7 +318,6 @@
 		7A2778C6285223D90044A73F /* KeychainManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A2778C5285223D90044A73F /* KeychainManager.swift */; };
 		7A2778C8285329210044A73F /* KeychainManagerTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A2778C7285329210044A73F /* KeychainManagerTests.swift */; };
 		7ABAD028287D92BF002071A1 /* MLSQualifiedClientID.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7ABAD027287D92BF002071A1 /* MLSQualifiedClientID.swift */; };
-		7AFC6A2D2876E9BF000FF1A1 /* SendMLSWelcomeAction.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7AFC6A282876E9BF000FF1A1 /* SendMLSWelcomeAction.swift */; };
 		7AFC6A2E2876E9BF000FF1A1 /* UploadSelfMLSKeyPackagesAction.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7AFC6A292876E9BF000FF1A1 /* UploadSelfMLSKeyPackagesAction.swift */; };
 		7AFC6A2F2876E9BF000FF1A1 /* ClaimMLSKeyPackageAction.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7AFC6A2A2876E9BF000FF1A1 /* ClaimMLSKeyPackageAction.swift */; };
 		7AFC6A302876E9BF000FF1A1 /* CountSelfMLSKeyPackagesAction.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7AFC6A2B2876E9BF000FF1A1 /* CountSelfMLSKeyPackagesAction.swift */; };
@@ -1127,7 +1126,6 @@
 		7A2778C5285223D90044A73F /* KeychainManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KeychainManager.swift; sourceTree = "<group>"; };
 		7A2778C7285329210044A73F /* KeychainManagerTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KeychainManagerTests.swift; sourceTree = "<group>"; };
 		7ABAD027287D92BF002071A1 /* MLSQualifiedClientID.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = MLSQualifiedClientID.swift; sourceTree = "<group>"; };
-		7AFC6A282876E9BF000FF1A1 /* SendMLSWelcomeAction.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = SendMLSWelcomeAction.swift; sourceTree = "<group>"; };
 		7AFC6A292876E9BF000FF1A1 /* UploadSelfMLSKeyPackagesAction.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = UploadSelfMLSKeyPackagesAction.swift; sourceTree = "<group>"; };
 		7AFC6A2A2876E9BF000FF1A1 /* ClaimMLSKeyPackageAction.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ClaimMLSKeyPackageAction.swift; sourceTree = "<group>"; };
 		7AFC6A2B2876E9BF000FF1A1 /* CountSelfMLSKeyPackagesAction.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = CountSelfMLSKeyPackagesAction.swift; sourceTree = "<group>"; };
@@ -1918,7 +1916,6 @@
 				7AFC6A2A2876E9BF000FF1A1 /* ClaimMLSKeyPackageAction.swift */,
 				7AFC6A2B2876E9BF000FF1A1 /* CountSelfMLSKeyPackagesAction.swift */,
 				7AFC6A2C2876E9BF000FF1A1 /* SendMLSMessageAction.swift */,
-				7AFC6A282876E9BF000FF1A1 /* SendMLSWelcomeAction.swift */,
 				7AFC6A292876E9BF000FF1A1 /* UploadSelfMLSKeyPackagesAction.swift */,
 				EEC8064928CF4BAD00DD58E9 /* FetchBackendMLSPublicKeysAction.swift */,
 				6397F6DF28F4447700298DB1 /* SendCommitBundleAction.swift */,
@@ -3597,7 +3594,6 @@
 				F9A706A41CAEE01D00C2F5FE /* ConversationChangeInfo.swift in Sources */,
 				A943BBE825B5A59D003D66BA /* ConversationLike.swift in Sources */,
 				062FD8852756053800B9DE39 /* Feature.ConversationGuestLinks.swift in Sources */,
-				7AFC6A2D2876E9BF000FF1A1 /* SendMLSWelcomeAction.swift in Sources */,
 				F9B71F0D1CB264DF001DB03F /* ZMConversationListDirectory.m in Sources */,
 				A949418F23E1DB79001B0373 /* ZMConnection+Fetch.swift in Sources */,
 				EEC47ED627A81EF60020B599 /* Feature+ClassifiedDomains.swift in Sources */,
