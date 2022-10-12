@@ -809,10 +809,11 @@ public final class MLSController: MLSControllerProtocol {
             return
         }
 
-        logger.info("schedule to commit pending proposals in \(groupID) at \(commitDate)")
-
-        let conversation = ZMConversation.fetch(with: groupID, in: context)
-        conversation?.commitPendingProposalDate = commitDate
+        context.performAndWait {
+            logger.info("schedule to commit pending proposals in \(groupID) at \(commitDate)")
+            let conversation = ZMConversation.fetch(with: groupID, in: context)
+            conversation?.commitPendingProposalDate = commitDate
+        }
     }
 
     enum MLSCommitPendingProposalsError: Error {
