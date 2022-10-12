@@ -882,7 +882,7 @@ public final class MLSController: MLSControllerProtocol {
         guard existsPendingPropsals(in: groupID) else { return }
         // Sending a message while there are pending proposals will result in an error,
         // so commit any first.
-        logger.info("preempively committing pending proposals in group (\(groupID))")
+        logger.info("preemptively committing pending proposals in group (\(groupID))")
         try await commitPendingProposals(in: groupID)
         logger.info("success: committed pending proposals in group (\(groupID))")
     }
@@ -932,11 +932,13 @@ public final class MLSController: MLSControllerProtocol {
         } catch MLSActionExecutor.Error.failedToSendCommit(recovery: .commitPendingProposalsAfterQuickSync) {
             logger.warn("failed to send commit, syncing then committing pending proposals...")
             await syncStatus.performQuickSync()
+            logger.info("sync finished, committing pending proposals...")
             try await commitPendingProposals(in: groupID)
 
         } catch MLSActionExecutor.Error.failedToSendCommit(recovery: .retryAfterQuickSync) {
             logger.warn("failed to send commit, syncing then retrying operation...")
             await syncStatus.performQuickSync()
+            logger.info("sync finished, retying operation...")
             try await retryOnCommitFailure(for: groupID, operation: operation)
 
         } catch MLSActionExecutor.Error.failedToSendCommit(recovery: .giveUp) {
