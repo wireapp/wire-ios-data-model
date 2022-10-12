@@ -71,6 +71,7 @@ class MLSActionExecutorTests: ZMBaseManagedObjectTest {
 
         let mockCommit = Bytes.random()
         let mockWelcome = Bytes.random()
+        let mockPublicGroupState = Bytes.random()
         let mockUpdateEvent = mockMemberJoinUpdateEvent()
 
         // Mock add clients.
@@ -80,14 +81,14 @@ class MLSActionExecutorTests: ZMBaseManagedObjectTest {
             return MemberAddedMessages(
                 commit: mockCommit,
                 welcome: mockWelcome,
-                publicGroupState: []
+                publicGroupState: mockPublicGroupState
             )
         }
 
-        // Mock send commit.
-        var mockSendCommitArguments = [Data]()
-        mockActionsProvider.sendMessageMocks.append({
-            mockSendCommitArguments.append($0)
+        // Mock send commit bundle.
+        var mockSendCommitBundleArguments = [Data]()
+        mockActionsProvider.sendCommitBundleMocks.append({
+            mockSendCommitBundleArguments.append($0)
             return [mockUpdateEvent]
         })
 
@@ -97,12 +98,6 @@ class MLSActionExecutorTests: ZMBaseManagedObjectTest {
             mockCommitAcceptedArguments.append($0)
         }
 
-        // Mock send welcome message.
-        var mockSendWelcomeArguments = [Data]()
-        mockActionsProvider.sendWelcomeMessageMocks.append({
-            mockSendWelcomeArguments.append($0)
-        })
-
         // When
         let updateEvents = try await sut.addMembers(invitees, to: groupID)
 
@@ -111,17 +106,14 @@ class MLSActionExecutorTests: ZMBaseManagedObjectTest {
         XCTAssertEqual(mockAddClientsArguments.first?.0, groupID.bytes)
         XCTAssertEqual(mockAddClientsArguments.first?.1, invitees)
 
-        // Then the commit was sent.
-        XCTAssertEqual(mockSendCommitArguments.count, 1)
-        XCTAssertEqual(mockSendCommitArguments.first, mockCommit.data)
+        // Then the commit bundle was sent.
+        XCTAssertEqual(mockSendCommitBundleArguments.count, 1)
+        // TODO: (David) test that the argument is equal to the commit bundle data
+        // XCTAssertEqual(mockSendCommitBundleArguments.first, commitBundle.data)
 
         // Then the commit was merged.
         XCTAssertEqual(mockCommitAcceptedArguments.count, 1)
         XCTAssertEqual(mockCommitAcceptedArguments.first, groupID.bytes)
-
-        // Then the welcome was sent.
-        XCTAssertEqual(mockSendWelcomeArguments.count, 1)
-        XCTAssertEqual(mockSendWelcomeArguments.first, mockWelcome.data)
 
         // Then the update event was returned.
         XCTAssertEqual(updateEvents, [mockUpdateEvent])
@@ -141,6 +133,7 @@ class MLSActionExecutorTests: ZMBaseManagedObjectTest {
         let clientIds =  [mlsClientID].compactMap { $0.string.utf8Data?.bytes }
 
         let mockCommit = Bytes.random()
+        let mockPublicGroupState = Bytes.random()
         let mockUpdateEvent = mockMemberLeaveUpdateEvent()
 
         // Mock remove clients.
@@ -150,14 +143,14 @@ class MLSActionExecutorTests: ZMBaseManagedObjectTest {
             return CommitBundle(
                 welcome: nil,
                 commit: mockCommit,
-                publicGroupState: []
+                publicGroupState: mockPublicGroupState
             )
         }
 
-        // Mock send commit.
-        var mockSendCommitArguments = [Data]()
-        mockActionsProvider.sendMessageMocks.append({
-            mockSendCommitArguments.append($0)
+        // Mock send commit bundle.
+        var mockSendCommitBundleArguments = [Data]()
+        mockActionsProvider.sendCommitBundleMocks.append({
+            mockSendCommitBundleArguments.append($0)
             return [mockUpdateEvent]
         })
 
@@ -167,12 +160,6 @@ class MLSActionExecutorTests: ZMBaseManagedObjectTest {
             mockCommitAcceptedArguments.append($0)
         }
 
-        // Mock send welcome message.
-        var mockSendWelcomeArguments = [Data]()
-        mockActionsProvider.sendWelcomeMessageMocks.append({
-            mockSendWelcomeArguments.append($0)
-        })
-
         // When
         let updateEvents = try await sut.removeClients(clientIds, from: groupID)
 
@@ -181,16 +168,14 @@ class MLSActionExecutorTests: ZMBaseManagedObjectTest {
         XCTAssertEqual(mockRemoveClientsArguments.first?.0, groupID.bytes)
         XCTAssertEqual(mockRemoveClientsArguments.first?.1, clientIds)
 
-        // Then the commit was sent.
-        XCTAssertEqual(mockSendCommitArguments.count, 1)
-        XCTAssertEqual(mockSendCommitArguments.first, mockCommit.data)
+        // Then the commit bundle was sent.
+        XCTAssertEqual(mockSendCommitBundleArguments.count, 1)
+        // TODO: (David) test that the argument is equal to the commit bundle data
+        // XCTAssertEqual(mockSendCommitBundleArguments.first, commitBundle.data)
 
         // Then the commit was merged.
         XCTAssertEqual(mockCommitAcceptedArguments.count, 1)
         XCTAssertEqual(mockCommitAcceptedArguments.first, groupID.bytes)
-
-        // Then no welcome was sent.
-        XCTAssertEqual(mockSendWelcomeArguments.count, 0)
 
         // Then the update event was returned.
         XCTAssertEqual(updateEvents, [mockUpdateEvent])
@@ -215,10 +200,10 @@ class MLSActionExecutorTests: ZMBaseManagedObjectTest {
             )
         }
 
-        // Mock send commit.
-        var mockSendCommitArguments = [Data]()
-        mockActionsProvider.sendMessageMocks.append({
-            mockSendCommitArguments.append($0)
+        // Mock send commit bundle.
+        var mockSendCommitBundleArguments = [Data]()
+        mockActionsProvider.sendCommitBundleMocks.append({
+            mockSendCommitBundleArguments.append($0)
             return []
         })
 
@@ -228,12 +213,6 @@ class MLSActionExecutorTests: ZMBaseManagedObjectTest {
             mockCommitAcceptedArguments.append($0)
         }
 
-        // Mock send welcome message.
-        var mockSendWelcomeArguments = [Data]()
-        mockActionsProvider.sendWelcomeMessageMocks.append({
-            mockSendWelcomeArguments.append($0)
-        })
-
         // When
         let updateEvents = try await sut.updateKeyMaterial(for: groupID)
 
@@ -241,16 +220,14 @@ class MLSActionExecutorTests: ZMBaseManagedObjectTest {
         XCTAssertEqual(mockUpdateKeyMaterialArguments.count, 1)
         XCTAssertEqual(mockUpdateKeyMaterialArguments.first, groupID.bytes)
 
-        // Then the commit was sent.
-        XCTAssertEqual(mockSendCommitArguments.count, 1)
-        XCTAssertEqual(mockSendCommitArguments.first, mockCommit.data)
+        // Then the commit bundle was sent.
+        XCTAssertEqual(mockSendCommitBundleArguments.count, 1)
+        // TODO: (David) test that the argument is equal to the commit bundle data
+        // XCTAssertEqual(mockSendCommitBundleArguments.first, commitBundle.data)
 
         // Then the commit was merged.
         XCTAssertEqual(mockCommitAcceptedArguments.count, 1)
         XCTAssertEqual(mockCommitAcceptedArguments.first, groupID.bytes)
-
-        // Then no welcome was sent.
-        XCTAssertEqual(mockSendWelcomeArguments.count, 0)
 
         // Then no update events were returned.
         XCTAssertEqual(updateEvents, [])
@@ -264,6 +241,7 @@ class MLSActionExecutorTests: ZMBaseManagedObjectTest {
 
         let mockCommit = Bytes.random()
         let mockWelcome = Bytes.random()
+        let mockPublicGroupState = Bytes.random()
         let mockUpdateEvent = mockMemberLeaveUpdateEvent()
 
         // Mock Commit pending proposals.
@@ -273,15 +251,15 @@ class MLSActionExecutorTests: ZMBaseManagedObjectTest {
             return CommitBundle(
                 welcome: mockWelcome,
                 commit: mockCommit,
-                publicGroupState: []
+                publicGroupState: mockPublicGroupState
             )
         }
 
-        // Mock send commit.
-        var mockSendCommitArguments = [Data]()
-        mockActionsProvider.sendMessageMocks.append({
-            mockSendCommitArguments.append($0)
-            return [mockUpdateEvent]
+        // Mock send commit bundle.
+        var mockSendCommitBundleArguments = [Data]()
+        mockActionsProvider.sendCommitBundleMocks.append({
+            mockSendCommitBundleArguments.append($0)
+            return []
         })
 
         // Mock merge commit.
@@ -290,12 +268,6 @@ class MLSActionExecutorTests: ZMBaseManagedObjectTest {
             mockCommitAcceptedArguments.append($0)
         }
 
-        // Mock send welcome message.
-        var mockSendWelcomeArguments = [Data]()
-        mockActionsProvider.sendWelcomeMessageMocks.append({
-            mockSendWelcomeArguments.append($0)
-        })
-
         // When
         let updateEvents = try await sut.commitPendingProposals(in: groupID)
 
@@ -303,17 +275,14 @@ class MLSActionExecutorTests: ZMBaseManagedObjectTest {
         XCTAssertEqual(mockCommitPendingProposals.count, 1)
         XCTAssertEqual(mockCommitPendingProposals.first, groupID.bytes)
 
-        // Then the commit was sent.
-        XCTAssertEqual(mockSendCommitArguments.count, 1)
-        XCTAssertEqual(mockSendCommitArguments.first, mockCommit.data)
+        // Then the commit bundle was sent.
+        XCTAssertEqual(mockSendCommitBundleArguments.count, 1)
+        // TODO: (David) test that the argument is equal to the commit bundle data
+        // XCTAssertEqual(mockSendCommitBundleArguments.first, commitBundle.data)
 
         // Then the commit was merged.
         XCTAssertEqual(mockCommitAcceptedArguments.count, 1)
         XCTAssertEqual(mockCommitAcceptedArguments.first, groupID.bytes)
-
-        // Then the welcome was sent.
-        XCTAssertEqual(mockSendWelcomeArguments.count, 1)
-        XCTAssertEqual(mockSendWelcomeArguments.first, mockWelcome.data)
 
         // Then the update event was returned.
         XCTAssertEqual(updateEvents, [mockUpdateEvent])
