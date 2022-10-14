@@ -208,7 +208,7 @@ actor MLSActionExecutor: MLSActionExecutorProtocol {
 
     private func sendCommitBundle(_ bundle: CommitBundle, for groupID: MLSGroupID) async throws -> [ZMUpdateEvent] {
         do {
-            let events = try await sendCommit(bundle)
+            let events = try await sendCommitBundle(bundle)
             try mergeCommit(in: groupID)
             return events
         } catch let error as SendCommitBundleAction.Failure {
@@ -224,12 +224,9 @@ actor MLSActionExecutor: MLSActionExecutorProtocol {
         }
     }
 
-    private func sendCommit(_ bundle: CommitBundle) async throws -> [ZMUpdateEvent] {
-        // core crypto should return a protobuf object instead of `CommitBundle`,
-        // which we should be able to convert into data.
-        // for now we'll just send empty data.
+    private func sendCommitBundle(_ bundle: CommitBundle) async throws -> [ZMUpdateEvent] {
         return try await actionsProvider.sendCommitBundle(
-            Data(),
+            try bundle.protobufData(),
             in: context.notificationContext
         )
     }

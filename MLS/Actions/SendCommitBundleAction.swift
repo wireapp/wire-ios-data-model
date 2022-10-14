@@ -17,7 +17,6 @@
 //
 
 import Foundation
-import WireCoreCrypto
 
 public final class SendCommitBundleAction: EntityAction {
     public typealias Result = [ZMUpdateEvent]
