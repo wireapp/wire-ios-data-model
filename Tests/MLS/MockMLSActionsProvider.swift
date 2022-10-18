@@ -108,7 +108,7 @@ class MockMLSActionsProvider: MLSActionsProviderProtocol {
         context: NotificationContext
     ) async throws -> String {
         guard let mock = fetchPublicGroupStateMock.first else { throw MockError.unmockedMethodInvoked }
-        countUnclaimedKeyPackagesMocks.removeFirst()
+        fetchPublicGroupStateMock.removeFirst()
         return mock(conversationId, domain)
     }
 
