@@ -28,7 +28,7 @@ public final class FetchPublicGroupStateAction: EntityAction {
         case endpointUnavailable
         case noConversation
         case missingGroupInfo
-        case conversationIDOrDomainNotFound
+        case conversationIdOrDomainNotFound
         case malformedResponse
         case emptyParameters
         case unknown(status: Int)
@@ -42,11 +42,11 @@ public final class FetchPublicGroupStateAction: EntityAction {
                 return "Conversation not found"
             case .missingGroupInfo:
                 return "The conversation has no group information"
-            case .conversationIDOrDomainNotFound:
-                return "Conversation ID Or domain not found."
+            case .conversationIdOrDomainNotFound:
+                return "Conversation ID or domain not found."
             case .malformedResponse:
                 return "Malformed response"
-            case.emptyParameters:
+            case .emptyParameters:
                 return "Empty parameters."
             case .unknown(let status):
                 return "Unknown error (response status: \(status))"
