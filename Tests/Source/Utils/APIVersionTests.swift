@@ -66,7 +66,7 @@ final class APIVersionTests: XCTestCase {
         APIVersion.setVersions(production: [.v0], development: [.v1])
 
         // Then
-        XCTAssertEqual(APIVersion.current, .v1)
+        XCTAssertEqual(BackendInfo.apiVersion, .v1)
     }
 
     func test_CurrentVersion_IsHighestProductionVersion_IfThereIsNoPreferredVersion() {
@@ -77,7 +77,7 @@ final class APIVersionTests: XCTestCase {
         APIVersion.setVersions(production: [.v0], development: [.v1])
 
         // Then
-        XCTAssertEqual(APIVersion.current, .v0)
+        XCTAssertEqual(BackendInfo.apiVersion, .v0)
     }
 
     func test_CurrentVersion_IsNil_IfThereAreNoVersions() {
@@ -85,7 +85,7 @@ final class APIVersionTests: XCTestCase {
         APIVersion.setVersions(production: [], development: [])
 
         // Then
-        XCTAssertNil(APIVersion.current)
+        XCTAssertNil(BackendInfo.apiVersion)
     }
 
 }
