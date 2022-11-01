@@ -34,12 +34,22 @@ public struct CoreCryptoConfiguration {
 
 public class CoreCryptoFactory {
 
-    public enum ConfigurationError: Error {
+    private let coreCryptoKeyProvider: CoreCryptoKeyProvider
+
+    public convenience init() {
+        self.init(coreCryptoKeyProvider: CoreCryptoKeyProvider())
+    }
+
+    init(coreCryptoKeyProvider: CoreCryptoKeyProvider) {
+        self.coreCryptoKeyProvider = coreCryptoKeyProvider
+    }
+
+    public enum ConfigurationError: Error, Equatable {
         case failedToGetQualifiedClientId
         case failedToGetCoreCryptoKey
     }
 
-    public static func coreCrypto(
+    public func coreCrypto(
         sharedContainerURL: URL,
         syncContext: NSManagedObjectContext,
         coreCryptoSetup: CoreCryptoSetupClosure
@@ -48,7 +58,7 @@ public class CoreCryptoFactory {
         return try coreCryptoSetup(configuration)
     }
 
-    public static func configuration(sharedContainerURL: URL, syncContext: NSManagedObjectContext) throws -> CoreCryptoConfiguration {
+    public func configuration(sharedContainerURL: URL, syncContext: NSManagedObjectContext) throws -> CoreCryptoConfiguration {
         precondition(syncContext.zm_isSyncContext)
 
         let selfUser = ZMUser.selfUser(in: syncContext)
@@ -65,7 +75,7 @@ public class CoreCryptoFactory {
         let mlsDirectory = accountDirectory.appendingMLSFolder()
 
         do {
-            let key = try CoreCryptoKeyProvider.coreCryptoKey()
+            let key = try coreCryptoKeyProvider.coreCryptoKey()
             return CoreCryptoConfiguration(
                 path: mlsDirectory.path,
                 key: key.base64EncodedString(),
