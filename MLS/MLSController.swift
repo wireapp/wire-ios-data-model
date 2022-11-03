@@ -956,10 +956,10 @@ public final class MLSController: MLSControllerProtocol {
     }
 
     private func fetchPublicGroupState(
-        conversationID: String,
+        conversationID: UUID,
         domain: String,
         context: NotificationContext
-    ) async throws -> String {
+    ) async throws -> Data {
         do {
             return try await actionsProvider.fetchPublicGroupState(
                 conversationId: conversationID,
@@ -1137,10 +1137,10 @@ protocol MLSActionsProviderProtocol {
     ) async throws
 
     func fetchPublicGroupState(
-        conversationId: String,
+        conversationId: UUID,
         domain: String,
         context: NotificationContext
-    ) async throws -> String
+    ) async throws -> Data
 
 }
 
@@ -1206,10 +1206,10 @@ class MLSActionsProvider: MLSActionsProviderProtocol {
     }
 
     func fetchPublicGroupState(
-        conversationId: String,
+        conversationId: UUID,
         domain: String,
         context: NotificationContext
-    ) async throws -> String {
+    ) async throws -> Data {
         var action = FetchPublicGroupStateAction(
             conversationId: conversationId,
             domain: domain

@@ -21,7 +21,7 @@ public final class FetchPublicGroupStateAction: EntityAction {
 
     // MARK: - Types
 
-    public typealias Result = String
+    public typealias Result = Data
 
     public enum Failure: Error, Equatable {
 
@@ -31,7 +31,7 @@ public final class FetchPublicGroupStateAction: EntityAction {
         case conversationIdOrDomainNotFound
         case malformedResponse
         case emptyParameters
-        case unknown(status: Int)
+        case unknown(status: Int, label: String, message: String)
 
         public var errorDescription: String? {
             switch self {
@@ -48,8 +48,8 @@ public final class FetchPublicGroupStateAction: EntityAction {
                 return "Malformed response"
             case .emptyParameters:
                 return "Empty parameters."
-            case .unknown(let status):
-                return "Unknown error (response status: \(status))"
+            case let .unknown(status, label, message):
+                return "Unknown error (response status: \(status), label: \(label), message: \(message))"
             }
         }
     }
@@ -57,13 +57,13 @@ public final class FetchPublicGroupStateAction: EntityAction {
     // MARK: - Properties
 
     public var resultHandler: ResultHandler?
-    public var conversationId: String
+    public var conversationId: UUID
     public var domain: String
 
     // MARK: - Life cycle
 
     public init(
-        conversationId: String,
+        conversationId: UUID,
         domain: String,
         resultHandler: ResultHandler? = nil
     ) {
