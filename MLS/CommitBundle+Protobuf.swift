@@ -20,15 +20,15 @@ import WireProtos
 
 extension CommitBundle {
     func protobufData() throws -> Data {
-        return try Proteus_CommitBundle(commitBundle: self).serializedData()
+        return try Mls_CommitBundle(commitBundle: self).serializedData()
     }
 }
 
-extension Proteus_CommitBundle {
+extension Mls_CommitBundle {
     init(commitBundle: CommitBundle) {
-        self = Proteus_CommitBundle.with {
+        self = Mls_CommitBundle.with {
             $0.commit = commitBundle.commit.data
-            $0.groupInfoBundle = Proteus_GroupInfoBundle(
+            $0.groupInfoBundle = Mls_GroupInfoBundle(
                 publicGroupState: commitBundle.publicGroupState
             )
 
@@ -39,10 +39,10 @@ extension Proteus_CommitBundle {
     }
 }
 
-extension Proteus_GroupInfoBundle {
+extension Mls_GroupInfoBundle {
     // TODO: (David) update this to use the `PublicGroupState` representation from CC once released
     init(publicGroupState: Bytes) {
-        self = Proteus_GroupInfoBundle.with {
+        self = Mls_GroupInfoBundle.with {
             $0.groupInfo = publicGroupState.data
             $0.groupInfoType = .publicGroupState
             $0.ratchetTreeType = .full
