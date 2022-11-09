@@ -34,7 +34,7 @@ public struct MLSQualifiedClientID {
             return nil
         }
 
-        return "\(userId.transportString()):\(clientId)@\(domain)"
+        return "\(userId.transportString()):\(clientId)@\(domain)".lowercased()
     }
 
     // MARK: - Methods

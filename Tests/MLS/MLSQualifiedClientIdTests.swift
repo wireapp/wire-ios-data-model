@@ -22,7 +22,7 @@ import XCTest
 
 class MLSQualifiedClientIdTests: ZMConversationTestsBase {
 
-    func test_itCreatesClientID_WithLowercasedUUID() throws {
+    func test_itCreatesLowercasedMLSQualifiedClientID() throws {
         // GIVEN
         let uuidString = "57ce2cb2-601f-11ed-9b6a-0242ac120002"
         let domain = "example.wire.com"
@@ -40,7 +40,7 @@ class MLSQualifiedClientIdTests: ZMConversationTestsBase {
 
         // THEN
 
-        let expectedId = "\(uuidString):\(clientID)@\(domain)"
+        let expectedId = "\(uuidString):\(clientID)@\(domain)".lowercased()
         XCTAssertNotNil(sut.qualifiedClientId)
         XCTAssertEqual(sut.qualifiedClientId, expectedId)
     }
