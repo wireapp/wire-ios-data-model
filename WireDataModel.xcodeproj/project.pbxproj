@@ -239,10 +239,10 @@
 		54F84CFD1F9950B300ABD7D5 /* DuplicatedEntityRemoval.swift in Sources */ = {isa = PBXBuildFile; fileRef = 54F84CFC1F9950B300ABD7D5 /* DuplicatedEntityRemoval.swift */; };
 		54F84D031F995B0200ABD7D5 /* DuplicatedEntityRemovalTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 54F84CFE1F99588D00ABD7D5 /* DuplicatedEntityRemovalTests.swift */; };
 		54F84D041F995B0700ABD7D5 /* DiskDatabaseTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 54F84D001F995A1F00ABD7D5 /* DiskDatabaseTests.swift */; };
-		54FB03A11E41E273000E13DC /* PersistedDataPatches.swift in Sources */ = {isa = PBXBuildFile; fileRef = 54FB03A01E41E273000E13DC /* PersistedDataPatches.swift */; };
+		54FB03A11E41E273000E13DC /* LegacyPersistedDataPatches.swift in Sources */ = {isa = PBXBuildFile; fileRef = 54FB03A01E41E273000E13DC /* LegacyPersistedDataPatches.swift */; };
 		54FB03A31E41E64A000E13DC /* UserClient+Patches.swift in Sources */ = {isa = PBXBuildFile; fileRef = 54FB03A21E41E64A000E13DC /* UserClient+Patches.swift */; };
-		54FB03AA1E41F204000E13DC /* PersistedDataPatches+Directory.swift in Sources */ = {isa = PBXBuildFile; fileRef = 54FB03A81E41F1B6000E13DC /* PersistedDataPatches+Directory.swift */; };
-		54FB03AD1E41F6C2000E13DC /* PersistedDataPatchesTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 54FB03AC1E41F6C2000E13DC /* PersistedDataPatchesTests.swift */; };
+		54FB03AA1E41F204000E13DC /* LegacyPersistedDataPatches+Directory.swift in Sources */ = {isa = PBXBuildFile; fileRef = 54FB03A81E41F1B6000E13DC /* LegacyPersistedDataPatches+Directory.swift */; };
+		54FB03AD1E41F6C2000E13DC /* LegacyPersistedDataPatchesTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 54FB03AC1E41F6C2000E13DC /* LegacyPersistedDataPatchesTests.swift */; };
 		54FB03AF1E41FC86000E13DC /* NSManagedObjectContext+Patches.swift in Sources */ = {isa = PBXBuildFile; fileRef = 54FB03AE1E41FC86000E13DC /* NSManagedObjectContext+Patches.swift */; };
 		55C40BCE22B0316800EFD8BD /* ZMUser+LegalHoldRequest.swift in Sources */ = {isa = PBXBuildFile; fileRef = 55C40BCD22B0316800EFD8BD /* ZMUser+LegalHoldRequest.swift */; };
 		55C40BD722B0F78500EFD8BD /* ZMUserLegalHoldTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 55C40BD422B0F75C00EFD8BD /* ZMUserLegalHoldTests.swift */; };
@@ -989,10 +989,10 @@
 		54F84CFC1F9950B300ABD7D5 /* DuplicatedEntityRemoval.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DuplicatedEntityRemoval.swift; sourceTree = "<group>"; };
 		54F84CFE1F99588D00ABD7D5 /* DuplicatedEntityRemovalTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DuplicatedEntityRemovalTests.swift; sourceTree = "<group>"; };
 		54F84D001F995A1F00ABD7D5 /* DiskDatabaseTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DiskDatabaseTests.swift; sourceTree = "<group>"; };
-		54FB03A01E41E273000E13DC /* PersistedDataPatches.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = PersistedDataPatches.swift; sourceTree = "<group>"; };
+		54FB03A01E41E273000E13DC /* LegacyPersistedDataPatches.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = LegacyPersistedDataPatches.swift; sourceTree = "<group>"; };
 		54FB03A21E41E64A000E13DC /* UserClient+Patches.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = "UserClient+Patches.swift"; sourceTree = "<group>"; };
-		54FB03A81E41F1B6000E13DC /* PersistedDataPatches+Directory.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = "PersistedDataPatches+Directory.swift"; sourceTree = "<group>"; };
-		54FB03AC1E41F6C2000E13DC /* PersistedDataPatchesTests.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = PersistedDataPatchesTests.swift; sourceTree = "<group>"; };
+		54FB03A81E41F1B6000E13DC /* LegacyPersistedDataPatches+Directory.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = "LegacyPersistedDataPatches+Directory.swift"; sourceTree = "<group>"; };
+		54FB03AC1E41F6C2000E13DC /* LegacyPersistedDataPatchesTests.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = LegacyPersistedDataPatchesTests.swift; sourceTree = "<group>"; };
 		54FB03AE1E41FC86000E13DC /* NSManagedObjectContext+Patches.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = "NSManagedObjectContext+Patches.swift"; sourceTree = "<group>"; };
 		55C40BCD22B0316800EFD8BD /* ZMUser+LegalHoldRequest.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "ZMUser+LegalHoldRequest.swift"; sourceTree = "<group>"; };
 		55C40BD322B0F23000EFD8BD /* zmessaging2.73.0.xcdatamodel */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcdatamodel; path = zmessaging2.73.0.xcdatamodel; sourceTree = "<group>"; };
@@ -1669,8 +1669,8 @@
 		1639A81122608FEB00868AB9 /* Patches */ = {
 			isa = PBXGroup;
 			children = (
-				54FB03A01E41E273000E13DC /* PersistedDataPatches.swift */,
-				54FB03A81E41F1B6000E13DC /* PersistedDataPatches+Directory.swift */,
+				54FB03A01E41E273000E13DC /* LegacyPersistedDataPatches.swift */,
+				54FB03A81E41F1B6000E13DC /* LegacyPersistedDataPatches+Directory.swift */,
 				54F84CFC1F9950B300ABD7D5 /* DuplicatedEntityRemoval.swift */,
 				16827AE92732A3C20079405D /* InvalidDomainRemoval.swift */,
 				F11F3E881FA32463007B6D3D /* InvalidClientsRemoval.swift */,
@@ -1739,7 +1739,7 @@
 		54FB03AB1E41F6C2000E13DC /* Utils */ = {
 			isa = PBXGroup;
 			children = (
-				54FB03AC1E41F6C2000E13DC /* PersistedDataPatchesTests.swift */,
+				54FB03AC1E41F6C2000E13DC /* LegacyPersistedDataPatchesTests.swift */,
 				54F84CFE1F99588D00ABD7D5 /* DuplicatedEntityRemovalTests.swift */,
 				F11F3E8A1FA32AA0007B6D3D /* InvalidClientsRemovalTests.swift */,
 				16127CF422005AAA0020E65C /* InvalidConversationRemovalTests.swift */,
@@ -3404,7 +3404,7 @@
 				166DCDB82555886F004F4F59 /* CoreDataStack+Migration.swift in Sources */,
 				54363A011D7876200048FD7D /* ZMClientMessage+Encryption.swift in Sources */,
 				8704676B21513DE900C628D7 /* ZMOTRMessage+Unarchive.swift in Sources */,
-				54FB03A11E41E273000E13DC /* PersistedDataPatches.swift in Sources */,
+				54FB03A11E41E273000E13DC /* LegacyPersistedDataPatches.swift in Sources */,
 				63CA8215240812620073426A /* ZMClientMessage+Composite.swift in Sources */,
 				162207F8272291CA0041EDE8 /* String+NilEmpty.swift in Sources */,
 				0630E4B8257F8C0B00C75BFB /* ZMUser+Applock.swift in Sources */,
@@ -3459,7 +3459,7 @@
 				F9A706A81CAEE01D00C2F5FE /* DependentObjectsKeysForObservedObjectKeysCache.swift in Sources */,
 				EEBACDA525B9C243000210AC /* LAContextProtocol.swift in Sources */,
 				1670D01C231823DC003A143B /* ZMUser+Permissions.swift in Sources */,
-				54FB03AA1E41F204000E13DC /* PersistedDataPatches+Directory.swift in Sources */,
+				54FB03AA1E41F204000E13DC /* LegacyPersistedDataPatches+Directory.swift in Sources */,
 				F9B71F2D1CB264EF001DB03F /* ZMConversation+UnreadCount.m in Sources */,
 				54D7B83F1E12774600C1B347 /* NSPersistentStore+Metadata.swift in Sources */,
 				BFCD8A2D1DCB4E8A00C6FCCF /* V2Asset.swift in Sources */,
@@ -3655,7 +3655,7 @@
 				EEE83B4A1FBB496B00FC0296 /* ZMMessageTimerTests.swift in Sources */,
 				F9B71F931CB2BF00001DB03F /* ZMMessageTests.m in Sources */,
 				16030DBE21AE8FAB00F8032E /* ZMConversationTests+Confirmations.swift in Sources */,
-				54FB03AD1E41F6C2000E13DC /* PersistedDataPatchesTests.swift in Sources */,
+				54FB03AD1E41F6C2000E13DC /* LegacyPersistedDataPatchesTests.swift in Sources */,
 				F9B71F9F1CB2BF2B001DB03F /* ZMConversationListDirectoryTests.m in Sources */,
 				F94A208F1CB51AF50059632A /* ManagedObjectValidationTests.m in Sources */,
 				A927F52723A029250058D744 /* ParticipantRoleTests.swift in Sources */,
