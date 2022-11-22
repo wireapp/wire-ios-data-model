@@ -73,6 +73,11 @@ class MLSActionExecutorTests: ZMBaseManagedObjectTest {
         let mockWelcome = Bytes.random()
         let mockPublicGroupState = Bytes.random()
         let mockUpdateEvent = mockMemberJoinUpdateEvent()
+        let mockPublicGroupState = PublicGroupStateBundle(
+            encryptionType: .Plaintext,
+            ratchetTreeType: .Full,
+            payload: .random()
+        )
 
         // Mock add clients.
         var mockAddClientsArguments = [(Bytes, [Invitee])]()
@@ -135,6 +140,11 @@ class MLSActionExecutorTests: ZMBaseManagedObjectTest {
         let mockCommit = Bytes.random()
         let mockPublicGroupState = Bytes.random()
         let mockUpdateEvent = mockMemberLeaveUpdateEvent()
+        let mockPublicGroupState = PublicGroupStateBundle(
+            encryptionType: .Plaintext,
+            ratchetTreeType: .Full,
+            payload: .random()
+        )
 
         // Mock remove clients.
         var mockRemoveClientsArguments = [(Bytes, [ClientId])]()
@@ -188,6 +198,11 @@ class MLSActionExecutorTests: ZMBaseManagedObjectTest {
         let groupID = MLSGroupID(.random())
 
         let mockCommit = Bytes.random()
+        let mockPublicGroupState = PublicGroupStateBundle(
+            encryptionType: .Plaintext,
+            ratchetTreeType: .Full,
+            payload: .random()
+        )
 
         // Mock Update key material.
         var mockUpdateKeyMaterialArguments = [Bytes]()
@@ -196,7 +211,7 @@ class MLSActionExecutorTests: ZMBaseManagedObjectTest {
             return CommitBundle(
                 welcome: nil,
                 commit: mockCommit,
-                publicGroupState: []
+                publicGroupState: mockPublicGroupState
             )
         }
 
@@ -230,7 +245,7 @@ class MLSActionExecutorTests: ZMBaseManagedObjectTest {
         XCTAssertEqual(mockCommitAcceptedArguments.first, groupID.bytes)
 
         // Then no update events were returned.
-        XCTAssertEqual(updateEvents, [])
+        XCTAssertEqual(updateEvents, [ZMUpdateEvent]())
     }
 
     // MARK: - Commit pending proposals
@@ -243,6 +258,11 @@ class MLSActionExecutorTests: ZMBaseManagedObjectTest {
         let mockWelcome = Bytes.random()
         let mockPublicGroupState = Bytes.random()
         let mockUpdateEvent = mockMemberLeaveUpdateEvent()
+        let mockPublicGroupState = PublicGroupStateBundle(
+            encryptionType: .Plaintext,
+            ratchetTreeType: .Full,
+            payload: .random()
+        )
 
         // Mock Commit pending proposals.
         var mockCommitPendingProposals = [Bytes]()
