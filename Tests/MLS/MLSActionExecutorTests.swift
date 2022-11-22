@@ -71,7 +71,6 @@ class MLSActionExecutorTests: ZMBaseManagedObjectTest {
 
         let mockCommit = Bytes.random()
         let mockWelcome = Bytes.random()
-        let mockPublicGroupState = Bytes.random()
         let mockUpdateEvent = mockMemberJoinUpdateEvent()
         let mockPublicGroupState = PublicGroupStateBundle(
             encryptionType: .Plaintext,
@@ -138,7 +137,6 @@ class MLSActionExecutorTests: ZMBaseManagedObjectTest {
         let clientIds =  [mlsClientID].compactMap { $0.string.utf8Data?.bytes }
 
         let mockCommit = Bytes.random()
-        let mockPublicGroupState = Bytes.random()
         let mockUpdateEvent = mockMemberLeaveUpdateEvent()
         let mockPublicGroupState = PublicGroupStateBundle(
             encryptionType: .Plaintext,
@@ -256,7 +254,6 @@ class MLSActionExecutorTests: ZMBaseManagedObjectTest {
 
         let mockCommit = Bytes.random()
         let mockWelcome = Bytes.random()
-        let mockPublicGroupState = Bytes.random()
         let mockUpdateEvent = mockMemberLeaveUpdateEvent()
         let mockPublicGroupState = PublicGroupStateBundle(
             encryptionType: .Plaintext,
