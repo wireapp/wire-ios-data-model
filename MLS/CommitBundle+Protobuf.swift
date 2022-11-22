@@ -40,12 +40,35 @@ extension Mls_CommitBundle {
 }
 
 extension Mls_GroupInfoBundle {
-    // TODO: (David) update this to use the `PublicGroupState` representation from CC once released
-    init(publicGroupState: Bytes) {
+    init(publicGroupState: PublicGroupStateBundle) {
         self = Mls_GroupInfoBundle.with {
-            $0.groupInfo = publicGroupState.data
-            $0.groupInfoType = .publicGroupState
-            $0.ratchetTreeType = .full
+            $0.groupInfo = publicGroupState.payload.data
+            $0.groupInfoType = Mls_GroupInfoType(encryptionType: publicGroupState.encryptionType)
+            $0.ratchetTreeType = Mls_RatchetTreeType(ratchetTreeType: publicGroupState.ratchetTreeType)
+        }
+    }
+}
+
+extension Mls_GroupInfoType {
+    init(encryptionType: PublicGroupStateEncryptionType) {
+        switch encryptionType {
+        case .Plaintext:
+            self = .groupInfo
+        case .JweEncrypted:
+            self = .groupInfoJwe
+        }
+    }
+}
+
+extension Mls_RatchetTreeType {
+    init(ratchetTreeType: RatchetTreeType) {
+        switch ratchetTreeType {
+        case .Full:
+            self = .full
+        case .Delta:
+            self = .delta
+        case .ByRef:
+            self = .reference
         }
     }
 }
