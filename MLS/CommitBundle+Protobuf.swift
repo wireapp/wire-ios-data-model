@@ -53,9 +53,10 @@ extension Mls_GroupInfoType {
     init(encryptionType: PublicGroupStateEncryptionType) {
         switch encryptionType {
         case .Plaintext:
-            self = .groupInfo
+            self = .publicGroupState
         case .JweEncrypted:
-            self = .groupInfoJwe
+            assertionFailure("JweEncrypted is not supported yet")
+            self = .publicGroupState
         }
     }
 }
