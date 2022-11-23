@@ -52,6 +52,12 @@ protocol MLSActionsProviderProtocol {
         in context: NotificationContext
     ) async throws -> [ZMUpdateEvent]
 
+    func fetchPublicGroupState(
+        conversationId: UUID,
+        domain: String,
+        context: NotificationContext
+    ) async throws -> Data
+
 }
 
 class MLSActionsProvider: MLSActionsProviderProtocol {
@@ -112,6 +118,19 @@ class MLSActionsProvider: MLSActionsProviderProtocol {
         in context: NotificationContext)
     async throws -> [ZMUpdateEvent] {
         var action = SendCommitBundleAction(commitBundle: bundle)
+        return try await action.perform(in: context)
+    }
+
+    func fetchPublicGroupState(
+        conversationId: UUID,
+        domain: String,
+        context: NotificationContext
+    ) async throws -> Data {
+        var action = FetchPublicGroupStateAction(
+            conversationId: conversationId,
+            domain: domain
+        )
+
         return try await action.perform(in: context)
     }
 }
