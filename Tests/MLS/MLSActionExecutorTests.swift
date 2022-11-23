@@ -143,16 +143,17 @@ class MLSActionExecutorTests: ZMBaseManagedObjectTest {
             ratchetTreeType: .Full,
             payload: .random()
         )
+        let mockCommitBundle = CommitBundle(
+            welcome: nil,
+            commit: mockCommit,
+            publicGroupState: mockPublicGroupState
+        )
 
         // Mock remove clients.
         var mockRemoveClientsArguments = [(Bytes, [ClientId])]()
         mockCoreCrypto.mockRemoveClientsFromConversation = {
             mockRemoveClientsArguments.append(($0, $1))
-            return CommitBundle(
-                welcome: nil,
-                commit: mockCommit,
-                publicGroupState: mockPublicGroupState
-            )
+            return mockCommitBundle
         }
 
         // Mock send commit bundle.
@@ -178,8 +179,7 @@ class MLSActionExecutorTests: ZMBaseManagedObjectTest {
 
         // Then the commit bundle was sent.
         XCTAssertEqual(mockSendCommitBundleArguments.count, 1)
-        // TODO: (David) test that the argument is equal to the commit bundle data
-        // XCTAssertEqual(mockSendCommitBundleArguments.first, commitBundle.data)
+        XCTAssertEqual(mockSendCommitBundleArguments.first, try mockCommitBundle.protobufData())
 
         // Then the commit was merged.
         XCTAssertEqual(mockCommitAcceptedArguments.count, 1)
@@ -201,16 +201,17 @@ class MLSActionExecutorTests: ZMBaseManagedObjectTest {
             ratchetTreeType: .Full,
             payload: .random()
         )
+        let mockCommitBundle = CommitBundle(
+            welcome: nil,
+            commit: mockCommit,
+            publicGroupState: mockPublicGroupState
+        )
 
         // Mock Update key material.
         var mockUpdateKeyMaterialArguments = [Bytes]()
         mockCoreCrypto.mockUpdateKeyingMaterial = {
             mockUpdateKeyMaterialArguments.append($0)
-            return CommitBundle(
-                welcome: nil,
-                commit: mockCommit,
-                publicGroupState: mockPublicGroupState
-            )
+            return mockCommitBundle
         }
 
         // Mock send commit bundle.
@@ -235,8 +236,7 @@ class MLSActionExecutorTests: ZMBaseManagedObjectTest {
 
         // Then the commit bundle was sent.
         XCTAssertEqual(mockSendCommitBundleArguments.count, 1)
-        // TODO: (David) test that the argument is equal to the commit bundle data
-        // XCTAssertEqual(mockSendCommitBundleArguments.first, commitBundle.data)
+        XCTAssertEqual(mockSendCommitBundleArguments.first, try mockCommitBundle.protobufData())
 
         // Then the commit was merged.
         XCTAssertEqual(mockCommitAcceptedArguments.count, 1)
@@ -260,6 +260,11 @@ class MLSActionExecutorTests: ZMBaseManagedObjectTest {
             ratchetTreeType: .Full,
             payload: .random()
         )
+        let mockCommitBundle = CommitBundle(
+            welcome: mockWelcome,
+            commit: mockCommit,
+            publicGroupState: mockPublicGroupState
+        )
 
         // Mock Commit pending proposals.
         var mockCommitPendingProposals = [Bytes]()
@@ -276,7 +281,7 @@ class MLSActionExecutorTests: ZMBaseManagedObjectTest {
         var mockSendCommitBundleArguments = [Data]()
         mockActionsProvider.sendCommitBundleMocks.append({
             mockSendCommitBundleArguments.append($0)
-            return []
+            return [mockUpdateEvent]
         })
 
         // Mock merge commit.
@@ -294,8 +299,7 @@ class MLSActionExecutorTests: ZMBaseManagedObjectTest {
 
         // Then the commit bundle was sent.
         XCTAssertEqual(mockSendCommitBundleArguments.count, 1)
-        // TODO: (David) test that the argument is equal to the commit bundle data
-        // XCTAssertEqual(mockSendCommitBundleArguments.first, commitBundle.data)
+        XCTAssertEqual(mockSendCommitBundleArguments.first, try mockCommitBundle.protobufData())
 
         // Then the commit was merged.
         XCTAssertEqual(mockCommitAcceptedArguments.count, 1)
