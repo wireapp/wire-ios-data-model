@@ -77,16 +77,17 @@ class MLSActionExecutorTests: ZMBaseManagedObjectTest {
             ratchetTreeType: .Full,
             payload: .random()
         )
+        let mockMemberAddedMessages = MemberAddedMessages(
+            commit: mockCommit,
+            welcome: mockWelcome,
+            publicGroupState: mockPublicGroupState
+        )
 
         // Mock add clients.
         var mockAddClientsArguments = [(Bytes, [Invitee])]()
         mockCoreCrypto.mockAddClientsToConversation = {
             mockAddClientsArguments.append(($0, $1))
-            return MemberAddedMessages(
-                commit: mockCommit,
-                welcome: mockWelcome,
-                publicGroupState: mockPublicGroupState
-            )
+            return mockMemberAddedMessages
         }
 
         // Mock send commit bundle.
@@ -111,9 +112,13 @@ class MLSActionExecutorTests: ZMBaseManagedObjectTest {
         XCTAssertEqual(mockAddClientsArguments.first?.1, invitees)
 
         // Then the commit bundle was sent.
+        let expectedCommitBundle = CommitBundle(
+            welcome: mockWelcome,
+            commit: mockCommit,
+            publicGroupState: mockPublicGroupState
+        )
         XCTAssertEqual(mockSendCommitBundleArguments.count, 1)
-        // TODO: (David) test that the argument is equal to the commit bundle data
-        // XCTAssertEqual(mockSendCommitBundleArguments.first, commitBundle.data)
+        XCTAssertEqual(mockSendCommitBundleArguments.first, try expectedCommitBundle.protobufData())
 
         // Then the commit was merged.
         XCTAssertEqual(mockCommitAcceptedArguments.count, 1)
