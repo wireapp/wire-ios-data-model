@@ -115,7 +115,7 @@ public struct FrameworkVersion: Comparable, Equatable {
     }
 }
 
-public func==(lhs: FrameworkVersion, rhs: FrameworkVersion) -> Bool {
+public func ==(lhs: FrameworkVersion, rhs: FrameworkVersion) -> Bool {
     return lhs.components == rhs.components
 }
 
