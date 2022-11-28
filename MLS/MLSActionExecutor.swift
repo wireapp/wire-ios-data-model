@@ -24,6 +24,7 @@ protocol MLSActionExecutorProtocol {
     func removeClients(_ clients: [ClientId], from groupID: MLSGroupID) async throws -> [ZMUpdateEvent]
     func updateKeyMaterial(for groupID: MLSGroupID) async throws -> [ZMUpdateEvent]
     func commitPendingProposals(in groupID: MLSGroupID) async throws -> [ZMUpdateEvent]
+    func joinGroup(_ groupID: MLSGroupID, publicGroupState: Data) async throws -> [ZMUpdateEvent]
 
 }
 
@@ -37,6 +38,7 @@ actor MLSActionExecutor: MLSActionExecutorProtocol {
         case removeClients([ClientId])
         case updateKeyMaterial
         case proposal
+        case joinGroup(Data)
 
     }
 
@@ -160,6 +162,17 @@ actor MLSActionExecutor: MLSActionExecutorProtocol {
         }
     }
 
+    // TODO: Add logs
+    func joinGroup(_ groupID: MLSGroupID, publicGroupState: Data) async throws -> [ZMUpdateEvent] {
+        do {
+            let bundle = try commitBundle(for: .joinGroup(publicGroupState), in: groupID)
+            let result = try await sendCommitBundle(bundle, for: groupID)
+            return result
+        } catch {
+            throw error
+        }
+    }
+
     // MARK: - Commit generation
 
     private func commitBundle(for action: Action, in groupID: MLSGroupID) throws -> CommitBundle {
@@ -195,6 +208,15 @@ actor MLSActionExecutor: MLSActionExecutorProtocol {
                 }
 
                 return bundle
+
+            case .joinGroup(let publicGroupState):
+                let conversationInitBundle = try coreCrypto.wire_joinByExternalCommit(groupState: publicGroupState.bytes)
+
+                return CommitBundle(
+                    welcome: nil,
+                    commit: conversationInitBundle.commit,
+                    publicGroupState: conversationInitBundle.publicGroupState
+                )
             }
         } catch Error.noPendingProposals {
             throw Error.noPendingProposals
