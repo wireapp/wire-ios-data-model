@@ -21,6 +21,8 @@ import XCTest
 @testable import WireDataModel
 import CoreData
 
+private let zmLog = ZMSLog(tag: "PatchesTest")
+
 struct TestPatch: DataPatchInterface {
     static var allCases = [TestPatch]()
     
@@ -31,8 +33,9 @@ struct TestPatch: DataPatchInterface {
     
     func execute(in context: NSManagedObjectContext) {
         //Execute test patch
-        print("executing test patch")
+        return block(context)
     }
+        
     init(version: Int, block: @escaping (NSManagedObjectContext)->()) {
         self.version = version
         self.block = block
@@ -40,86 +43,116 @@ struct TestPatch: DataPatchInterface {
 }
 
 class PatchApplicatorTests: ZMBaseManagedObjectTest {
-
-    func testThatItApplyPatchesWhenNoVersion() {
-        // GIVEN
-        var patchApplied = false
-        let patch = TestPatch(version: 1) { (moc) in
-            XCTFail()
-            patchApplied = true
-        }
-        
-        // WHEN
-        self.syncMOC.performGroupedBlockAndWait {
-            TestPatch.allCases = [patch]
+    
+    func testItAppliesNoPatchesWhenThereIsNoPreviousVersion() {
+        syncMOC.performGroupedBlockAndWait {
+            // Given some patches
+            var patchApplied = [Int: Bool]()
+            TestPatch.allCases = [
+                TestPatch(version: 1, block: { _ in patchApplied[1] = true }),
+                TestPatch(version: 2, block: { _ in patchApplied[2] = true }),
+                TestPatch(version: 3, block: { _ in patchApplied[3] = true })
+            ]
+            
+            // Given no previous version
+            self.syncMOC.setPersistentStoreMetadata(Optional<Int>.none, key: lastRunPatchVersion)
+            self.syncMOC.saveOrRollback()
+            
+            // When I apply some patches
             PatchApplicator.apply(TestPatch.self, in: self.syncMOC)
+            
+            zmLog.info("patchApplied \(patchApplied)")
+            // Then no patches were run
+            XCTAssertEqual(patchApplied, [:])
+            
+            // Then the current version is set as the previous version
+            let previousVersion = self.syncMOC.persistentStoreMetadata(forKey: lastRunPatchVersion) as? Int
+            XCTAssertEqual(previousVersion, 3)
         }
-
-        // THEN
-        XCTAssertTrue(patchApplied)
     }
     
-    func testThatItApplyPatchesWhenPreviousVersionIsLesser() {
-
-        // GIVEN
-        var patchApplied = false
-        let patch = TestPatch(version: 1) { (moc) in
-            XCTAssertEqual(moc, self.syncMOC)
-            patchApplied = true
-        }
+    func testThatItDoesNotApplyRequiredPatch() {
         
-        TestPatch.allCases = [patch]
-        
-        // this will bump last patched version to current version, which hopefully is less than 10000000.32.32
+        //Given a previous version as 2
         self.syncMOC.performGroupedBlockAndWait {
+            self.syncMOC.setPersistentStoreMetadata(2, key: lastRunPatchVersion)
+            self.syncMOC.saveOrRollback()
+            
+            //Given some patches of various verions
+            var wasPatch1Executed = false
+            let patch1 = TestPatch(version: 1) { (moc) in
+                wasPatch1Executed = true
+            }
+            
+            var wasPatch2Executed = false
+            let patch2 = TestPatch(version: 2) { (moc) in
+                wasPatch2Executed = true
+            }
+            
+            var wasPatch3Executed = false
+            let patch3 = TestPatch(version: 3) { (moc) in
+                wasPatch3Executed = true
+            }
+            
+            var wasPatch4Executed = false
+            let patch4 = TestPatch(version: 4) { (moc) in
+                wasPatch4Executed = true
+            }
+            
+            var wasPatch5Executed = false
+            let patch5 = TestPatch(version: 5) { (moc) in
+                wasPatch5Executed = true
+            }
+            
+            TestPatch.allCases = [patch1, patch2, patch3, patch4, patch5]
+            
+            // When I apply some patches
             PatchApplicator.apply(TestPatch.self, in: self.syncMOC)
-        }
-
-        // WHEN
-        self.syncMOC.performGroupedBlockAndWait {
-            PatchApplicator.apply(TestPatch.self, in: self.syncMOC)
-        }
-
-        // THEN
-        XCTAssertTrue(patchApplied)
-    }
-
-    func testThatItDoesNotApplyUnnecessarypatch() {
-        
-        self.syncMOC.performGroupedBlockAndWait {
-            self.syncMOC.setPersistentStoreMetadata(5, key: "zm_lastDataModelVersionThatWasPatched")
-        }
-        
-        var wasPatch1Executed = false
-        let patch1 = TestPatch(version: 4) { (moc) in
-            wasPatch1Executed = true
-        }
-        
-        var wasPatch2Executed = false
-        let patch2 = TestPatch(version: 5) { (moc) in
-            wasPatch2Executed = true
-        }
-        
-        var wasPatch3Executed = false
-        let patch3 = TestPatch(version: 6) { (moc) in
-            wasPatch3Executed = true
-        }
-        
-        var wasPatch4Executed = false
-        let patch4 = TestPatch(version: 7) { (moc) in
-            wasPatch4Executed = true
-        }
-        
-        TestPatch.allCases = [patch1, patch2, patch3, patch4]
-        
-        // When
-        self.syncMOC.performGroupedBlockAndWait {
-            PatchApplicator.apply(TestPatch.self, in: self.syncMOC)
-        }
-        // Then
+            zmLog.info("wasPatch1Executed\(wasPatch1Executed)")
+            zmLog.info("wasPatch2Executed\(wasPatch2Executed)")
+            zmLog.info("wasPatch3Executed\(wasPatch3Executed)")
+            zmLog.info("wasPatch4Executed\(wasPatch4Executed)")
+            zmLog.info("wasPatch5Executed\(wasPatch5Executed)")
+            
+            let updatedCurrentVersion = self.syncMOC.persistentStoreMetadata(forKey: lastRunPatchVersion) as? Int
+            zmLog.info("updatedCurrentVersion\(updatedCurrentVersion)")
+            
+            // Then
             XCTAssertFalse(wasPatch1Executed)
             XCTAssertFalse(wasPatch2Executed)
             XCTAssertTrue(wasPatch3Executed)
             XCTAssertTrue(wasPatch4Executed)
+            XCTAssertTrue(wasPatch5Executed)
+            
+            // Then the current version is set as the previous version
+            let previousVersion = self.syncMOC.persistentStoreMetadata(forKey: lastRunPatchVersion) as? Int
+            XCTAssertEqual(previousVersion, 5)
+            
+        }
+    }
+    
+    func testItAppliesFirstPatchSuccessfully() {
+        
+        self.syncMOC.performGroupedBlockAndWait {
+            // Given no patches were run previously (previous version is 1)
+            self.syncMOC.setPersistentStoreMetadata(0, key: lastRunPatchVersion)
+            self.syncMOC.saveOrRollback()
+        
+            // When the first patch is added
+            var wasPatch1Executed = false
+            let patch1 = TestPatch(version: 1) { (moc) in
+                wasPatch1Executed = true
+            }
+            
+            TestPatch.allCases = [patch1]
+            
+            PatchApplicator.apply(TestPatch.self, in: self.syncMOC)
+            zmLog.info("wasPatch1Executed\(wasPatch1Executed)")
+            
+            // Then previous version is 1
+            let previousVersion = self.syncMOC.persistentStoreMetadata(forKey: lastRunPatchVersion) as? Int
+            
+            XCTAssertEqual(previousVersion, 1)
+        }
     }
 }

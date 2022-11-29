@@ -1,6 +1,6 @@
 //
 // Wire
-// Copyright (C) 2017 Wire Swiss GmbH
+// Copyright (C) 2022 Wire Swiss GmbH
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -29,7 +29,6 @@ enum PatchApplicator {
     ) {
         // Get the current version
         let currentVersion = T.allCases.count
-    
         
         defer {
             context.setPersistentStoreMetadata(currentVersion, key: lastRunPatchVersion)
@@ -40,18 +39,20 @@ enum PatchApplicator {
         guard let previousVersion = context.persistentStoreMetadata(forKey: lastRunPatchVersion) as? Int
         else {
             // no version was run, this is a fresh install, skipping...
-            print("no versions")
+            zmLog.info("no version was run, this is a fresh install, skipping...")
             return
         }
         
-        print("previousVersion\(previousVersion)")
-        T.allCases.filter { $0.version > previousVersion }.forEach {
+        zmLog.info("previousVersion\(previousVersion)")
+        T.allCases
+            .filter { $0.version > previousVersion }
+            .forEach {
             $0.execute(in: context)
         }
     }
 }
 
-let lastRunPatchVersion = "zm_lastDataModelVersionThatWasPatched"
+let lastRunPatchVersion = "zm_PatchApplicatorLastRunPatchVersion"
 
 protocol DataPatchInterface: CaseIterable {
     
@@ -62,18 +63,8 @@ protocol DataPatchInterface: CaseIterable {
 
 enum DataPatch: Int, DataPatchInterface {
     
+    // Add patches as cases
     case patch1
-    case patch2
-    
-    var patches: Bool {
-        switch self {
-        case .patch1:
-            break
-        case .patch2:
-            break
-        }
-        return true
-    }
     
     var version: Int {
         return rawValue
@@ -81,5 +72,9 @@ enum DataPatch: Int, DataPatchInterface {
     
     func execute(in context: NSManagedObjectContext) {
         //Execute production patch
+        
+        switch self {
+        case .patch1: break
+        }
     }
 }
