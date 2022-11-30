@@ -714,12 +714,6 @@ public final class MLSController: MLSControllerProtocol {
                 publicGroupState: publicGroupState
             )
 
-            // TODO: Verify that the config is correct
-            try coreCrypto.wire_mergePendingGroupFromExternalCommit(
-                conversationId: groupID.bytes,
-                config: .init(ciphersuite: .mls128Dhkemx25519Aes128gcmSha256Ed25519)
-            )
-
             context.performAndWait {
                 conversationInfo.conversation.mlsStatus = .ready
             }
@@ -1001,6 +995,15 @@ public final class MLSController: MLSControllerProtocol {
             logger.warn("failed to send commit, giving up...")
             // TODO: [John] inform user
             throw MLSActionExecutor.Error.failedToSendCommit(recovery: .giveUp)
+
+        } catch MLSActionExecutor.Error.failedToSendExternalCommit(recovery: .retry) {
+            logger.warn("failed to send external commit, retrying operation...")
+            try await retryOnCommitFailure(for: groupID, operation: operation)
+
+        } catch MLSActionExecutor.Error.failedToSendExternalCommit(recovery: .giveUp) {
+            logger.warn("failed to send external commit, giving up...")
+            throw MLSActionExecutor.Error.failedToSendExternalCommit(recovery: .giveUp)
+
         }
     }
 
