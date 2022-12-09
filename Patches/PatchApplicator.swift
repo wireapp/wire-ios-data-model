@@ -22,6 +22,8 @@ import CoreData
 private let zmLog = ZMSLog(tag: "Patches")
 
 enum PatchApplicator {
+
+    static let lastRunPatchVersion = "zm_PatchApplicatorLastRunPatchVersion"
     
     static func apply<T: DataPatchInterface>(
         _ patchType: T.Type,
@@ -52,8 +54,6 @@ enum PatchApplicator {
     }
 }
 
-let lastRunPatchVersion = "zm_PatchApplicatorLastRunPatchVersion"
-
 protocol DataPatchInterface: CaseIterable {
     
     var version: Int { get }
@@ -61,20 +61,19 @@ protocol DataPatchInterface: CaseIterable {
     
 }
 
-enum DataPatch: Int, DataPatchInterface {
-    
-    // Add patches as cases
-    case patch1
-    
-    var version: Int {
-        return rawValue
-    }
-    
-    func execute(in context: NSManagedObjectContext) {
-        //Execute production patch
-        
-        switch self {
-        case .patch1: break
-        }
-    }
-}
+// When we add the first patch, uncomment this type and add an enum
+// case. The patch code should go in the execute method.
+
+//enum DataPatch: Int, DataPatchInterface {
+//
+//
+//
+//    var version: Int {
+//        return rawValue
+//    }
+//
+//    func execute(in context: NSManagedObjectContext) {
+//        switch self {
+//        }
+//    }
+//}

@@ -41,13 +41,13 @@ class PatchApplicatorTests: ZMBaseManagedObjectTest {
 
     func setCurrentVersion(_ version: Int?) {
         syncMOC.performGroupedBlockAndWait {
-            self.syncMOC.setPersistentStoreMetadata(version, key: lastRunPatchVersion)
+            self.syncMOC.setPersistentStoreMetadata(version, key: PatchApplicator.lastRunPatchVersion)
             self.syncMOC.saveOrRollback()
         }
     }
 
     var previousVersion: Int? {
-        return syncMOC.persistentStoreMetadata(forKey: lastRunPatchVersion) as? Int
+        return syncMOC.persistentStoreMetadata(forKey: PatchApplicator.lastRunPatchVersion) as? Int
     }
 
     func createTestPatches(forVersions versions: ClosedRange<Int>) -> [TestPatch] {
