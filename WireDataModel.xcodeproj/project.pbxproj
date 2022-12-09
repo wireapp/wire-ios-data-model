@@ -2682,6 +2682,7 @@
 			isa = PBXGroup;
 			children = (
 				874B5DA81CEDB9E30010474C /* Cartfile */,
+				874B5DA91CEDB9E40010474C /* Cartfile.private */,
 				874B5DAA1CEDB9E40010474C /* Cartfile.resolved */,
 				543089B71D420165004D8AC4 /* README.md */,
 				F9A708641CAEF9BD00C2F5FE /* Default-568h@2x.png */,
@@ -2755,7 +2756,6 @@
 		F9C9A6771CAD7A790039E10C /* Resources */ = {
 			isa = PBXGroup;
 			children = (
-				874B5DA91CEDB9E40010474C /* Cartfile.private */,
 				167BCC182609E92300E9D7E3 /* ZMEventModel.xcdatamodeld */,
 				F189988C1E7BE03800E579A2 /* zmessaging.xcdatamodeld */,
 				F9C9A5DC1CAD76A50039E10C /* Info.plist */,
