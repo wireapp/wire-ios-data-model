@@ -21,7 +21,7 @@ import CoreData
 
 private let zmLog = ZMSLog(tag: "Patches")
 
-class PatchApplicator {
+public final class PatchApplicator {
 
     let lastRunVersionKey: String
 
@@ -29,7 +29,7 @@ class PatchApplicator {
         self.lastRunVersionKey = lastRunVersionKey
     }
 
-    public func applyPatches<T: DataPatchInterface>(
+    func applyPatches<T: DataPatchInterface>(
         _ patchType: T.Type,
         in context: NSManagedObjectContext
     ) {
