@@ -21,30 +21,34 @@ import CoreData
 
 private let zmLog = ZMSLog(tag: "Patches")
 
-enum PatchApplicator {
+class PatchApplicator {
 
-    static let lastRunPatchVersion = "zm_PatchApplicatorLastRunPatchVersion"
-    
-    static func apply<T: DataPatchInterface>(
+    let lastRunVersionKey: String
+
+    init(lastRunVersionKey: String) {
+        self.lastRunVersionKey = lastRunVersionKey
+    }
+
+    public func applyPatches<T: DataPatchInterface>(
         _ patchType: T.Type,
         in context: NSManagedObjectContext
     ) {
         // Get the current version
         let currentVersion = T.allCases.count
-        
+
         defer {
-            context.setPersistentStoreMetadata(currentVersion, key: lastRunPatchVersion)
+            context.setPersistentStoreMetadata(currentVersion, key: self.lastRunVersionKey)
             context.saveOrRollback()
         }
-        
+
         // Get the previous version
-        guard let previousVersion = context.persistentStoreMetadata(forKey: lastRunPatchVersion) as? Int
+        guard let previousVersion = context.persistentStoreMetadata(forKey: self.lastRunVersionKey) as? Int
         else {
             // no version was run, this is a fresh install, skipping...
             zmLog.info("no version was run, this is a fresh install, skipping...")
             return
         }
-        
+
         zmLog.info("previousVersion\(previousVersion)")
         T.allCases
             .filter { $0.version > previousVersion }
