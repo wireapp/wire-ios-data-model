@@ -23,9 +23,9 @@ private let zmLog = ZMSLog(tag: "Patches")
 
 public final class PatchApplicator<T> {
 
-    let lastRunVersionKey: String
+    public let lastRunVersionKey: String
 
-    init(lastRunVersionKey: String) {
+    public init(lastRunVersionKey: String) {
         self.lastRunVersionKey = lastRunVersionKey
     }
 
