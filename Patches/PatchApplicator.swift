@@ -29,7 +29,7 @@ public final class PatchApplicator<T> {
         self.lastRunVersionKey = lastRunVersionKey
     }
 
-    func applyPatches<T: DataPatchInterface>(
+    public func applyPatches<T: DataPatchInterface>(
         _ patchType: T.Type,
         in context: NSManagedObjectContext
     ) {
