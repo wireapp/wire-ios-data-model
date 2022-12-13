@@ -21,7 +21,7 @@ import CoreData
 
 private let zmLog = ZMSLog(tag: "Patches")
 
-public final class PatchApplicator {
+public final class PatchApplicator<T> {
 
     let lastRunVersionKey: String
 

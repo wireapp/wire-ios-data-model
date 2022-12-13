@@ -25,7 +25,7 @@ import simd
 class PatchApplicatorTests: ZMBaseManagedObjectTest {
 
     var patchCountByVersion = [Int: Int]()
-    let applicator = PatchApplicator(lastRunVersionKey: "zm_PatchApplicatorLastRunPatchVersion")
+    let applicator = PatchApplicator<String>(lastRunVersionKey: "zm_PatchApplicatorLastRunPatchVersion")
 
     override func setUp() {
         super.setUp()
