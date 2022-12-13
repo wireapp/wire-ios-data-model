@@ -58,7 +58,7 @@ public final class PatchApplicator<T> {
     }
 }
 
-protocol DataPatchInterface: CaseIterable {
+public protocol DataPatchInterface: CaseIterable {
     
     var version: Int { get }
     func execute(in context: NSManagedObjectContext)
