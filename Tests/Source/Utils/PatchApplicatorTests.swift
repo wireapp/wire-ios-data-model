@@ -25,16 +25,18 @@ import simd
 class PatchApplicatorTests: ZMBaseManagedObjectTest {
 
     var patchCountByVersion = [Int: Int]()
-    let applicator = PatchApplicator<String>(lastRunVersionKey: "zm_PatchApplicatorLastRunPatchVersion")
+    var sut: PatchApplicator<String>!
 
     override func setUp() {
         super.setUp()
-        self.setCurrentVersion(.none)
         patchCountByVersion = [:]
+        sut = PatchApplicator<String>(lastRunVersionKey: "testLastRunVersionKey")
+        self.setCurrentVersion(.none)
     }
 
     override func tearDown() {
         self.setCurrentVersion(.none)
+        sut = nil
         super.tearDown()
     }
 
@@ -42,13 +44,13 @@ class PatchApplicatorTests: ZMBaseManagedObjectTest {
 
     func setCurrentVersion(_ version: Int?) {
         syncMOC.performGroupedBlockAndWait {
-            self.syncMOC.setPersistentStoreMetadata(version, key: self.applicator.lastRunVersionKey)
+            self.syncMOC.setPersistentStoreMetadata(version, key: self.sut.lastRunVersionKey)
             self.syncMOC.saveOrRollback()
         }
     }
 
     var previousVersion: Int? {
-        return syncMOC.persistentStoreMetadata(forKey: self.applicator.lastRunVersionKey) as? Int
+        return syncMOC.persistentStoreMetadata(forKey: self.sut.lastRunVersionKey) as? Int
     }
 
     func createTestPatches(forVersions versions: ClosedRange<Int>) -> [TestPatch] {
@@ -70,7 +72,7 @@ class PatchApplicatorTests: ZMBaseManagedObjectTest {
             TestPatch.allCases = self.createTestPatches(forVersions: 1...3)
 
             // When I apply some patches
-            self.applicator.applyPatches(TestPatch.self, in: self.syncMOC)
+            self.sut.applyPatches(TestPatch.self, in: self.syncMOC)
 
             // Then no patches were run
             XCTAssertTrue(self.patchCountByVersion.isEmpty)
@@ -89,7 +91,7 @@ class PatchApplicatorTests: ZMBaseManagedObjectTest {
             TestPatch.allCases = self.createTestPatches(forVersions: 1...5)
 
             // When I apply some patches
-            self.applicator.applyPatches(TestPatch.self, in: self.syncMOC)
+            self.sut.applyPatches(TestPatch.self, in: self.syncMOC)
 
             // Then
             XCTAssertEqual(self.patchCountByVersion[1], nil)
@@ -112,7 +114,7 @@ class PatchApplicatorTests: ZMBaseManagedObjectTest {
             TestPatch.allCases = self.createTestPatches(forVersions: 1...1)
 
             // When I run all patches
-            self.applicator.applyPatches(TestPatch.self, in: self.syncMOC)
+            self.sut.applyPatches(TestPatch.self, in: self.syncMOC)
 
             // Then the patch was executed
             XCTAssertEqual(self.patchCountByVersion[1], 1)
@@ -131,7 +133,7 @@ class PatchApplicatorTests: ZMBaseManagedObjectTest {
             TestPatch.allCases = self.createTestPatches(forVersions: 1...1)
 
             // When I run all patches
-            self.applicator.applyPatches(TestPatch.self, in: self.syncMOC)
+            self.sut.applyPatches(TestPatch.self, in: self.syncMOC)
 
             // Then the patch was executed
             XCTAssertEqual(self.patchCountByVersion[1], 1)
@@ -140,7 +142,7 @@ class PatchApplicatorTests: ZMBaseManagedObjectTest {
             XCTAssertEqual(self.previousVersion, 1)
 
             // When I run the patches again
-            self.applicator.applyPatches(TestPatch.self, in: self.syncMOC)
+            self.sut.applyPatches(TestPatch.self, in: self.syncMOC)
 
             // Then the patch was not executed again
             XCTAssertEqual(self.patchCountByVersion[1], 1)
