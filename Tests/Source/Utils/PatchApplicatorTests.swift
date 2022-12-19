@@ -25,12 +25,12 @@ import simd
 class PatchApplicatorTests: ZMBaseManagedObjectTest {
 
     var patchCountByVersion = [Int: Int]()
-    var sut: PatchApplicator<String>!
+    var sut: PatchApplicator<TestPatch>!
 
     override func setUp() {
         super.setUp()
         patchCountByVersion = [:]
-        sut = PatchApplicator<String>(lastRunVersionKey: "testLastRunVersionKey")
+        sut = PatchApplicator<TestPatch>(lastRunVersionKey: "testLastRunVersionKey")
         self.setCurrentVersion(.none)
     }
 
@@ -72,7 +72,7 @@ class PatchApplicatorTests: ZMBaseManagedObjectTest {
             TestPatch.allCases = self.createTestPatches(forVersions: 1...3)
 
             // When I apply some patches
-            self.sut.applyPatches(TestPatch.self, in: self.syncMOC)
+            self.sut.applyPatches(in: self.syncMOC)
 
             // Then no patches were run
             XCTAssertTrue(self.patchCountByVersion.isEmpty)
@@ -91,7 +91,7 @@ class PatchApplicatorTests: ZMBaseManagedObjectTest {
             TestPatch.allCases = self.createTestPatches(forVersions: 1...5)
 
             // When I apply some patches
-            self.sut.applyPatches(TestPatch.self, in: self.syncMOC)
+            self.sut.applyPatches(in: self.syncMOC)
 
             // Then
             XCTAssertEqual(self.patchCountByVersion[1], nil)
@@ -114,7 +114,7 @@ class PatchApplicatorTests: ZMBaseManagedObjectTest {
             TestPatch.allCases = self.createTestPatches(forVersions: 1...1)
 
             // When I run all patches
-            self.sut.applyPatches(TestPatch.self, in: self.syncMOC)
+            self.sut.applyPatches(in: self.syncMOC)
 
             // Then the patch was executed
             XCTAssertEqual(self.patchCountByVersion[1], 1)
@@ -133,7 +133,7 @@ class PatchApplicatorTests: ZMBaseManagedObjectTest {
             TestPatch.allCases = self.createTestPatches(forVersions: 1...1)
 
             // When I run all patches
-            self.sut.applyPatches(TestPatch.self, in: self.syncMOC)
+            self.sut.applyPatches(in: self.syncMOC)
 
             // Then the patch was executed
             XCTAssertEqual(self.patchCountByVersion[1], 1)
@@ -142,7 +142,7 @@ class PatchApplicatorTests: ZMBaseManagedObjectTest {
             XCTAssertEqual(self.previousVersion, 1)
 
             // When I run the patches again
-            self.sut.applyPatches(TestPatch.self, in: self.syncMOC)
+            self.sut.applyPatches(in: self.syncMOC)
 
             // Then the patch was not executed again
             XCTAssertEqual(self.patchCountByVersion[1], 1)
