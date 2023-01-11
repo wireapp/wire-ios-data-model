@@ -915,7 +915,7 @@ public final class MLSController: MLSControllerProtocol {
     }
 
     private func commitPendingProposalsIfNeeded(in groupID: MLSGroupID) async throws {
-        guard existsPendingPropsals(in: groupID) else { return }
+        guard existsPendingProposals(in: groupID) else { return }
         // Sending a message while there are pending proposals will result in an error,
         // so commit any first.
         logger.info("preemptively committing pending proposals in group (\(groupID))")
@@ -923,7 +923,7 @@ public final class MLSController: MLSControllerProtocol {
         logger.info("success: committed pending proposals in group (\(groupID))")
     }
 
-    private func existsPendingPropsals(in groupID: MLSGroupID) -> Bool {
+    private func existsPendingProposals(in groupID: MLSGroupID) -> Bool {
         guard let context = context else { return false }
 
         var groupHasPendingProposals = false
