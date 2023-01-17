@@ -745,7 +745,7 @@ public final class MLSController: MLSControllerProtocol {
         guard
             let conversation = conversation,
             let identifier = identifier,
-            let domain = domain?.selfOrNilIfEmpty ?? APIVersion.domain
+            let domain = domain?.selfOrNilIfEmpty ?? BackendInfo.domain
         else {
             return nil
         }
