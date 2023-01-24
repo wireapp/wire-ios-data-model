@@ -560,9 +560,8 @@ public extension UserClient {
     }
 
     @objc func missesClients(_ clients: Set<UserClient>) {
-
         zmLog.debug("Adding clients(\( clients.count)) to list of missing clients")
-
+        Logging.missingClients.info("adding clients (\(clients.map(\.remoteIdentifier))) to list of missing clients")
         self.mutableSetValue(forKey: ZMUserClientMissingKey).union(clients)
         if !hasLocalModifications(forKey: ZMUserClientMissingKey) {
             setLocallyModifiedKeys(Set(arrayLiteral: ZMUserClientMissingKey))
@@ -572,13 +571,14 @@ public extension UserClient {
     /// Use this method only for the selfClient
     @objc func removeMissingClient(_ client: UserClient) {
         zmLog.debug("Removing client from list of missing clients")
-
+        Logging.missingClients.info("removing client (\(client.remoteIdentifier)) from list of missing clients")
         self.mutableSetValue(forKey: ZMUserClientMissingKey).remove(client)
     }
 
     /// Deletes the session between the selfClient and the given userClient
     /// If there is no session it does nothing
     static func deleteSession(for clientID: EncryptionSessionIdentifier, managedObjectContext: NSManagedObjectContext) {
+        Logging.missingClients.info("delete session for session id: \(clientID)")
         guard let selfClient = ZMUser.selfUser(in: managedObjectContext).selfClient(), selfClient.sessionIdentifier != clientID
         else { return }
 
@@ -591,7 +591,17 @@ public extension UserClient {
     /// Returns false if the session could not be established
     /// Use this method only for the selfClient
     func establishSessionWithClient(_ client: UserClient, usingPreKey preKey: String) -> Bool {
-        guard isSelfClient(), let sessionIdentifier = client.sessionIdentifier else { return false }
+        Logging.missingClients.info("establish session with client: \(client.remoteIdentifier)")
+
+        guard isSelfClient() else {
+            Logging.missingClients.info("failed to establish session with client: \(client.remoteIdentifier): not self client")
+            return false
+        }
+
+        guard let sessionIdentifier = client.sessionIdentifier else {
+            Logging.missingClients.info("failed to establish session with client: \(client.remoteIdentifier): no session identifier")
+            return false
+        }
 
         var didEstablishSession = false
 
@@ -600,6 +610,7 @@ public extension UserClient {
             // Session is already established?
             if sessionsDirectory.hasSession(for: sessionIdentifier) {
                 zmLog.debug("Session with \(sessionIdentifier) was already established, re-creating")
+                Logging.missingClients.info("session with client (\(client.remoteIdentifier)) already established, re-creating")
                 sessionsDirectory.delete(sessionIdentifier)
             }
         }
@@ -615,10 +626,12 @@ public extension UserClient {
                 client.fingerprint = sessionsDirectory.fingerprint(for: sessionIdentifier)
                 didEstablishSession = true
             } catch {
+                Logging.missingClients.error("faild to session with client (\(client.remoteIdentifier)) with prekey (\(preKey))")
                 zmLog.error("Cannot create session for prekey \(preKey)")
             }
         }
 
+        Logging.missingClients.info("session with client (\(client.remoteIdentifier)), did establish session: \(didEstablishSession)")
         return didEstablishSession
     }
 
