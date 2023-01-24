@@ -225,25 +225,34 @@ public class UserClient: ZMManagedObject, UserClientType {
     }
 
     public static func fetchUserClient(withRemoteId remoteIdentifier: String, forUser user: ZMUser, createIfNeeded: Bool) -> UserClient? {
+        Logging.missingClients.info("fetchUserClient with id (\(remoteIdentifier)... createIfNeeded: \(createIfNeeded)")
         precondition(!createIfNeeded || user.managedObjectContext!.zm_isSyncContext, "clients can only be created on the syncContext")
 
         guard let context = user.managedObjectContext else {
+            Logging.missingClients.info("fetchUserClient with id (\(remoteIdentifier)... failed: no context")
             fatal("User \(user.safeForLoggingDescription) is not a member of a managed object context (deleted object).")
         }
 
+        Logging.missingClients.info("fetchUserClient with id (\(remoteIdentifier)... user (\(user.remoteIdentifier)) has \(user.clients.count) existing clients")
+
         let relationClients = user.clients.filter({$0.remoteIdentifier == remoteIdentifier})
+
+        Logging.missingClients.info("fetchUserClient with id (\(remoteIdentifier)... user (\(user.remoteIdentifier)) has \(relationClients) relation clients matching id")
 
         requireInternal(relationClients.count <= 1, "Detected duplicate clients: \(relationClients.map({ $0.safeForLoggingDescription }))")
 
         if let client = relationClients.first {
+            Logging.missingClients.info("fetchUserClient with id (\(remoteIdentifier)... returning first relation client")
             return client
         }
 
         if let client = self.fetchExistingUserClient(with: remoteIdentifier, in: context) {
+            Logging.missingClients.info("fetchUserClient with id (\(remoteIdentifier)... returning fetched existing user client")
             return client
         }
 
         if createIfNeeded {
+            Logging.missingClients.info("fetchUserClient with id (\(remoteIdentifier)... creating client")
             let newClient = UserClient.insertNewObject(in: context)
             newClient.remoteIdentifier = remoteIdentifier
             newClient.user = user
@@ -252,9 +261,13 @@ public class UserClient: ZMManagedObject, UserClientType {
             newClient.needsSessionMigration = user.domain == nil
             // Form reverse relationship
             user.mutableSetValue(forKey: "clients").add(newClient)
+            Logging.missingClients.info("fetchUserClient with id (\(remoteIdentifier)... returning created client")
             return newClient
+        } else {
+            Logging.missingClients.info("fetchUserClient with id (\(remoteIdentifier)... not creating client")
         }
 
+        Logging.missingClients.info("fetchUserClient with id (\(remoteIdentifier)... returning nil")
         return nil
     }
 
