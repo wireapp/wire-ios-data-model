@@ -13,6 +13,8 @@ For licensing information, see the attached LICENSE file and the list of third-p
 
 This framework is part of Wire iOS SyncEngine. Additional documentation is available in the [Wire iOS wiki](https://github.com/wireapp/wire-ios/wiki).
 
+⚠️ **This repository is now part of [wire-ios-mono](https://github.com/wireapp/wire-ios-mono)**
+
 ## How to build
 
 This framework is using Carthage to manage its dependencies. To pull the dependencies binaries, run `carthage bootstrap --platform ios --use-xcframeworks`.
